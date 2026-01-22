@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "skills": {
+    "vercel-react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/agent-skills.git",
+      "skillPath": "skills/react-best-practices/SKILL.md",
+      "installedAt": "2026-01-22T21:23:29.222Z",
+      "updatedAt": "2026-01-22T21:23:29.222Z"
+    },
+    "web-design-guidelines": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/agent-skills.git",
+      "skillPath": "skills/web-design-guidelines/SKILL.md",
+      "installedAt": "2026-01-22T21:28:17.957Z",
+      "updatedAt": "2026-01-22T21:28:17.957Z"
+    },
+    "remotion-best-practices": {
+      "source": "remotion-dev/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/remotion-dev/skills.git",
+      "skillPath": "skills/remotion/SKILL.md",
+      "installedAt": "2026-01-22T21:29:07.584Z",
+      "updatedAt": "2026-01-22T21:29:07.584Z"
+    }
+  }
+}
