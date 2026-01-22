@@ -1,0 +1,90 @@
+{
+  "providers": {
+    "cliproxyapi": {
+      "baseUrl": "http://localhost:8317/v1",
+      "apiKey": "sk-dummy",
+      "models": [
+        {
+          "id": "gpt-5.1-codex-max(medium)",
+          "name": "gpt-5.1-codex-max (Medium)",
+          "api": "openai-completions",
+          "reasoning": true,
+          "input": ["text"],
+          "cost": {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0},
+          "contextWindow": 1024000,
+          "maxTokens": 32000
+        },
+        {
+          "id": "gpt-5.1-codex-max(high)",
+          "name": "gpt-5.1-codex-max (High)",
+          "api": "openai-completions",
+          "reasoning": true,
+          "input": ["text"],
+          "cost": {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0},
+          "contextWindow": 1024000,
+          "maxTokens": 32000
+        },
+        {
+          "id": "gpt-5.2-codex(medium)",
+          "name": "gpt-5.2-codex (Medium)",
+          "api": "openai-completions",
+          "reasoning": true,
+          "input": ["text"],
+          "cost": {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0},
+          "contextWindow": 1024000,
+          "maxTokens": 32000
+        },
+        {
+          "id": "gpt-5.2-codex(high)",
+          "name": "gpt-5.2-codex (High)",
+          "api": "openai-completions",
+          "reasoning": true,
+          "input": ["text"],
+          "cost": {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0},
+          "contextWindow": 1024000,
+          "maxTokens": 32000
+        },
+        {
+          "id": "gpt-5.2(medium)",
+          "name": "gpt-5.2 (Medium)",
+          "api": "openai-completions",
+          "reasoning": true,
+          "input": ["text"],
+          "cost": {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0},
+          "contextWindow": 1024000,
+          "maxTokens": 32000
+        },
+        {
+          "id": "gpt-5.2(high)",
+          "name": "gpt-5.2 (High)",
+          "api": "openai-completions",
+          "reasoning": true,
+          "input": ["text"],
+          "cost": {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0},
+          "contextWindow": 1024000,
+          "maxTokens": 32000
+        },
+        {
+          "id": "claude-sonnet-4-5-20250929",
+          "name": "Claude Sonnet 4.5",
+          "api": "openai-completions",
+          "reasoning": true,
+          "input": ["text"],
+          "cost": {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0},
+          "contextWindow": 200000,
+          "maxTokens": 32000
+        },
+        {
+          "id": "claude-opus-4-5-20251101",
+          "name": "Claude Opus 4.5",
+          "api": "openai-completions",
+          "reasoning": true,
+          "input": ["text"],
+          "cost": {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0},
+          "contextWindow": 200000,
+          "maxTokens": 32000
+        }
+      ]
+    }
+  }
+}

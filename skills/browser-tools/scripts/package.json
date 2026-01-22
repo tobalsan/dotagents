@@ -1,0 +1,7 @@
+{
+  "name": "browser-tools",
+  "type": "module",
+  "dependencies": {
+    "puppeteer-core": "^24.0.0"
+  }
+}

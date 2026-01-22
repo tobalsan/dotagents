@@ -1,0 +1,42 @@
+{
+  "general": {
+    "preferredEditor": "neovim",
+    "previewFeatures": true
+  },
+  "security": {
+    "auth": {
+      "selectedType": "oauth-personal"
+    }
+  },
+  "ui": {
+    "theme": "GitHub",
+    "footer": {
+      "hideContextPercentage": false
+    }
+  },
+  "mcpServers": {
+    "context7": {
+      "httpUrl": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}",
+        "Accept": "application/json, text/event-stream"
+      }
+    },
+    "langchain": {
+      "httpUrl": "https://docs.langchain.com/mcp"
+    },
+    "pal": {
+      "command": "sh",
+      "args": [
+        "-c",
+        "for p in $(which uvx 2>/dev/null) $HOME/.local/bin/uvx /opt/homebrew/bin/uvx /usr/local/bin/uvx uvx; do [ -x \"$p\" ] && exec \"$p\" --from git+https://github.com/BeehiveInnovations/pal-mcp-server.git pal-mcp-server; done; echo 'uvx not found' >&2; exit 1"
+      ],
+      "env": {
+        "PATH": "/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin:~/.local/bin",
+        "GEMINI_API_KEY": "${GEMINI_API_KEY}",
+        "OPENAI_API_KEY": "${OPENAI_API_KEY}",
+        "XAI_API_KEY": "${XAI_API_KEY}"
+      }
+    }
+  }
+}

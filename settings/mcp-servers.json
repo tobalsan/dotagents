@@ -1,0 +1,93 @@
+{
+  "mcpServers": {
+    "todoist": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@doist/todoist-ai"
+      ],
+      "env": {
+        "TODOIST_API_KEY": "TODOIST_API_KEY"
+      }
+    },
+    "firecrawl": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "firecrawl-mcp"
+      ],
+      "env": {
+        "FIRECRAWL_API_KEY": "FIRECRAWL_API_KEY"
+      }
+    },
+    "google-calendar": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "@cocal/google-calendar-mcp"
+      ],
+      "env": {
+        "GOOGLE_OAUTH_CREDENTIALS": "$HOME/.gcal-mcp/google_calendar_oauth_credentials.json"
+      }
+    },
+    "fetch": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-fetch"
+      ],
+      "alwaysAllow": [
+        "fetch"
+      ]
+    },
+    "datetime": {
+      "command": "node",
+      "args": [
+        "$HOME/Documents/Cline/MCP/datetime-server/build/index.js"
+      ],
+      "cwd": "$HOME/Documents/Cline/MCP/datetime-server",
+      "disabled": false,
+      "alwaysAllow": [
+        "get_datetime"
+      ]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ],
+      "alwaysAllow": [
+        "browser_navigate",
+        "browser_type",
+        "browser_snapshot",
+        "browser_click",
+        "browser_press_key"
+      ]
+    },
+    "github.com/marcopesani/mcp-server-serper": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "serper-search-scrape-mcp-server"
+      ],
+      "env": {
+        "SERPER_API_KEY": "SERPER_API_KEY"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "google_search",
+        "scrape"
+      ]
+    },
+    "historical-data-server": {
+      "command": "node",
+      "args": [
+        "$HOME/Documents/Cline/MCP/historical_data_analyst_server/historical-data-server/build/index.js"
+      ],
+      "cwd": "$HOME/Documents/Cline/MCP/historical_data_analyst_server/historical-data-server",
+      "disabled": false,
+      "alwaysAllow": []
+    }
+  }
+}

@@ -1,0 +1,23 @@
+---
+description: Build comprehensive specs for the given base specs by asking probing questions
+---
+
+# Drill Specs
+
+Your task is to first help me build comprehensive specs for the following project idea:
+
+<base-specs>
+$ARGUMENTS
+</base-specs>
+
+First, if we are inside an existing codebase, use up to 10 subagents in parallel to explore the codebase and understand the current state of the project.
+
+Then, use the `AskUserQuestionTool` to help build the specs by interviewing me and gathering requirements and details about the project implementation, UI & UX, tech stack, concerns, tradeoffs, etc.
+
+Make sure questions are not obvious and probe deeper into the underlying needs and constraints.
+
+Interview me continually and systematically until the spec is complete. Document all responses and insights to create a comprehensive and well-structured specification that serves as the foundation for the project. 
+Write the defined specs into the project file.
+Once the project is shaped, move it to `~/code/agent-company/project-manager/projects/doing`.
+
+IMPORTANT: Plan only. Do NOT implement anything. We're focusing on specs. Do NOT assume functionality is missing; confirm with code search first.
