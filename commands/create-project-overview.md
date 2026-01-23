@@ -2,7 +2,7 @@
 description: Create a project overview document for a codebase.
 ---
 
-Your task: generate a single concise ARCHITECTURE_OVERVIEW.md in Markdown that I can paste into another AI chat which WILL NOT have access to this codebase.
+Your task: generate a single concise `docs/PROJECT_OVERVIEW.md` in Markdown that I can paste into another AI chat which WILL NOT have access to this codebase.
 
 General goals
 - Explain the system like you’re briefing a senior engineer who hasn’t seen the repo.
@@ -67,4 +67,4 @@ Level of detail guidelines
 Now:
 1. Inspect the repository.
 2. Synthesize the information.
-3. Produce the `./ai_docs/ARCHITECTURE_OVERVIEW.md` following the instructions above.
+3. Produce the `./docs/PROJECT_OVERVIEW.md` following the instructions above.
