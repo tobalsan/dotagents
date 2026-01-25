@@ -12,7 +12,8 @@ $ARGUMENTS
 
 First, if we are inside an existing codebase, use up to 10 subagents in parallel to explore the codebase and understand the current state of the project.
 
-Then, use the `AskUserQuestionTool` to help build the specs by interviewing me and gathering requirements and details about the project implementation, UI & UX, tech stack, concerns, tradeoffs, etc.
+Then, if the `AskUserQuestionTool` is available, use it to help build the specs by interviewing me and gathering requirements and details about the project implementation, UI & UX, tech stack, concerns, tradeoffs, etc.
+If the tool is not available, just start interviewing me, asking questions in a sequential manner (not all at once).
 
 Make sure questions are not obvious and probe deeper into the underlying needs and constraints.
 
