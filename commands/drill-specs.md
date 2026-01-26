@@ -19,6 +19,5 @@ Make sure questions are not obvious and probe deeper into the underlying needs a
 
 Interview me continually and systematically until the spec is complete. Document all responses and insights to create a comprehensive and well-structured specification that serves as the foundation for the project. 
 Write the defined specs into the project file.
-Once the project is shaped, move it to `~/code/agent-company/project-manager/projects/doing`.
 
 IMPORTANT: Plan only. Do NOT implement anything. We're focusing on specs. Do NOT assume functionality is missing; confirm with code search first.
