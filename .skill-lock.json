@@ -1,29 +1,14 @@
 {
-  "version": 1,
+  "version": 3,
   "skills": {
-    "vercel-react-best-practices": {
-      "source": "vercel-labs/agent-skills",
+    "skill-creator": {
+      "source": "anthropics/skills",
       "sourceType": "github",
-      "sourceUrl": "https://github.com/vercel-labs/agent-skills.git",
-      "skillPath": "skills/react-best-practices/SKILL.md",
-      "installedAt": "2026-01-22T21:23:29.222Z",
-      "updatedAt": "2026-01-22T21:23:29.222Z"
-    },
-    "web-design-guidelines": {
-      "source": "vercel-labs/agent-skills",
-      "sourceType": "github",
-      "sourceUrl": "https://github.com/vercel-labs/agent-skills.git",
-      "skillPath": "skills/web-design-guidelines/SKILL.md",
-      "installedAt": "2026-01-22T21:28:17.957Z",
-      "updatedAt": "2026-01-22T21:28:17.957Z"
-    },
-    "remotion-best-practices": {
-      "source": "remotion-dev/skills",
-      "sourceType": "github",
-      "sourceUrl": "https://github.com/remotion-dev/skills.git",
-      "skillPath": "skills/remotion/SKILL.md",
-      "installedAt": "2026-01-22T21:29:07.584Z",
-      "updatedAt": "2026-01-22T21:29:07.584Z"
+      "sourceUrl": "https://github.com/anthropics/skills.git",
+      "skillPath": "skills/skill-creator/SKILL.md",
+      "skillFolderHash": "7bd8fc459f09f0e14dcc2adbb4a5a58e60ea755c",
+      "installedAt": "2026-01-26T12:57:01.139Z",
+      "updatedAt": "2026-01-26T12:57:01.139Z"
     }
   }
 }
