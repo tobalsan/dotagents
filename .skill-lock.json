@@ -9,6 +9,39 @@
       "skillFolderHash": "7bd8fc459f09f0e14dcc2adbb4a5a58e60ea755c",
       "installedAt": "2026-01-26T12:57:01.139Z",
       "updatedAt": "2026-01-26T12:57:01.139Z"
+    },
+    "baseline-ui": {
+      "source": "ibelick/ui-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/ibelick/ui-skills.git",
+      "skillPath": "skills/baseline-ui/SKILL.md",
+      "skillFolderHash": "1d00bae5569450a8c07a38f45362a49e5cd6bb3b",
+      "installedAt": "2026-01-30T09:30:20.947Z",
+      "updatedAt": "2026-01-30T09:30:20.947Z"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/skills.git",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "skillFolderHash": "c2f31172b6f256272305a5e6e7228b258446899f",
+      "installedAt": "2026-01-30T09:30:34.816Z",
+      "updatedAt": "2026-01-30T09:30:34.816Z"
+    },
+    "12-principles-of-animation": {
+      "source": "raphaelsalaja/userinterface-wiki",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/raphaelsalaja/userinterface-wiki.git",
+      "skillPath": "skills/12-principles-of-animation/SKILL.md",
+      "skillFolderHash": "38db5702706db71fb7dbb02d4ee453bf85b5f115",
+      "installedAt": "2026-01-30T09:38:16.078Z",
+      "updatedAt": "2026-01-30T09:38:16.078Z"
     }
+  },
+  "lastSelectedAgents": [
+    "claude-code"
+  ],
+  "dismissed": {
+    "findSkillsPrompt": true
   }
 }
