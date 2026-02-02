@@ -26,6 +26,10 @@ Whenever making a web search, you must use the following tools in order, only us
 
 Never use `# noqa`, `# type: ignore`, or similar suppression comments to make linting/type checking pass. Always fix the underlying issue properly. Restructure code if needed to satisfy linters without suppression hacks.
 
+## Handle Pre-existing Errors
+
+You must not use the excuse that test failures or type/lint errors are "pre-existing" to ignore them. **You must always fix any failing test, or type/lint error, before declaring your work complete.**.
+
 ## Python commands
 
 Always use `uv` to run python commands, unless explicitly stated otherwise.
