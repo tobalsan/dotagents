@@ -10,25 +10,32 @@ Launch autonomous ralph loops that iterate on project scopes until completion.
 
 ## Workflow
 
-1. **Locate scope file** in `~/code/agent-company/project-manager/projects/{todo,doing}/`
+1. **Get project details** via `apm get <project_id> --json`
 2. **Generate prompt** from template with project-specific paths
-3. **Launch loop** with `ralph.sh`
+3. **Launch loop** with chosen agent (claude or codex)
 
-## Step 1: Find Scope File
+## Step 1: Get Project Details
 
 List available projects:
 
 ```bash
-ls ~/code/agent-company/project-manager/projects/todo/
-ls ~/code/agent-company/project-manager/projects/doing/
+apm list --status todo
+apm list --status in_progress
 ```
 
-User selects a project (e.g., `PRO-4_20260114_fix_ruff_mypy_runs`).
+Get project details:
 
-Required files for a project:
-- `{project_id}.md` - main spec
-- `{project_id}.scopes.md` - task scopes
-- `{project_id}.progress.md` - progress log (create if missing)
+```bash
+apm get <project_id> --json
+```
+
+This returns project metadata including path. Project files live at `~/projects/<project_id>_<slug>/`.
+
+Required files for a ralph loop:
+- `README.md` - main spec (in project folder)
+- `SPECS.md` - detailed specs (in project folder)
+- `SCOPES.md` - task scopes (in project folder)
+- `progress.md` - progress log (create if missing)
 
 ## Step 2: Generate Prompt
 
@@ -36,27 +43,60 @@ Read [assets/prompt.template.md](assets/prompt.template.md) and replace placehol
 
 | Placeholder | Value |
 |-------------|-------|
-| `{{PROJECT_FILE}}` | `~/code/agent-company/project-manager/projects/{status}/{project_id}.md` |
-| `{{SCOPES_FILE}}` | `~/code/agent-company/project-manager/projects/{status}/{project_id}.scopes.md` |
-| `{{PROGRESS_FILE}}` | `~/code/agent-company/project-manager/projects/{status}/{project_id}.progress.md` |
-| `{{SOURCE_DIR}}` | Application source directory (ask user or read from spec) |
+| `{{PROJECT_FILE}}` | `~/projects/<project_folder>/README.md` |
+| `{{SCOPES_FILE}}` | `~/projects/<project_folder>/SCOPES.md` |
+| `{{PROGRESS_FILE}}` | `~/projects/<project_folder>/progress.md` |
+| `{{SOURCE_DIR}}` | Repo path from project frontmatter (or ask user) |
 
-Write generated prompt to **same folder as project files**: `~/code/agent-company/project-manager/projects/{status}/{project_id}.prompt.md`
+Write generated prompt to project folder: `~/projects/<project_folder>/prompt.md`
 
 ## Step 3: Launch Loop
 
+Choose the appropriate script based on user preference:
+
+### Using Claude (default)
+
 ```bash
-./scripts/ralph.sh <iterations> <workspace> <prompt_file>
+./scripts/ralph_claude.sh <iterations> <workspace> <prompt_file>
 ```
 
 Example:
 ```bash
-./scripts/ralph.sh 20 ~/code/algodyn/cloudifai ~/code/agent-company/project-manager/projects/doing/PRO-6_20260115_cloudifai_invoice_dashboard.prompt.md
+./scripts/ralph_claude.sh 20 ~/code/aihub ~/projects/PRO-58_aihub_persist_sessions/prompt.md
 ```
+
+### Using Codex
+
+```bash
+./scripts/ralph_codex.sh <iterations> <workspace> <prompt_file>
+```
+
+Example:
+```bash
+./scripts/ralph_codex.sh 20 ~/code/aihub ~/projects/PRO-58_aihub_persist_sessions/prompt.md
+```
+
+**Choose based on user's request:**
+- "ralph loop with codex" / "use codex" → `ralph_codex.sh`
+- "ralph loop with claude" / "use claude" / default → `ralph_claude.sh`
 
 The loop exits early if output contains `<promise>COMPLETE</promise>`.
 
+## Environment Variables
+
+Both scripts support:
+- `RALPH_MAX_RETRIES` - Max retry attempts per iteration (default: 3)
+- `RALPH_RETRY_DELAY` - Seconds between retries (default: 2)
+
+Claude-specific:
+- `RALPH_STREAM_VERBOSE` - Enable verbose streaming (default: 1)
+- `RALPH_KILL_GRACE_SECONDS` - Grace period before killing hung process (default: 2)
+
+Codex-specific:
+- `RALPH_MODEL` - Model to use (default: o3)
+
 ## Resources
 
-- `scripts/ralph.sh` - Main loop script
+- `scripts/ralph_claude.sh` - Loop script using Claude CLI
+- `scripts/ralph_codex.sh` - Loop script using Codex CLI
 - `assets/prompt.template.md` - Prompt template with placeholders
