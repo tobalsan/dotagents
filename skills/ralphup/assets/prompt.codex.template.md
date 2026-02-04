@@ -15,14 +15,7 @@
 
 ## Subagent Usage
 
-Use subagents for parallel work:
-- `spawn_agent` starts a new agent with its own context and a task prompt, returns an agent_id
-- That agent runs tools/commands independently while you continue (parallel work)
-- Use `send_input` to message it later (optionally `interrupt=true` to stop current work)
-- Wait for completion and get its final message/result
-- Use `close_agent` to end it when done
-- Subagents don't share your short-term context; tell them what they need (paths, constraints)
-- Their output comes back as text; relay key results
+Use subagents (`spawn_agent`) to delegate work and execute in parallel
 
 Spawn as many subagents as appropriate for the task at hand. Use them liberally for:
 - Parallel file searches and reads
