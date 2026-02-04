@@ -30,6 +30,8 @@ Never use `# noqa`, `# type: ignore`, or similar suppression comments to make li
 
 You must not use the excuse that test failures or type/lint errors are "pre-existing" to ignore them. **You must always fix any failing test, or type/lint error, before declaring your work complete.**.
 
+**Never skip tests** (`.skip`, `@pytest.mark.skip`, etc.) when asked to fix failing tests. Always fix the underlying issue.
+
 ## Python commands
 
 Always use `uv` to run python commands, unless explicitly stated otherwise.
