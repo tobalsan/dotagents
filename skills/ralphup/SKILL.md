@@ -39,7 +39,11 @@ Required files for a ralph loop:
 
 ## Step 2: Generate Prompt
 
-Read [assets/prompt.template.md](assets/prompt.template.md) and replace placeholders:
+Choose the appropriate template based on the CLI being used:
+- **Claude**: [assets/prompt.claude.template.md](assets/prompt.claude.template.md)
+- **Codex**: [assets/prompt.codex.template.md](assets/prompt.codex.template.md)
+
+Read the template and replace placeholders:
 
 | Placeholder | Value |
 |-------------|-------|
@@ -100,4 +104,5 @@ Codex-specific:
 
 - `scripts/ralph_claude.sh` - Loop script using Claude CLI
 - `scripts/ralph_codex.sh` - Loop script using Codex CLI
-- `assets/prompt.template.md` - Prompt template with placeholders
+- `assets/prompt.claude.template.md` - Prompt template for Claude (references Sonnet/Opus subagents)
+- `assets/prompt.codex.template.md` - Prompt template for Codex (uses spawn_agent/send_input/close_agent)
