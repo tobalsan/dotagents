@@ -5,7 +5,7 @@
 
 1. Your task is to implement functionality per the specifications using parallel subagents. Follow @{{SCOPES_FILE}} and choose the most important item to address. Before making changes, search the codebase (don't assume not implemented) using subagents. Spawn as many subagents as fit for searches/reads. Use a single subagent for build/tests. Spawn additional subagents when complex reasoning is needed (debugging, architectural decisions).
 2. After implementing functionality or resolving problems, run the tests for that unit of code that was improved. If functionality is missing then it's your job to add it as per the application specifications.
-3. When all the validation steps pass, update @{{SCOPES_FILE}} to mark the completed task as `passes: true`, then run the command `/commit`.
+3. When all the validation steps pass, update @{{SCOPES_FILE}} to mark the completed task as `passes: true`, then execute the prompt `/commit`.
 4. Important: When authoring documentation, capture the why — tests and implementation importance.
 5. Important: Single sources of truth, no migrations/adapters. If tests unrelated to your work fail, resolve them as part of the increment.
 6. When you learn something new about how to run the application, update @AGENTS.md using a subagent but keep it brief. For example if you run commands multiple times before learning the correct command then that file should be updated.
