@@ -22,7 +22,8 @@ fi
 ITERATIONS="$1"
 WORKDIR="${2:-$(pwd)}"
 PROMPT_FILE="${3:-prompt.md}"
-MODEL="${RALPH_MODEL:-o3}"
+MODEL="${RALPH_MODEL:-gpt-5.2-codex}"
+REASONING_EFFORT="${RALPH_REASONING_EFFORT:-medium}"
 MAX_RETRIES="${RALPH_MAX_RETRIES:-3}"
 RETRY_DELAY="${RALPH_RETRY_DELAY:-2}"
 
@@ -92,14 +93,14 @@ run_codex() {
     prompt="$(<"$PROMPT_FILE")"
 
     set +e
-    codex \
-      --yolo \
-      exec \
-      --json \
-      -m "$MODEL" \
-      -C "$WORKDIR" \
-      "$prompt" \
-      > "$stream_file" 2> "$err_file"
+    local codex_args=(exec --yolo --json -C "$WORKDIR")
+    if [[ -n "$MODEL" ]]; then
+      codex_args+=(--model "$MODEL")
+    fi
+    if [[ -n "$REASONING_EFFORT" ]]; then
+      codex_args+=(-c "model_reasoning_effort=\"$REASONING_EFFORT\"")
+    fi
+    codex "${codex_args[@]}" "$prompt" > "$stream_file" 2> "$err_file"
     status=$?
     set -e
 

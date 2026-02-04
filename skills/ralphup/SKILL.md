@@ -93,7 +93,8 @@ Claude-specific:
 - `RALPH_KILL_GRACE_SECONDS` - Grace period before killing hung process (default: 2)
 
 Codex-specific:
-- `RALPH_MODEL` - Model to use (default: o3)
+- `RALPH_MODEL` - Model to use (default: `gpt-5.2-codex`)
+- `RALPH_REASONING_EFFORT` - Reasoning effort level (default: `medium`)
 
 ## Resources
 
