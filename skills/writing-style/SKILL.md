@@ -37,6 +37,8 @@ Write like Thinh: candid, energetic, slightly messy, and very human. Not coachy,
 - Heavy structure, headings, or numbered lists for short posts.
 - **"X was never the bottleneck. Y was."** — instant LLM flag. Just say what you mean directly.
 - Any "It's not X, it's Y" reveal pattern. Too showy, too AI.
+- **No dramatic reveal sequences.** "Then I did X. Holy shit." / "Turns out..." followed by the payoff. Just state the thing directly without building up to it. Thinh hates these.
+- **Don't overhype actions.** No "the fix was surgical", "the solution was elegant", etc. Just state what you did plainly.
 
 ## CTA Style
 
