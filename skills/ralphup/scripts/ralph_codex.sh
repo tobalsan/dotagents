@@ -22,7 +22,7 @@ fi
 ITERATIONS="$1"
 WORKDIR="${2:-$(pwd)}"
 PROMPT_FILE="${3:-prompt.md}"
-MODEL="${RALPH_MODEL:-gpt-5.2-codex}"
+MODEL="${RALPH_MODEL:-gpt-5.3-codex}"
 REASONING_EFFORT="${RALPH_REASONING_EFFORT:-medium}"
 MAX_RETRIES="${RALPH_MAX_RETRIES:-3}"
 RETRY_DELAY="${RALPH_RETRY_DELAY:-2}"
@@ -63,6 +63,12 @@ try:
                 for block in content:
                     if isinstance(block, dict) and block.get("type") == "output_text":
                         last_message = block.get("text", "")
+            elif msg_type == "item.completed":
+                item = obj.get("item", {})
+                if item.get("type") == "agent_message":
+                    text = item.get("text", "")
+                    if text:
+                        last_message = text
             elif msg_type == "assistant":
                 # Alternative format
                 message = obj.get("message", {})
