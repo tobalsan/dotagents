@@ -45,7 +45,8 @@ For each subquery, use in order:
 1. exa search "<query>" -n 5
 2. exa code "<query>" -t 5000  (if technical)
 3. WebSearch for broader coverage
-4. firecrawl_scrape for promising URLs needing full content
+4. web_fetch https://markdown.new/<url> for promising URLs needing full content (preferred)
+5. firecrawl_scrape as fallback if markdown.new is not satisfactory
 ```
 
 Subagents report findings back to main agent. Main agent controls all drilling—subagents do NOT spawn sub-subagents.
@@ -126,7 +127,8 @@ Use in this order, but run searches in parallel across tools:
 1. `exa search` / `exa code` — optimized for technical/documentation
 2. `firecrawl_search` — broader web search
 3. `WebSearch` — fallback for coverage
-4. `firecrawl_scrape` — extract full content from promising URLs
+4. `web_fetch https://markdown.new/<url>` — extract full content via markdown.new (preferred)
+5. `firecrawl_scrape` — extract full content from promising URLs (fallback)
 
 ## Key Principles
 

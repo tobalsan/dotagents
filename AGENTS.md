@@ -19,8 +19,9 @@ Don't add error handling, fallbacks, or validation for scenarios that can't happ
 Whenever making a web search, you must use the following tools in order, only using the next if the previous is not sufficient:
 
 1. `exa`
-2. `firecrawl` MCP
-3. `WebSearch` / `WebFetch`
+2. `web_fetch` with `https://markdown.new/<url>` for content extraction (preferred over firecrawl)
+3. `firecrawl` MCP
+4. `WebSearch` / `WebFetch`
 
 ## Linting and Type Checking
 
