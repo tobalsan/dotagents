@@ -72,10 +72,24 @@
       "skillFolderHash": "754cc462bf4364bcad1d591ea0b4d25cceeddae4",
       "installedAt": "2026-01-30T14:03:35.195Z",
       "updatedAt": "2026-01-30T14:03:35.195Z"
+    },
+    "netlify-deploy": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/openai/skills.git",
+      "skillPath": "skills/.curated/netlify-deploy/SKILL.md",
+      "skillFolderHash": "c6a6b44ad6ac2cba019c007bb18cdeb31c73dd5d",
+      "installedAt": "2026-02-15T16:56:01.815Z",
+      "updatedAt": "2026-02-15T16:56:01.815Z"
     }
   },
   "lastSelectedAgents": [
-    "claude-code"
+    "amp",
+    "codex",
+    "gemini-cli",
+    "github-copilot",
+    "kimi-cli",
+    "opencode"
   ],
   "dismissed": {
     "findSkillsPrompt": true
