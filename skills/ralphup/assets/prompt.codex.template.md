@@ -1,7 +1,12 @@
+## CRITICAL: Workspace Boundary
+
+Your working directory is your ONLY workspace. ALL file reads, edits, searches, and commits MUST happen within your current working directory.
+NEVER read from, write to, or `cd` into any path outside your workspace. The workspace is a complete copy of the codebase — everything you need is here.
+If you see absolute paths referencing the original source repo in specs or docs, always resolve them to the equivalent relative path in your workspace instead.
+
 0a. Study @{{PROJECT_FILE}} with parallel subagents to learn the application specifications. Spawn as many subagents as needed for the task.
 0b. Study @{{SCOPES_FILE}}
 0c. Study @{{PROGRESS_FILE}}
-0d. For reference, the application source code is in `{{SOURCE_DIR}}`.
 
 1. Your task is to implement functionality per the specifications using parallel subagents. Follow @{{SCOPES_FILE}} and choose the most important item to address. Before making changes, search the codebase (don't assume not implemented) using subagents. Spawn as many subagents as fit for searches/reads. Use a single subagent for build/tests. Spawn additional subagents when complex reasoning is needed (debugging, architectural decisions).
 2. After implementing functionality or resolving problems, run the tests for that unit of code that was improved. If functionality is missing then it's your job to add it as per the application specifications.
