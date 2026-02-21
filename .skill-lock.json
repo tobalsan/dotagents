@@ -81,11 +81,21 @@
       "skillFolderHash": "c6a6b44ad6ac2cba019c007bb18cdeb31c73dd5d",
       "installedAt": "2026-02-15T16:56:01.815Z",
       "updatedAt": "2026-02-15T16:56:01.815Z"
+    },
+    "prompt-engineer": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/sickn33/antigravity-awesome-skills.git",
+      "skillPath": "skills/prompt-engineer/SKILL.md",
+      "skillFolderHash": "bdcee8b91a5c7c0f13b171070e9351698eb427e3",
+      "installedAt": "2026-02-21T18:57:19.282Z",
+      "updatedAt": "2026-02-21T18:57:19.282Z"
     }
   },
   "lastSelectedAgents": [
     "amp",
     "codex",
+    "cursor",
     "gemini-cli",
     "github-copilot",
     "kimi-cli",
