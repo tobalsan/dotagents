@@ -13,6 +13,12 @@ Review the user's recent activity over the specified period to ground the conver
 Use `gglog` and `clistory` to review the user's recent activity. If no period specified, default to today.
 Also use `raindrop` to review the user's recent bookmarks as they can be interesting topics to publish about.
 
+Also scan the X feed for inspiration using `bird`:
+- `bird home -n 20 --plain` — "For You" feed
+- `bird home --following -n 20 --plain` — "Following" feed
+
+From the X feed, only surface posts that are **relevant to Thinh's projects, interests, and challenges** (AI agents, developer tooling, solopreneur/1-man business, trading/quant, learn-in-public). Ignore unrelated viral content, memes, or off-topic threads. If a relevant post sparks an idea, mention it as a potential inspiration source alongside the activity themes.
+
 After summarizing the themes, run a quick interview instead of listing ideas:
 1) Ask 2–4 short questions to converge on a target topic (based on the activity and bookmarks).
 2) Once a topic is selected, ask a quick probe to define the angle (tone such as quip/experience sharing/didactic/resource sharing, etc.) and format (short/long/with media).
