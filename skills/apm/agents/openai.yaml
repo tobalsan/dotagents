@@ -1,0 +1,4 @@
+interface:
+  display_name: "APM Project Ops"
+  short_description: "Manage AIHub projects and runs via apm CLI"
+  default_prompt: "Use $apm to inspect a project, update metadata, and start or resume a CLI run with explicit options."
