@@ -28,10 +28,8 @@ Use `apm start` for full run config.
 
 ```bash
 apm start PRO-123 \
-  --agent codex \
   --name "worker-a" \
-  --model gpt-5.3-codex \
-  --reasoning-effort high \
+  --template worker \
   --mode clone \
   --branch main \
   --slug worker-a \
@@ -45,10 +43,29 @@ apm start PRO-123 \
 - `--model <id>`: harness model.
 - `--reasoning-effort <xhigh|high|medium|low|...>`: codex/claude effort.
 - `--thinking <off|low|medium|high|xhigh>`: pi thinking level.
-- `--mode <main-run|clone|worktree>`: run workspace strategy.
+- `--mode <main-run|clone|worktree|none>`: run workspace strategy.
 - `--branch <branch>`: base branch for clone/worktree.
 - `--slug <slug>`: run slug override.
+- `--template <coordinator|worker|reviewer|custom>`: apply UI template defaults for role prompt + run config.
+- `--prompt-role <coordinator|worker|reviewer|legacy>`: override role prompt mapping.
+- `--include-default-prompt|--exclude-default-prompt`: force toggle default project context.
+- `--include-role-instructions|--exclude-role-instructions`: force toggle role instruction block.
+- `--include-post-run|--exclude-post-run`: force toggle post-run checklist block.
 - `--custom-prompt <text|->`: append custom prompt (`-` reads stdin).
+
+### Template Defaults (UI parity)
+
+When `--template` is set, `apm start` pre-fills run config the same way as UI prep form:
+
+- `coordinator`: `--agent claude`, `--model opus`, effort `medium`, includes `default:on role:on post-run:off`
+- `worker`: `--agent codex`, `--model gpt-5.3-codex`, effort `medium`, includes `default:on role:on post-run:on`
+- `reviewer`: `--agent codex`, `--model gpt-5.3-codex`, effort `medium`, includes `default:on role:on post-run:off`
+- `custom`: `--agent codex`, `--model gpt-5.3-codex`, effort `xhigh`, includes `default:on role:on post-run:on`
+
+Notes:
+- Prefer template-only commands unless you intentionally override.
+- Explicit flags override template defaults: `--agent`, `--model`, `--reasoning-effort`, `--thinking`, and include/exclude toggles.
+- If overridden to `--agent pi`, template effort is translated to `--thinking`.
 
 ### Harness Model Matrix
 
