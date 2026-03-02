@@ -108,10 +108,21 @@
       "skillFolderHash": "56959a2ddd833553648e4a884c344acd52e89434",
       "installedAt": "2026-02-25T17:48:31.488Z",
       "updatedAt": "2026-02-25T17:48:31.488Z"
+    },
+    "frontend-design": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/anthropics/skills.git",
+      "skillPath": "skills/frontend-design/SKILL.md",
+      "skillFolderHash": "928950704df8a8b885c03de5da626331e6f29cf8",
+      "pluginName": "example-skills",
+      "installedAt": "2026-03-02T14:42:25.915Z",
+      "updatedAt": "2026-03-02T14:42:25.915Z"
     }
   },
   "lastSelectedAgents": [
     "amp",
+    "cline",
     "codex",
     "cursor",
     "gemini-cli",
