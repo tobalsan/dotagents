@@ -12,9 +12,9 @@ Use `apm` for project CRUD and run orchestration from terminal. Prefer `--json` 
 ## Command Map
 
 - List/filter projects: `apm list [--status ...] [--owner ...] [--domain ...] [--json]`
-- Create project: `apm create --title "..." [--domain ...] [--owner ...] [--execution-mode ...] [--appetite ...] [--status ...]`
+- Create project: `apm create --title "..." [description] [--specs <text|->] [--domain ...] [--owner ...] [--execution-mode ...] [--appetite ...] [--status ...]`
 - Get project: `apm get PRO-123 [--json]`
-- Update project: `apm update PRO-123 [--title ...] [--status ...] [--domain ...] [--owner ...] [--execution-mode ...] [--appetite ...] [--repo ...] [--content <text|->]`
+- Update project: `apm update PRO-123 [--title ...] [--status ...] [--domain ...] [--owner ...] [--execution-mode ...] [--appetite ...] [--repo ...] [--readme <text|->] [--specs <text|->]`
 - Move status quickly: `apm move PRO-123 review`
 - Start run: `apm start PRO-123 ...`
 - Resume run: `apm resume PRO-123 -m "..." [--slug ...]`
@@ -68,6 +68,7 @@ apm status PRO-123 --json
 2. Update metadata/content.
 ```bash
 apm update PRO-123 --status in_progress --owner "Thinh"
+cat SPECS.md | apm update PRO-123
 ```
 3. Start or resume run.
 ```bash
