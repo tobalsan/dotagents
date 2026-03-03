@@ -102,5 +102,5 @@ apm move PRO-123 review
 
 - Normalize IDs to `PRO-<n>` format.
 - Use `--json` for stable machine-readable output.
-- Set endpoint with `AIHUB_API_URL=http://127.0.0.1:4000` when needed.
+- Set endpoint with `AIHUB_API_URL=<url>` when needed.
 - If `apm` is unavailable, fallback to `pnpm apm ...` in the repository root.
