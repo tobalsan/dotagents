@@ -36,3 +36,7 @@ You must not use the excuse that test failures or type/lint errors are "pre-exis
 ## Python commands
 
 Always use `uv` to run python commands, unless explicitly stated otherwise.
+
+## Git merge protocol
+
+Default to `git merge --ff-only` to merge branches.
