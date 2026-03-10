@@ -69,7 +69,7 @@ Notes:
 
 ### Harness Model Matrix
 
-- Codex models: `gpt-5.3-codex`, `gpt-5.3-codex-spark`, `gpt-5.2`
+- Codex models: `gpt-5.4`, `gpt-5.3-codex`, `gpt-5.3-codex-spark`, `gpt-5.2`
 - Claude models: `opus`, `sonnet`, `haiku`
 - Pi models: `qwen3.5-plus`, `qwen3-max-2026-01-23`, `MiniMax-M2.5`, `glm-5`, `kimi-k2.5`
 
@@ -103,4 +103,4 @@ apm move PRO-123 review
 - Normalize IDs to `PRO-<n>` format.
 - Use `--json` for stable machine-readable output.
 - Set endpoint with `AIHUB_API_URL=<url>` when needed.
-- If `apm` is unavailable, fallback to `pnpm apm ...` in the repository root.
+- **Fallback:** if `apm` produces no output, use `cd ~/code/aihub && pnpm apm ...` instead.
