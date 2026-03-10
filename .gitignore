@@ -2,3 +2,4 @@
 node_modules
 __pycache__
 /skills/dev-browser/tmp
+/skills/dev-browser/profiles/*
