@@ -127,6 +127,15 @@
       "skillFolderHash": "01cfb6a412faf9d680880cc3f631c419121a9916",
       "installedAt": "2026-03-04T12:14:18.832Z",
       "updatedAt": "2026-03-04T12:14:18.832Z"
+    },
+    "obsidian-cli": {
+      "source": "kepano/obsidian-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/kepano/obsidian-skills.git",
+      "skillPath": "skills/obsidian-cli/SKILL.md",
+      "skillFolderHash": "96254a554e480359de7b685571876f2e7f9ba57d",
+      "installedAt": "2026-03-23T09:10:18.248Z",
+      "updatedAt": "2026-03-23T09:10:18.248Z"
     }
   },
   "lastSelectedAgents": [
@@ -137,7 +146,9 @@
     "gemini-cli",
     "github-copilot",
     "kimi-cli",
-    "opencode"
+    "opencode",
+    "warp",
+    "claude-code"
   ],
   "dismissed": {
     "findSkillsPrompt": true
