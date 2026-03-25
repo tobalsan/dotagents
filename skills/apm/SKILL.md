@@ -12,7 +12,7 @@ Use `apm` for project CRUD and run orchestration from terminal. Prefer `--json` 
 ## Command Map
 
 - List/filter projects: `apm list [--status ...] [--owner ...] [--domain ...] [--json]`
-- Create project: `apm create --title "..." [description] [--specs <text|->] [--domain ...] [--owner ...] [--execution-mode ...] [--appetite ...] [--status ...]`
+- Create project: `apm create --title "..." [description] [--specs <text|->] [--domain ...] [--owner ...] [--execution-mode ...] [--appetite ...] [--status ...]` (status defaults to `maybe` — only set `--status` if there's a reason to override)
 - Get project: `apm get PRO-123 [--json]`
 - Update project: `apm update PRO-123 [--title ...] [--status ...] [--domain ...] [--owner ...] [--execution-mode ...] [--appetite ...] [--repo ...] [--readme <text|->] [--specs <text|->]`
 - Move status quickly: `apm move PRO-123 review`
@@ -30,8 +30,7 @@ Use `apm start` for full run config.
 apm start PRO-123 \
   --name "worker-a" \
   --template worker \
-  --mode clone \
-  --branch main \
+  --mode worktree \
   --slug worker-a \
   --custom-prompt "Implement task 2"
 ```
@@ -57,13 +56,14 @@ apm start PRO-123 \
 
 When `--template` is set, `apm start` pre-fills run config the same way as UI prep form:
 
-- `coordinator`: `--agent claude`, `--model opus`, effort `medium`, includes `default:on role:on post-run:off`
-- `worker`: `--agent codex`, `--model gpt-5.3-codex`, effort `medium`, includes `default:on role:on post-run:on`
-- `reviewer`: `--agent codex`, `--model gpt-5.3-codex`, effort `medium`, includes `default:on role:on post-run:off`
-- `custom`: `--agent codex`, `--model gpt-5.3-codex`, effort `xhigh`, includes `default:on role:on post-run:on`
+- `coordinator`: `--agent claude`, `--model opus`, effort `medium`, `--mode none`, base branch `main`, includes `default:on role:on post-run:off`
+- `worker`: `--agent codex`, `--model gpt-5.4`, effort `medium`, `--mode worktree`, base branch `space/<projectId>`, includes `default:on role:on post-run:on`
+- `reviewer`: `--agent codex`, `--model gpt-5.4`, effort `high`, `--mode none`, base branch `main`, includes `default:on role:on post-run:on`
+- `custom`: `--agent codex`, `--model gpt-5.3-codex`, effort `xhigh`, `--mode clone`, base branch `main`, includes `default:on role:on post-run:on`
 
 Notes:
 - Prefer template-only commands unless you intentionally override.
+- Worker template base branch is resolved server-side to `space/<projectId>`; add `--branch ...` only when intentionally overriding.
 - Explicit flags override template defaults: `--agent`, `--model`, `--reasoning-effort`, `--thinking`, and include/exclude toggles.
 - If overridden to `--agent pi`, template effort is translated to `--thinking`.
 
