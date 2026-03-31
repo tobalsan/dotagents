@@ -12,7 +12,7 @@ Use `apm` for project CRUD and run orchestration from terminal. Prefer `--json` 
 ## Command Map
 
 - List/filter projects: `apm list [--status ...] [--owner ...] [--domain ...] [--json]`
-- Create project: `apm create --title "..." [description] [--specs <text|->] [--domain ...] [--owner ...] [--execution-mode ...] [--appetite ...] [--status ...]` (status defaults to `maybe` — only set `--status` if there's a reason to override)
+- Create project: `apm create --title "..." [description] [--specs <text|->] [--domain ...] [--owner ...] [--execution-mode ...] [--appetite ...] [--status shaping]` — **Always use `--status shaping`** on create. Most new projects are being shaped/spec'd. Never use `--status in_progress` at creation time — move to `in_progress` later with `apm move` when implementation actually begins.
 - Get project: `apm get PRO-123 [--json]`
 - Update project: `apm update PRO-123 [--title ...] [--status ...] [--domain ...] [--owner ...] [--execution-mode ...] [--appetite ...] [--repo ...] [--readme <text|->] [--specs <text|->]`
 - Move status quickly: `apm move PRO-123 review`
