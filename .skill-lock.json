@@ -129,13 +129,13 @@
       "updatedAt": "2026-03-04T12:14:18.832Z"
     },
     "obsidian-cli": {
-      "source": "kepano/obsidian-skills",
+      "source": "pablo-mano/obsidian-cli-skill",
       "sourceType": "github",
-      "sourceUrl": "https://github.com/kepano/obsidian-skills.git",
+      "sourceUrl": "https://github.com/pablo-mano/obsidian-cli-skill.git",
       "skillPath": "skills/obsidian-cli/SKILL.md",
-      "skillFolderHash": "96254a554e480359de7b685571876f2e7f9ba57d",
+      "skillFolderHash": "c96107c01b6c708df97a01e9b6ce74b1da3a97a9",
       "installedAt": "2026-03-23T09:10:18.248Z",
-      "updatedAt": "2026-03-23T09:10:18.248Z"
+      "updatedAt": "2026-04-07T17:24:09.440Z"
     },
     "better-auth-best-practices": {
       "source": "better-auth/skills",
