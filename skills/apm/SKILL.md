@@ -22,6 +22,62 @@ Use `apm` for project CRUD and run orchestration from terminal. Prefer `--json` 
 - Add project comment: `apm comment PRO-123 -m "..." [--author ...]`
 - Archive/unarchive project: `apm archive PRO-123`, `apm unarchive PRO-123`
 
+## Creating Projects
+
+When creating a project:
+
+1. **Use `--readme` for high-level context** — the *why*, background, key files, links. README is the human-readable project summary.
+2. **Use `--specs` for the full specification** — overview, goals, architecture, requirements, constraints, AND tasks + acceptance criteria. Specs are the comprehensive blueprint for implementation. A good spec answers: what are we building, why, how does it fit together, what are the constraints, AND what's the work breakdown.
+
+### Task formatting (strict)
+
+Tasks in specs MUST follow this format for the UI parser:
+
+```md
+## Tasks
+
+- [ ] **Task title** `status:todo`
+  Optional indented description.
+
+- [ ] **Another task** `status:in_progress` `agent:worker-1`
+```
+
+Rules:
+- Title must be wrapped in **bold**.
+- Status must be backticked: `` `status:todo` ``, `` `status:in_progress` ``, `` `status:done` ``.
+- Description lines must be indented by 2+ spaces.
+- Optional H3 subgroup headings are allowed under `## Tasks`.
+- See `docs/specs-task-format.md` for full spec.
+
+### Acceptance criteria formatting
+
+Plain checkbox items under `## Acceptance Criteria`:
+
+```md
+## Acceptance Criteria
+
+- [ ] Criterion one
+- [ ] Criterion two
+```
+
+### Stdin pattern for multi-line content
+
+Use heredoc to avoid shell escaping issues. Do NOT use `-` as the specs/readme value in the same command line — it reads stdin but creates a stray `-` bullet. Use `$(cat <<'EOF' ... EOF)` instead:
+
+```bash
+apm update PRO-123 --specs "$(cat <<'EOF'
+## Tasks
+- [ ] **Do the thing** `status:todo`
+EOF
+)"
+
+apm update PRO-123 --readme "$(cat <<'EOF'
+# Project Title
+Why this exists and how it works.
+EOF
+)"
+```
+
 ## Run Control
 
 Use `apm start` for full run config.
