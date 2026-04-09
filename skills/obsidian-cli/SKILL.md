@@ -5,8 +5,7 @@ description: >
   Use this skill whenever the user wants Claude to directly interact with their
   Obsidian vault — reading a note or daily note, writing or appending content,
   searching vault contents, counting or listing notes, managing tasks, moving or
-  renaming files, finding orphaned notes or broken links. Without this skill, Claude
-  has no way to access vault data or execute vault operations. Treat any request that
+  renaming files, finding orphaned notes or broken links. Treat any request that
   implies "go into my vault and do X" as a trigger — the user is asking Claude to act,
   not to explain. Also trigger for vault automation, CLI scripting, or cron-based
   workflows involving Obsidian, managing sync history, querying Bases, restoring file
