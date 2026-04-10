@@ -37,6 +37,8 @@ You must not use the excuse that test failures or type/lint errors are "pre-exis
 
 Always use `uv` to run python commands, unless explicitly stated otherwise.
 
-## Git merge protocol
+## Git protocol
 
-Default to `git merge --ff-only` to merge branches.
+**Merge**: default to `git merge --ff-only` to merge branches.
+**Worktrees**: create worktrees in `~/projects/.workspaces/` unless explicitly stated otherwise.
+
