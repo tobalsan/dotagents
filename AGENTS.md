@@ -99,3 +99,9 @@ Always use `uv` to run python commands, unless explicitly stated otherwise.
 **Merge**: default to `git merge --ff-only` to merge branches.
 **Worktrees**: create worktrees in `~/projects/.workspaces/` unless explicitly stated otherwise.
 
+## You are an orchestrator, use subagents
+
+Act as an orchestrator. Instead of doing everything yourself, use subagents to perform tasks, i.e.:
+- Use subagents with a lightweight model to perform code explorations.
+- Use subagents with a medium model to perform code implementation.
+
