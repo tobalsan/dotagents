@@ -10,10 +10,10 @@ Use tmux as a programmable terminal multiplexer for interactive work. Works on L
 ## Quickstart (isolated socket)
 
 ```bash
-SOCKET_DIR=${TMPDIR:-/tmp}/claude-tmux-sockets  # well-known dir for all agent sockets
-mkdir -p "$SOCKET_DIR"
-SOCKET="$SOCKET_DIR/claude.sock"                # keep agent sessions separate from your personal tmux
-SESSION=claude-python                           # slug-like names; avoid spaces
+TMUX_SOCKET_DIR=${TMPDIR:-/tmp}/agents  # well-known dir for all agent sockets
+mkdir -p "$TMUX_SOCKET_DIR"
+SOCKET="$TMUX_SOCKET_DIR/tmux-agents.sock"                # keep agent sessions separate from your personal tmux
+SESSION=cool-project                           # slug-like names; avoid spaces
 tmux -S "$SOCKET" new -d -s "$SESSION" -n shell
 tmux -S "$SOCKET" send-keys -t "$SESSION":0.0 -- 'python3 -q' Enter
 tmux -S "$SOCKET" capture-pane -p -J -t "$SESSION":0.0 -S -200  # watch output
@@ -24,29 +24,29 @@ After starting a session ALWAYS tell the user how to monitor the session by givi
 
 ```
 To monitor this session yourself:
-  tmux -S "$SOCKET" attach -t claude-lldb
+  tmux -S "$SOCKET" attach -t some-project
 
 Or to capture the output once:
-  tmux -S "$SOCKET" capture-pane -p -J -t claude-lldb:0.0 -S -200
+  tmux -S "$SOCKET" capture-pane -p -J -t some-lldb:0.0 -S -200
 ```
 
 This must ALWAYS be printed right after a session was started and once again at the end of the tool loop. But the earlier you send it, the happier the user will be.
 
 ## Socket convention
 
-- Agents MUST place tmux sockets under `CLAUDE_TMUX_SOCKET_DIR` (defaults to `${TMPDIR:-/tmp}/claude-tmux-sockets`) and use `tmux -S "$SOCKET"` so we can enumerate/clean them. Create the dir first: `mkdir -p "$CLAUDE_TMUX_SOCKET_DIR"`.
-- Default socket path to use unless you must isolate further: `SOCKET="$CLAUDE_TMUX_SOCKET_DIR/claude.sock"`.
+- Agents MUST place tmux sockets under `TMUX_SOCKET_DIR` (defaults to `${TMPDIR:-/tmp}/agents`) and use `tmux -S "$SOCKET"` so we can enumerate/clean them. Create the dir first: `mkdir -p "$TMUX_SOCKET_DIR"`.
+- Default socket path to use unless you must isolate further: `SOCKET="$TMUX_SOCKET_DIR/tmux-agents.sock"`.
 
 ## Targeting panes and naming
 
-- Target format: `{session}:{window}.{pane}`, defaults to `:0.0` if omitted. Keep names short (e.g., `claude-py`, `claude-gdb`).
+- Target format: `{session}:{window}.{pane}`, defaults to `:0.0` if omitted. Keep names short (e.g., `project-x`, `cool-feature`).
 - Use `-S "$SOCKET"` consistently to stay on the private socket path. If you need user config, drop `-f /dev/null`; otherwise `-f /dev/null` gives a clean config.
 - Inspect: `tmux -S "$SOCKET" list-sessions`, `tmux -S "$SOCKET" list-panes -a`.
 
 ## Finding sessions
 
 - List sessions on your active socket with metadata: `./tools/find-sessions.sh -S "$SOCKET"`; add `-q partial-name` to filter.
-- Scan all sockets under the shared directory: `./tools/find-sessions.sh --all` (uses `CLAUDE_TMUX_SOCKET_DIR` or `${TMPDIR:-/tmp}/claude-tmux-sockets`).
+- Scan all sockets under the shared directory: `./tools/find-sessions.sh --all` (uses `TMUX_SOCKET_DIR` or `${TMPDIR:-/tmp}/agents`).
 
 ## Sending input safely
 
