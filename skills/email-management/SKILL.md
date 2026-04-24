@@ -17,7 +17,7 @@ When an action involves adding a label, use the following top-level labels:
 - For emails requiring action, use the `action-required` label.
 - To place an email for review, use the `review` label.
 - For newsletters I want to keep/read, use the `newsletter` label.
-- To trash an email, use the `trashed` label.
+- To trash an email, apply the `trashed` label. **Note:** "trashed" means applying the Gmail label named `trashed` — do NOT actually move emails to Gmail's Trash/bin.
 
 Once an email has been processed, you must mark it as read.
 
@@ -78,6 +78,22 @@ Use `gog` to authenticate a Gmail account and perform email operations (read, se
 ### Output formats
 - Use JSON output for scripting:
   - `gog --json gmail search 'newer_than:1d' --max 5`
+
+### Sandbox HOME pitfall
+
+Hermes terminal sessions resolve `$HOME` to the sandbox home (`~/.hermes/profiles/cloud/home/`) instead of `/Users/thinh`. The `gog` CLI stores credentials in `~/Library/Application Support/gogcli/`, so it fails with "OAuth client credentials missing" when run without override.
+
+**Fix:** Prefix every `gog` command with `HOME=/Users/thinh`:
+```bash
+HOME=/Users/thinh gog gmail search 'newer_than:1d' --max 5
+```
+
+Alternatively, patch the Hermes config (`~/.hermes/profiles/cloud/config.yaml`) to pass HOME through:
+```yaml
+terminal:
+  env_passthrough:
+    - HOME
+```
 
 ### Safety checklist
 - Confirm the target account (`--account` or `GOG_ACCOUNT`) before any send/modify/delete action.
