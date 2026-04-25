@@ -52,8 +52,9 @@ Use `gog` to authenticate a Gmail account and perform email operations (read, se
   - `gog gmail labels list`
 - Get label details (includes counts):
   - `gog gmail labels get INBOX`
-- Modify labels on threads (confirm before running):
-  - `gog gmail labels modify <threadId> --add IMPORTANT --remove UNREAD`
+- Modify labels on threads (use `--force` to skip confirmations in automated runs):
+  - `gog gmail labels modify <threadId> --add IMPORTANT --remove UNREAD --force`
+  - Multiple labels: comma-separated — `--remove UNREAD,INBOX` (NOT space-separated, which errors)
 
 ### Drafts
 - List drafts:
