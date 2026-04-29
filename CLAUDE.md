@@ -97,7 +97,7 @@ Always use `uv` to run python commands, unless explicitly stated otherwise.
 ## Git protocol
 
 **Merge**: default to `git merge --ff-only` to merge branches.
-**Worktrees**: create worktrees in `~/projects/.workspaces/` unless explicitly stated otherwise.
+**Worktrees**: create worktrees in `~/.worktrees/` unless explicitly stated otherwise.
 
 ## You are an orchestrator, use subagents
 

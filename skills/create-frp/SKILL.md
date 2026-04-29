@@ -72,7 +72,7 @@ Whatever the modality, the validation path must be end-to-end against the runnin
 
 Probe until you have answers for all of:
 
-- **Where to run**: exact path, branch, worktree to use (e.g. `~/projects/.workspaces/feature-x`)
+- **Where to run**: exact path, branch, worktree to use (e.g. `~/.worktrees/<project>/feature-x`)
 - **How to set up**: install commands, env vars, secrets, services to start
 - **What to run**:
   - Service / server / preview command if the feature exposes a runtime surface (exact: `pnpm dev`, `bun dev`, `uv run uvicorn ...`, `cargo run --bin server`) and the port/URL/socket it serves on

@@ -60,7 +60,7 @@
 
 ### 5.1 Setup
 
-**Workspace**: <exact path or worktree, e.g. `~/projects/.workspaces/feature-x`>
+**Workspace**: <exact path or worktree, e.g. `~/.worktrees/$project/feature-x`>
 **Branch**: <branch name>
 **Install**: `<command>`
 **Env / secrets**: <vars needed, where to get them>
