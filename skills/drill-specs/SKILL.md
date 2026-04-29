@@ -53,7 +53,7 @@ Once the interview is complete, write a structured spec document. Include:
 Before writing the spec, ask the user where they want it saved. Offer two default choices:
 
 1. **Workspace/repo** — save to `docs/` folder in the active workspace or repository
-2. **AIHub project** — use the `apm` skill to save the spec into AIHub project manager
+2. **AIHub project** — use the `aihub/projects` skill to save the spec into AIHub project manager
 
 Accept custom paths if the user specifies one.
 
