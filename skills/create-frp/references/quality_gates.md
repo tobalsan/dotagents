@@ -20,12 +20,16 @@ Before declaring FRP done, every gate below must pass. If any fails, loop back t
 
 - [ ] Exact workspace path / branch / worktree specified
 - [ ] Setup commands listed verbatim
+- [ ] Service/server/preview command listed verbatim with port/URL/socket (if feature exposes a runtime surface)
 - [ ] Test commands listed verbatim with file paths or patterns
 - [ ] Lint + typecheck + build commands listed
-- [ ] Testing modality named (unit / CLI / browser / HTTP)
-- [ ] If browser: URL + flow + element selectors or visual checks
-- [ ] If CLI: exact command + expected stdout / exit code
-- [ ] If HTTP: exact request + expected status + response shape
+- [ ] Testing modality named (unit / CLI / HTTP / server-RPC / library / browser-UI)
+- [ ] If CLI: exact command + fixtures/inputs + expected stdout + expected exit code
+- [ ] If HTTP: exact request (method/URL/headers/body) + expected status + response shape + auth setup
+- [ ] If server / socket / RPC: bring-up command + client used + messages sent + expected responses
+- [ ] If library/SDK: minimal driver script + asserted return values or side effects
+- [ ] If browser/UI: URL + step-by-step interaction sequence (clicks, inputs, waits) + element selectors or visual checks + named browser-automation skill
+- [ ] An end-to-end protocol against the running thing is specified — not just static checks
 - [ ] Skills/tools to use named explicitly
 - [ ] Acceptance criteria each tie to a runnable check
 - [ ] Success and failure signals distinguishable from output alone

@@ -17,7 +17,7 @@ User provides fuzzy/high-level feature request via `$ARGUMENTS`.
 - **Probe iteratively.** Use `AskUserQuestion` (preferred) or text questions, 1–3 per round. Never dump all questions at once.
 - **Don't infer past user intent.** When ambiguous, ask. Don't pick silently.
 - **Three steps are sequential gates.** Don't advance until current step has clear, concrete answers.
-- **Validation is the make-or-break step.** FRP not done until Step 3 yields a runnable, step-by-step plan another agent can execute blindly.
+- **Validation is the make-or-break step.** FRP not done until Step 3 yields a runnable, step-by-step plan another agent can execute blindly. Every feature has an exact runnable protocol — connect to the server and send these requests, invoke this CLI with these args and observe this stdout, open this URL and perform these clicks, etc. Validation must spell out that protocol end-to-end. Static checks (typecheck, lint, unit tests) alone never count as feature validation.
 
 ## Workflow
 
@@ -59,21 +59,33 @@ Each answer narrows what's worth building. Solo MVP ≠ production HA. Don't gol
 
 ### Step 3: Validation — runnable verification plan (CRITICAL)
 
-This is the most important step. The FRP is **not done** until validation is concrete enough that an unfamiliar agent can execute it without guessing.
+This is the most important step, and like Step 1 and Step 2 it is an **interview**, not a form-fill. Drill iteratively the same way you drilled Goal and Scale: ask 1–3 questions per round, refuse vague answers, push until the user has named the exact e2e path a fresh agent will execute. The FRP is **not done** until validation is concrete enough that an unfamiliar agent can run it without guessing.
+
+Every feature is testable via an exact protocol — name it concretely. Examples:
+- HTTP/API → start the server, send these curl/HTTPie requests with these payloads, assert these status codes and response bodies.
+- Server / socket / RPC → bring up the service on this port, connect with this client, send these messages, observe these responses.
+- CLI → invoke with these exact args against this fixture, assert this stdout / exit code.
+- Library / SDK → import and call from this script, assert this return value or side effect.
+- UI → start the preview/dev server, open this URL, perform these clicks/inputs in order, observe these visible elements.
+
+Whatever the modality, the validation path must be end-to-end against the running thing. Typecheck, lint, and unit tests verify code correctness, not feature correctness — they are necessary but never sufficient on their own.
 
 Probe until you have answers for all of:
 
 - **Where to run**: exact path, branch, worktree to use (e.g. `~/projects/.workspaces/feature-x`)
 - **How to set up**: install commands, env vars, secrets, services to start
 - **What to run**:
+  - Service / server / preview command if the feature exposes a runtime surface (exact: `pnpm dev`, `bun dev`, `uv run uvicorn ...`, `cargo run --bin server`) and the port/URL/socket it serves on
   - Test commands (exact: `pnpm test path/to/file.test.ts`, `uv run pytest tests/feature_x.py`)
   - Lint / typecheck commands
   - Build commands
-- **Testing modality**:
+- **Testing modality** — pick whichever fits the feature, and for each one the spec must be concrete enough to execute without guessing:
   - Pure unit/integration? Then which framework, which test files.
-  - CLI? Then exact command to invoke and expected output.
-  - Browser? Then which URL, which flow to navigate, what to look for. Specify if a browser-automation skill should be used (e.g. `agent-browser`, `browser-tools`, `claude-in-chrome`, `webapp-testing`).
-  - HTTP API? Then curl/HTTPie commands and expected status codes / response shape.
+  - CLI? Then exact command to invoke, fixtures/inputs, expected stdout, expected exit code.
+  - HTTP API? Then exact curl/HTTPie request (method, URL, headers, body) and expected status code + response shape. Include any auth setup.
+  - Server / socket / RPC? Then the bring-up command, the client used to connect, the exact messages sent, and the expected responses or stream.
+  - Library / SDK? Then a minimal driver script that imports and exercises the surface, with asserted return values or side effects.
+  - Browser / UI? Then: which URL, which preview command starts it, the **interaction sequence** step-by-step (click selector X → type Y → wait for Z → assert visible W), and which browser-automation skill to use (e.g. `agent-browser`, `browser-tools`, `claude-in-chrome`, `webapp-testing`). "Navigate and check" is not enough — enumerate the clicks, inputs, and observations.
 - **Skills / tools to use**: name them explicitly (e.g. `webapp-testing`, `agent-browser`, `verification-before-completion`)
 - **Acceptance criteria**: bullet list of concrete observable behaviors the agent must verify, each tied to a command or check
 - **Success vs failure signals**: what output proves success; what output indicates regression
@@ -81,8 +93,9 @@ Probe until you have answers for all of:
 **Anti-patterns to reject**:
 - "Make sure it works"
 - "Run the tests" (which tests?)
-- "Verify in the browser" (which URL? what flow?)
+- "Verify in the browser" (which URL? what flow? which clicks?)
 - "Check edge cases" (which ones?)
+- "Typecheck and tests pass" as the *only* validation — push for the e2e protocol against the running thing (curl, client connect, CLI invoke, UI interaction, etc.).
 
 **Gate**: A fresh agent could execute the validation plan top-to-bottom without asking a single clarifying question. If not, keep probing.
 
@@ -92,7 +105,7 @@ Once all three gates pass, write FRP using the template at [references/frp_templ
 
 Before writing, ask user where to save:
 1. **Workspace/repo** — `docs/frp/<slug>.md` in active workspace
-2. **AIHub project** — use `apm` skill
+2. **AIHub project** — use `aihub/projects` skill
 3. **Linear comment** — if tied to a Linear issue, use `linctl comment update <COMMENT_ID> --body "..."`
 4. Custom path if user specifies
 
