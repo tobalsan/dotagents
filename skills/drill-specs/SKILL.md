@@ -1,11 +1,11 @@
 ---
 name: drill-specs
-description: Build comprehensive specs for a project idea through systematic interviewing. Use when user asks to "drill specs", "flesh out an idea", "build specs", "interview me about requirements", or wants to turn a rough project concept into a detailed specification. Triggers on requests like "/drill-specs", "help me spec out X", "what questions should I answer about this project". NOT for implementing features—strictly planning and specification.
+description: Drill into a project idea via systematic interviewing to surface hidden requirements, scope, and tradeoffs. Use when user asks to "drill specs", "flesh out an idea", "interview me about requirements", or wants probing questions on a rough concept. Triggers on "/drill-specs", "help me spec out X", "what questions should I answer about this project". NOT for writing the spec document or implementing—strictly interviewing.
 ---
 
 # Drill Specs
 
-Build a comprehensive specification for the user's project idea through structured interviewing.
+Interview the user to surface hidden requirements, scope, and tradeoffs for a project idea.
 
 ## Input
 
@@ -35,30 +35,10 @@ Guidelines:
 - Challenge assumptions; surface implicit requirements
 - Do NOT ask all questions at once—interview iteratively, 1-3 questions per round
 - Adapt follow-up questions based on previous answers
-
-### 3. Spec Documentation
-
-Once the interview is complete, write a structured spec document. Include:
-
-- Problem statement
-- Goals & non-goals
-- User stories / use cases
-- Technical architecture
-- Data model
-- UI/UX flows
-- Open questions / risks
-
-### 4. Save Location
-
-Before writing the spec, ask the user where they want it saved. Offer two default choices:
-
-1. **Workspace/repo** — save to `docs/` folder in the active workspace or repository
-2. **AIHub project** — use the `aihub/projects` skill to save the spec into AIHub project manager
-
-Accept custom paths if the user specifies one.
+- Continue until coverage is comprehensive across the dimensions above
 
 ## Rules
 
-- **Plan only.** Do NOT implement anything.
+- **Interview only.** Do NOT implement.
 - **Do NOT assume functionality is missing.** Confirm with code search first.
-- Continue interviewing until the spec is comprehensive—don't stop early.
+- Stop when the user signals enough, or when no further non-obvious questions remain.
