@@ -37,6 +37,14 @@
         "OPENAI_API_KEY": "${OPENAI_API_KEY}",
         "XAI_API_KEY": "${XAI_API_KEY}"
       }
+    },
+    "deepwiki": {
+      "url": "https://mcp.deepwiki.com/mcp",
+      "type": "http"
     }
-  }
+  },
+  "model": {
+    "name": "gemini-3-flash-preview"
+  },
+  "hooks": {}
 }

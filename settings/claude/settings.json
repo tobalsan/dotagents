@@ -87,16 +87,33 @@
       "Bash(* > ~/.ssh/:*)"
     ]
   },
-  "hooks": {},
+  "hooks": {
+    "UserPromptSubmit": [],
+    "Stop": [],
+    "PostToolUse": [],
+    "PostToolUseFailure": [],
+    "PermissionRequest": [] 
+  },
   "statusLine": {
     "type": "command",
-    "command": "~/.claude/statusline.sh",
-    "padding": 0
+    "command": "bash ~/.claude/statusline-command.sh"
   },
   "enabledPlugins": {
-    "example-skills@anthropic-agent-skills": true,
+    "example-skills@anthropic-agent-skills": false,
     "document-skills@anthropic-agent-skills": true,
-    "dev-browser@dev-browser-marketplace": true
+    "dev-browser@dev-browser-marketplace": false,
+    "superpowers@claude-plugins-official": true,
+    "caveman@caveman": true
   },
-  "model": "haiku"
+  "extraKnownMarketplaces": {
+    "caveman": {
+      "source": {
+        "source": "github",
+        "repo": "JuliusBrussee/caveman"
+      }
+    }
+  },
+  "effortLevel": "high",
+  "skipDangerousModePermissionPrompt": true,
+  "agentPushNotifEnabled": true
 }
