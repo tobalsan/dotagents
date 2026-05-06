@@ -19,7 +19,7 @@ If inside an existing codebase, launch up to 10 subagents in parallel to explore
 
 ### 2. Structured Interview
 
-Use `AskUserQuestion` (preferred) or sequential text questions to interview the user across these dimensions:
+Use `AskUserQuestion` (preferred), or sequential text questions to interview the user across these dimensions:
 
 - **Core purpose**: What problem does this solve? Who is it for?
 - **Scope & boundaries**: What's in/out of scope? MVP vs future?
@@ -30,12 +30,13 @@ Use `AskUserQuestion` (preferred) or sequential text questions to interview the 
 - **Edge cases**: Error states, empty states, concurrent access, migrations
 
 Guidelines:
+- **ONE question per turn. Never batch.** No "Q1/Q2/Q3", no "Round 1 of N", no "while you're thinking, also...". Ask one thing, wait for the answer, then ask the next.
+  - Why: batched questions force the user to context-switch across unrelated decisions and produce shallow answers. Single questions let each answer shape the next.
+  - The only exception: a single question may present multiple-choice options (a/b/c) for *that one question*. That is still one question.
 - Ask non-obvious, probing questions—skip anything Claude can infer
-- Go deep on answers that reveal hidden complexity
+- Go deep on the current answer before moving on; let it reshape the next question
 - Challenge assumptions; surface implicit requirements
-- Do NOT ask all questions at once—interview iteratively, 1-3 questions per round
-- Adapt follow-up questions based on previous answers
-- Continue until coverage is comprehensive across the dimensions above
+- Continue until coverage is comprehensive across the dimensions above, or the user signals stop
 
 ## Rules
 
