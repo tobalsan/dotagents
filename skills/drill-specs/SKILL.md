@@ -30,9 +30,11 @@ Use `AskUserQuestion` (preferred), or sequential text questions to interview the
 - **Edge cases**: Error states, empty states, concurrent access, migrations
 
 Guidelines:
-- **ONE question per turn. Never batch.** No "Q1/Q2/Q3", no "Round 1 of N", no "while you're thinking, also...". Ask one thing, wait for the answer, then ask the next.
+- **ONE decision per turn. Never batch.** No "Q1/Q2/Q3", no "Round 1 of N", no "while you're thinking, also...". Ask about one decision, wait for the answer, then ask the next.
   - Why: batched questions force the user to context-switch across unrelated decisions and produce shallow answers. Single questions let each answer shape the next.
-  - The only exception: a single question may present multiple-choice options (a/b/c) for *that one question*. That is still one question.
+  - **Sub-parts count as batching.** A "Q3" with parts (a) Push policy, (b) Status transition, (c) Cleanup, (d) Pre-flight check is FOUR questions in a trench coat — each part is a separate decision with its own option list. This is forbidden. Pick the one most-blocking decision and ask only that.
+  - **The only allowed multi-choice form:** a single decision presented with mutually-exclusive options (a/b/c) where the user picks one. That is one question. Multiple sub-decisions, each with their own a/b/c options, is not.
+  - Test: if the user could answer part of your message and leave another part unanswered, you batched. Cut.
 - Ask non-obvious, probing questions—skip anything Claude can infer
 - Go deep on the current answer before moving on; let it reshape the next question
 - Challenge assumptions; surface implicit requirements
