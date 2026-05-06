@@ -42,7 +42,9 @@ This is the default action for any email that doesn't fit the criteria above.
 
 - **Promotional & Marketing Content:** General marketing emails, special offers, and promotional content (e.g., from **eBay**, **Boulanger**, **Parallels**, **PayPal**, **Speedy**).
 - **Uninteresting Newsletters:** All newsletters that are not on the approved list for the `newsletter` label (e.g., from **Jeff Sauer**, **Fireworks AI**, **Vinh Giang**).
-- **Low-Priority Automated Updates:** Non-critical, routine notifications and digests that I don't need to review, such as weekly **GitHub** Dependabot alerts or general informational emails from brokers like **Interactive Brokers** (e.g., "Reminder to Think Before You Click!").
+- **Low-Priority Automated Updates:** Non-critical, routine notifications and digests that I don't need to review, such as general informational emails from brokers like **Interactive Brokers** (e.g., "Reminder to Think Before You Click!").
+- **Meta for Business:** All marketing/promotional emails from Meta for Business go straight to trash.
+- **GitHub Dependabot alerts:** All Dependabot alert emails go straight to trash.
 - **Unimportant Policy Updates:** Updates to operating agreements oozr program policies for services I don't actively manage, such as the **Amazon Influencer & Associates Program**.
 
 ---
