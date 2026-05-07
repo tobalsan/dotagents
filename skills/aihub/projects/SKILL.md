@@ -1,5 +1,5 @@
 ---
-name: aihub-projects
+name: projects
 description: "Manage AIHub projects via the `aihub projects` CLI. Use when creating, listing, updating, starting, resuming, archiving, or checking status of projects. Triggers on requests involving project management, project runs, project specs, moving project status, commenting on projects, or any `aihub projects` command."
 ---
 
