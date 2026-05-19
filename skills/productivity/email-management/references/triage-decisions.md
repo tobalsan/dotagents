@@ -16,7 +16,8 @@ Apply this label to emails that are important to read but do not require an imme
 - **Security and Account Alerts:** All security alerts (e.g., from **Google**) and updates to account privacy policies (e.g., from **Nintendo**) should be reviewed.
 - **Direct Messages & Communications:** Notifications of new messages from platforms like **LinkedIn** or **CoFoundersLab**.
 - **Calendar reminders:** Google Calendar notifications for events I set reminders for.
-- **Transactional & Order Updates:** Emails concerning a recent purchase, like order confirmations or shipping updates (e.g., from **Boulanger**).
+- **Transactional & Order Updates:** Emails concerning a recent purchase, like order confirmations or shipping updates (e.g., from **Boulanger**). All shipping notifications go to review.
+- **Subscription Renewals:** Any subscription renewal notice goes to review, not trash.
 - **Important Service Provider Updates:**
   - Critical system-generated reports, such as abuse alerts from my hosting provider (**abuse@hetzner.com**).
   - Communications from essential services like my water utility provider (**veolia.com**).
