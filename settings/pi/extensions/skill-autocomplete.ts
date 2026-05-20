@@ -2,6 +2,8 @@ import { CustomEditor, type ExtensionAPI } from "@earendil-works/pi-coding-agent
 import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 
 
+const SKILL_TOKEN_CHARS = "A-Za-z0-9_:-";
+
 function escapeRegex(value: string): string {
 	return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -10,12 +12,21 @@ function unique<T>(values: T[]): T[] {
 	return [...new Set(values)];
 }
 
+function isNonEmpty(value: string): value is string {
+	return value.length > 0;
+}
+
+interface SkillData {
+	names: string[];
+	fullSkillPattern?: RegExp;
+}
+
 class SkillConfirmEditor extends CustomEditor {
 	constructor(
 		tui: any,
 		theme: any,
 		keybindings: any,
-		private readonly getSkillNames: () => string[],
+		private readonly getSkillData: () => SkillData,
 		private readonly highlight: (text: string) => string,
 		private readonly ghost: (text: string) => string,
 	) {
@@ -26,8 +37,7 @@ class SkillConfirmEditor extends CustomEditor {
 		if (data === "\t") {
 			const partial = this.getPartialMatch();
 			if (partial) {
-				this.setText(this.getText().replace(new RegExp(`(\\s/)${escapeRegex(partial.partial)}$`), `$1${partial.partial}${partial.completion} `));
-				this.tui.requestRender();
+				this.setText(this.getText().replace(new RegExp(`(\\s/)${escapeRegex(partial.partial)}$`), `$1${partial.name} `));
 				return;
 			}
 		}
@@ -36,15 +46,15 @@ class SkillConfirmEditor extends CustomEditor {
 		this.tui.requestRender();
 	}
 
-	private getPartialMatch(): { partial: string; completion: string } | undefined {
-		const token = this.getText().match(/\s\/([A-Za-z0-9_-]+)$/)?.[1];
+	private getPartialMatch(): { partial: string; completion: string; name: string } | undefined {
+		const token = this.getText().match(new RegExp(`\\s/([${SKILL_TOKEN_CHARS}]+)$`))?.[1];
 		if (!token) return undefined;
 
-		const matches = this.getSkillNames().filter((name) => name.toLowerCase().startsWith(token.toLowerCase()));
+		const matches = this.getSkillData().names.filter((name) => name.toLowerCase().startsWith(token.toLowerCase()));
 		if (matches.length !== 1) return undefined;
 
 		const completion = matches[0]!.slice(token.length);
-		return completion.length > 0 ? { partial: token, completion } : undefined;
+		return completion.length > 0 ? { partial: token, completion, name: matches[0]! } : undefined;
 	}
 
 	private ghostAtCursor(cursor: string, completion: string): string {
@@ -54,10 +64,7 @@ class SkillConfirmEditor extends CustomEditor {
 	}
 
 	override render(width: number): string[] {
-		const skills = this.getSkillNames().sort((a, b) => b.length - a.length);
-		const fullSkillPattern = skills.length > 0
-			? new RegExp(`(\\s/)(${skills.map(escapeRegex).join("|")})(?=\\s|$)`, "gi")
-			: undefined;
+		const { fullSkillPattern } = this.getSkillData();
 		const partial = this.getPartialMatch();
 		const partialWithCursorPattern = partial
 			? new RegExp(`(\\s/${escapeRegex(partial.partial)})(.*?\\x1b\\[7m \\x1b\\[0m)`)
@@ -81,34 +88,27 @@ class SkillConfirmEditor extends CustomEditor {
 
 export default function (pi: ExtensionAPI) {
 	const normalizeSkillName = (name: string) => name.replace(/^\//, "").replace(/^skill:/, "");
-	const getSkillNames = () =>
-		unique(
-			pi
-				.getCommands()
-				.filter((command) => command.source === "skill")
-				.flatMap((command) => [command.name, normalizeSkillName(command.name)])
+	let cachedSignature = "";
+	let cachedSkillData: SkillData = { names: [] };
+	const getSkillData = (): SkillData => {
+		const commands = pi.getCommands().filter((command) => command.source === "skill");
+		const signature = commands.map((command) => String(command.name)).join("\n");
+		if (signature === cachedSignature) return cachedSkillData;
+
+		const names = unique(
+			commands
+				.flatMap((command) => [String(command.name), normalizeSkillName(String(command.name))])
 				.map(normalizeSkillName)
-				.filter(Boolean),
+				.filter(isNonEmpty),
 		).sort();
-
-	const getTextMatch = (text: string, slashMode = false): { partial?: string; completion?: string; full?: string } | undefined => {
-		const skills = getSkillNames();
-		const fullTokens = [...text.matchAll(/\s\/([A-Za-z0-9_-]+)(?=\s|$)/g)].map((match) => match[1]!);
-		const full = fullTokens
-			.map((token) => skills.find((name) => name.toLowerCase() === token.toLowerCase()))
-			.find(Boolean);
-		if (full) return { full };
-
-		const slashToken = text.match(/\s\/([A-Za-z0-9_-]*)$/)?.[1];
-		if (skills.length === 0 || slashToken === undefined) return undefined;
-
-		const token = slashToken ?? text.trimStart().match(/^[A-Za-z0-9_-]*/)?.[0] ?? "";
-		if (token.length === 0) return undefined;
-
-		const matches = skills.filter((name) => name.toLowerCase().startsWith(token.toLowerCase()));
-		if (matches.length !== 1) return undefined;
-		return { partial: token, completion: matches[0]!.slice(token.length) };
+		const fullSkillPattern = names.length > 0
+			? new RegExp(`(\\s/)(${names.slice().sort((a, b) => b.length - a.length).map(escapeRegex).join("|")})(?=\\s|$)`, "gi")
+			: undefined;
+		cachedSignature = signature;
+		cachedSkillData = { names, fullSkillPattern };
+		return cachedSkillData;
 	};
+	const getSkillNames = () => getSkillData().names;
 
 	pi.registerCommand("skill-autocomplete-debug", {
 		description: "Show loaded skill names used by skill-autocomplete",
@@ -125,7 +125,7 @@ export default function (pi: ExtensionAPI) {
 					tui,
 					theme,
 					keybindings,
-					getSkillNames,
+					getSkillData,
 					(text) => ctx.ui.theme.fg("mdCode", text),
 					(text) => ctx.ui.theme.fg("dim", text),
 				),
@@ -134,20 +134,20 @@ export default function (pi: ExtensionAPI) {
 		setTimeout(installEditor, 25);
 		ctx.ui.addAutocompleteProvider((current) => ({
 			async getSuggestions(lines, cursorLine, cursorCol, options) {
-				const native = await current.getSuggestions(lines, cursorLine, cursorCol, options);
 				const line = lines[cursorLine] ?? "";
 				const before = line.slice(0, cursorCol);
-				const slash = before.match(/\s\/([A-Za-z0-9_-]*)$/);
-				if (!slash) return native;
+				const slash = before.match(new RegExp(`\\s/([${SKILL_TOKEN_CHARS}]*)$`));
+				if (!slash) return current.getSuggestions(lines, cursorLine, cursorCol, options);
 
 				const query = slash[1] ?? "";
-				if (query.length === 0) return native;
+				if (query.length === 0) return current.getSuggestions(lines, cursorLine, cursorCol, options);
 
 				const skillItems = getSkillNames()
 					.filter((name) => name.toLowerCase().startsWith(query.toLowerCase()))
 					.map((name) => ({ value: name, label: name, description: "skill" }));
-				if (skillItems.length === 0) return native;
+				if (skillItems.length === 0) return current.getSuggestions(lines, cursorLine, cursorCol, options);
 
+				const native = await current.getSuggestions(lines, cursorLine, cursorCol, options);
 				const seen = new Set<string>();
 				const items = [...skillItems, ...(native?.items ?? [])].filter((item) => {
 					if (seen.has(item.value)) return false;
