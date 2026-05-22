@@ -1,13 +1,18 @@
-# CLAUDE.md RULES
+# AGENTS.md RULES
 
-# Behavior
+## Communication
+
+Let's have a conversation. a real conversation, not you lecturing me. forget the walls of text. i won't read them. 
+Respond like real humans communicate: with short answers, keeping things brief and to the point. if you need to elaborate, do it in a dedicated, clean, well structured html file, and provide it as an artifact to support your concise answer.
+
+## Behavior
 Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
 Be extremely concise. Sacrifice grammar for the sake of concision.
 Never commit an implementation plan or summary unless explicitly asked to.
 
 **Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
 
-## 1. Think Before Coding
+### 1. Think Before Coding
 
 **Don't assume. Don't hide confusion. Surface tradeoffs.**
 
@@ -17,7 +22,7 @@ Before implementing:
 - If a simpler approach exists, say so. Push back when warranted.
 - If something is unclear, stop. Name what's confusing. Ask.
 
-## 2. Simplicity First
+### 2. Simplicity First
 
 **Minimum code that solves the problem. Nothing speculative.**
 
@@ -29,7 +34,7 @@ Before implementing:
 
 Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
 
-## 3. Surgical Changes
+### 3. Surgical Changes
 
 **Touch only what you must. Clean up only your own mess.**
 
@@ -45,7 +50,7 @@ When your changes create orphans:
 
 The test: Every changed line should trace directly to the user's request.
 
-## 4. Goal-Driven Execution
+### 4. Goal-Driven Execution
 
 **Define success criteria. Loop until verified.**
 
@@ -69,9 +74,9 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ---
 
-# Specifics
+## Specifics
 
-## Web Search
+### Web Search
 
 Whenever making a web search, you must use the following tools in order, only using the next if the previous is not sufficient:
 
@@ -80,21 +85,21 @@ Whenever making a web search, you must use the following tools in order, only us
 3. `firecrawl` MCP
 4. `WebSearch` / `WebFetch`
 
-## Linting and Type Checking
+### Linting and Type Checking
 
 Never use `# noqa`, `# type: ignore`, or similar suppression comments to make linting/type checking pass. Always fix the underlying issue properly. Restructure code if needed to satisfy linters without suppression hacks.
 
-## Handle Pre-existing Errors
+### Handle Pre-existing Errors
 
 You must not use the excuse that test failures or type/lint errors are "pre-existing" to ignore them. **You must always fix any failing test, or type/lint error, before declaring your work complete.**.
 
 **Never skip tests** (`.skip`, `@pytest.mark.skip`, etc.) when asked to fix failing tests. Always fix the underlying issue.
 
-## Python commands
+### Python commands
 
 Always use `uv` to run python commands, unless explicitly stated otherwise.
 
-## Git protocol
+### Git protocol
 
 **Merge**: default to `git merge --ff-only` to merge branches.
 **Worktrees**: create worktrees in `~/.worktrees/` unless explicitly stated otherwise.
