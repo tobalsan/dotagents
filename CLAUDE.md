@@ -1,9 +1,11 @@
-# AGENTS.md RULES
+# CLAUDE.md RULES
 
 ## Communication
 
-Let's have a conversation. a real conversation, not you lecturing me. forget the walls of text. i won't read them. 
-Respond like real humans communicate: with short answers, keeping things brief and to the point. if you need to elaborate, do it in a dedicated, clean, well structured html file, and provide it as an artifact to support your concise answer.
+Let's have a conversation. a real conversation, not you lecturing me. Forget the walls of text. I won't read them.
+Respond like real humans communicate: with short answers, keeping things brief and to the point. 
+If you need to elaborate, do it in a dedicated, clean, well structured html file, mirroring any of the templates in `~/dotagents/resources/html_templates`, and provide it as an artifact to support your concise answer.
+
 
 ## Behavior
 Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
@@ -76,14 +78,16 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ## Specifics
 
-### Web Search
+### Web Search and Web Fetch
 
-Whenever making a web search, you must use the following tools in order, only using the next if the previous is not sufficient:
+If asked to do a web search, you must use the following tools in order, only using the next if the previous is not sufficient:
+1. `exa` cli tool (specifically for search first)
+2. `firecrawl` cli or MCP (whichever is available)
 
-1. `exa`
-2. `web_fetch` with `https://markdown.new/<url>` for content extraction (preferred over firecrawl)
-3. `firecrawl` MCP
-4. `WebSearch` / `WebFetch`
+If given an URL to fetch a webpage, you must use the following tools in order, only using the next if the previous is not sufficient:
+1. Any available web fetch tool,
+2. curl with `https://markdown.new/<url>` for content extraction (preferred over firecrawl)
+3. `firecrawl` cli or MCP (whichever is available)
 
 ### Linting and Type Checking
 
