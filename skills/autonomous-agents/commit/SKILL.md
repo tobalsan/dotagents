@@ -12,7 +12,7 @@ Create atomic commits following strict formatting and atomicity rules.
 ### Message Length Limits (IRON RULE)
 
 - Main message: 50 chars max
-- Body (if included): max 2 lines, each 72 chars max
+- Body (if included): max 3 lines, each 72 chars max
 - Footer (if included): max 1 line, 72 chars max
 
 ### Atomic Commits
@@ -20,6 +20,9 @@ Create atomic commits following strict formatting and atomicity rules.
 Keep commits atomic:
 - Commit only files actually touched
 - Always list paths explicitly in commit command
+- **One purpose per commit.** If changes implement several features, fixes, or
+  unrelated purposes, split them into multiple separate commits — never bundle
+  distinct purposes into a single commit, even if they touch overlapping files.
 
 **For tracked files:**
 ```bash
@@ -45,7 +48,7 @@ Example:
 ```git
 feat(auth): add TOTP
 
-[optional body, max two lines, each under 72 chars]
+[optional body, max three lines, each under 72 chars]
 
 [optional footer, max one line under 72 chars]
 ```
