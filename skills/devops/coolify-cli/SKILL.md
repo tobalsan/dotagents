@@ -52,4 +52,6 @@ All commands accept `--format`: `table` (default), `json` (scripting), `pretty` 
 
 ## Full Command Reference
 
-See [references/commands.md](references/commands.md) for the complete command catalog with all flags and options.
+- [references/commands.md](references/commands.md) — complete command catalog with all flags and options.
+- [references/llms.txt](references/llms.txt) — quick AI/LLM instructions, operating rules, common workflows.
+- [references/llms-full.txt](references/llms-full.txt) — exhaustive command/flag catalog. **Very long (~2500 lines): read in partial chunks with `offset`/`limit`, not all at once.**
