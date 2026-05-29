@@ -1,6 +1,6 @@
 ---
 name: commit
-description: Create atomic commits with strict formatting rules. Use when user asks to commit changes with /commit or explicitly requests creating a git commit. Enforces 50-char max commit message, conventional commit format (feat/fix/refactor/docs/test/chore), and explicit file paths only (never git add . or commit -a).
+description: Create atomic commits with strict formatting rules. Use when user asks to commit changes with /commit or explicitly requests creating a git commit. Enforces 50-char max commit message, why-focused commit message/body, conventional commit format (feat/fix/refactor/docs/test/chore), and explicit file paths only (never git add . or commit -a).
 ---
 
 # Commit
@@ -12,7 +12,7 @@ Create atomic commits following strict formatting and atomicity rules.
 ### Message Length Limits (IRON RULE)
 
 - Main message: 50 chars max
-- Body (if included): max 3 lines, each 72 chars max
+- Body: max 3 lines, each 72 chars max
 - Footer (if included): max 1 line, 72 chars max
 
 ### Atomic Commits
@@ -44,11 +44,24 @@ Use: `<type>[(scope)][!]: <summary>`
 
 Types: `feat|fix|refactor|docs|test|chore`
 
+### Explain WHY, Not Just WHAT
+
+Commit summary and body must explain why the change exists: user need,
+bug impact, invariant being protected, or operational reason. Avoid summaries
+that only name changed files or say what code was added.
+
+A body is required unless the summary is truly explicit by itself. When changes
+are medium or large, touch many files, or include multiple coordinated parts,
+always include a body listing the important reasons/behavior. A large commit
+like `2a1b7646bc3e` must have a body.
+
+Use up to 3 body lines. Each line should add decision context or grouped impact,
+not repeat the summary.
+
 Example:
 ```git
-feat(auth): add TOTP
+feat(auth): require TOTP for admins
 
-[optional body, max three lines, each under 72 chars]
-
-[optional footer, max one line under 72 chars]
+Protects privileged routes after password compromise.
+Keeps user sessions valid while enforcing admin step-up.
 ```
