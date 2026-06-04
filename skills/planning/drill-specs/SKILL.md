@@ -1,11 +1,11 @@
 ---
 name: drill-specs
-description: Drill into a project idea via systematic interviewing to surface hidden requirements, scope, and tradeoffs. Use when user asks to "drill specs", "flesh out an idea", "interview me about requirements", or wants probing questions on a rough concept. Triggers on "/drill-specs", "help me spec out X", "what questions should I answer about this project". NOT for writing the spec document or implementing—strictly interviewing.
+description: Drill into a project idea via systematic interviewing to surface the goal, intended outcome, and tradeoffs—the "why", not the "how". Use when user asks to "drill specs", "flesh out an idea", "interview me about requirements", or wants probing questions on a rough concept. Triggers on "/drill-specs", "help me spec out X", "what questions should I answer about this project". NOT for writing the spec document, designing the implementation, or coding—strictly interviewing for intent.
 ---
 
 # Drill Specs
 
-Interview the user to surface hidden requirements, scope, and tradeoffs for a project idea.
+Interview the user to pin down what they actually want and why—the intended end-state and tradeoffs—not how it gets built.
 
 ## Input
 
@@ -15,33 +15,34 @@ The user provides a base project idea/concept via `$ARGUMENTS`.
 
 ### 1. Codebase Discovery
 
-If inside an existing codebase, launch up to 10 subagents in parallel to explore and understand the current project state. This informs which capabilities already exist vs what's new.
+If inside an existing codebase, explore first (subagents in parallel) only to avoid asking about context that is already settled. Do not let code discovery turn the interview toward implementation.
 
-### 2. Structured Interview
+### 2. Outcome Interview
 
-Use `AskUserQuestion` (preferred), or sequential text questions to interview the user across these dimensions:
+Use `AskUserQuestion` (preferred), or sequential text questions. Drill these lenses—they are angles to probe, not a checklist to march through:
 
-- **Core purpose**: What problem does this solve? Who is it for?
-- **Scope & boundaries**: What's in/out of scope? MVP vs future?
-- **Implementation**: Tech stack, architecture, integrations, data model
-- **UI & UX**: Flows, screens, interactions, accessibility
-- **Constraints**: Performance, security, compliance, budget, timeline
-- **Tradeoffs**: What are you willing to sacrifice? Speed vs quality vs cost?
-- **Edge cases**: Error states, empty states, concurrent access, migrations
+- **The win**: What does the world look like when this works? What observably changes?
+- **Who & why**: Who feels what differently? Why does this matter enough to build?
+- **Definition of done**: What observable outcome must it nail vs merely improve? What's the one non-negotiable end-state?
+- **Failure**: What would make you call this a failure even if it shipped on time?
+- **Tradeoffs**: Which outcomes can degrade, and which cannot? What are you willing to sacrifice—speed, cost, scope, polish—to protect the core outcome?
+- **Boundaries**: What's deliberately out of scope, now and maybe forever?
 
 Guidelines:
-- **ONE decision per turn. Never batch.** No "Q1/Q2/Q3", no "Round 1 of N", no "while you're thinking, also...". Ask about one decision, wait for the answer, then ask the next.
-  - Why: batched questions force the user to context-switch across unrelated decisions and produce shallow answers. Single questions let each answer shape the next.
-  - **Sub-parts count as batching.** A "Q3" with parts (a) Push policy, (b) Status transition, (c) Cleanup, (d) Pre-flight check is FOUR questions in a trench coat — each part is a separate decision with its own option list. This is forbidden. Pick the one most-blocking decision and ask only that.
-  - **The only allowed multi-choice form:** a single decision presented with mutually-exclusive options (a/b/c) where the user picks one. That is one question. Multiple sub-decisions, each with their own a/b/c options, is not.
-  - Test: if the user could answer part of your message and leave another part unanswered, you batched. Cut.
+- **Every "how" question is a smell.** Tech stack, screens, data model, edge cases—skip them. Ask a how-question ONLY when the answer would change the *goal* itself. Default: don't.
+- **ONE decision per turn. Never batch.** No "Q1/Q2/Q3", no "Round 1 of N", no "while you're thinking, also...". Ask one decision, wait, then ask the next.
+  - Why: batched questions force context-switching across unrelated decisions and produce shallow answers. Single questions let each answer reshape the next.
+  - **Sub-parts count as batching.** A "Q3" with parts (a)(b)(c)(d) is four questions in a trench coat. Pick the single most-blocking decision; ask only that.
+  - **Allowed:** one decision with mutually-exclusive options (a/b/c), user picks one. Multiple sub-decisions each with their own options is not.
+  - Test: if the user could answer part and leave the rest, you batched. Cut.
 - Ask non-obvious, probing questions—skip anything Claude can infer
 - Go deep on the current answer before moving on; let it reshape the next question
-- Challenge assumptions; surface implicit requirements
-- Continue until coverage is comprehensive across the dimensions above, or the user signals stop
+- Challenge assumptions; surface the implicit intent behind a stated feature
+- Do not ask what to build next. Ask what must become true for the user, customer, or business.
 
 ## Rules
 
-- **Interview only.** Do NOT implement.
+- **Interview only.** Do NOT implement or design.
+- **Stay on "why".** Surface intent and outcome; treat implementation detail as out of scope unless it defines the goal.
 - **Do NOT assume functionality is missing.** Confirm with code search first.
-- Stop when the user signals enough, or when no further non-obvious questions remain.
+- **Done when** you could hand the "why" to three engineers and they'd agree on the goal—even if they'd build it three different ways. Stop there, or when the user signals enough.
