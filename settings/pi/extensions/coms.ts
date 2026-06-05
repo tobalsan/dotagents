@@ -211,7 +211,7 @@ function abbreviateModel(model: string): string {
 // ━━ CLI flag shape (read via pi.registerFlag/pi.getFlag) ━━━━━━━━━━━━━━━━━━━
 
 interface CliFlags {
-	name?: string;
+	comsName?: string;
 	purpose?: string;
 	project?: string;
 	color?: string;
@@ -221,13 +221,13 @@ interface CliFlags {
 function readCliFlags(pi: ExtensionAPI): CliFlags {
 	// Identity flags are declared via pi.registerFlag at extension load time so
 	// pi's CLI parser accepts them; here we just read them back.
-	const name = pi.getFlag("name") as string | undefined;
+	const comsName = pi.getFlag("coms-name") as string | undefined;
 	const purpose = pi.getFlag("purpose") as string | undefined;
 	const project = pi.getFlag("project") as string | undefined;
 	const color = pi.getFlag("color") as string | undefined;
 	const explicit = pi.getFlag("explicit") as boolean | undefined;
 	return {
-		name: name && name.length > 0 ? name : undefined,
+		comsName: comsName && comsName.length > 0 ? comsName : undefined,
 		purpose: purpose && purpose.length > 0 ? purpose : undefined,
 		project: project && project.length > 0 ? project : undefined,
 		color: color && color.length > 0 ? color : undefined,
@@ -530,8 +530,8 @@ function readFrontmatterFromArgv(argv: string[]): { name?: string; description?:
 export default function (pi: ExtensionAPI) {
 	// ━━ Register identity CLI flags so pi's parser accepts them. ━━━━━━━━━
 	// Without these, pi 0.73+ rejects the invocation with "Unknown options:
-	// --name, --project, ..." before this extension's hooks ever fire.
-	pi.registerFlag("name", {
+	// --coms-name, --project, ..." before this extension's hooks ever fire.
+	pi.registerFlag("coms-name", {
 		description: "Override agent name (otherwise from frontmatter or auto-generated)",
 		type: "string",
 		default: undefined,
@@ -777,7 +777,7 @@ export default function (pi: ExtensionAPI) {
 		const session_id = ulid();
 
 		const defaultName = `agent-${session_id.slice(-6)}`;
-		const desiredName = flags.name || fm.name || defaultName;
+		const desiredName = flags.comsName || fm.name || defaultName;
 		const name = resolveUniqueName(project, desiredName);
 		if (name !== desiredName) {
 			try {
