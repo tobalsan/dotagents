@@ -114,3 +114,7 @@ Act as an orchestrator. Instead of doing everything yourself, use subagents to p
 - Use subagents with a lightweight model to perform code explorations.
 - Use subagents with a medium model to perform code implementation.
 
+**Triviality threshold:** delegate non-trivial or multi-file implementation to a medium-model subagent. Direct edits in the main thread are acceptable ONLY for trivial changes (≤2 lines, single file). If an edit is larger, stop and delegate it.
+
+A PreToolUse hook (`~/.claude/hooks/orchestrator-reminder.sh`) injects this reminder before each main-thread Edit/Write; subagents are exempt.
+
