@@ -6,6 +6,7 @@ If elaboration needed: write a clean HTML file mirroring templates in `~/dotagen
 
 ## Behavior
 - Never commit an implementation plan or summary unless explicitly asked.
+- If asked to commit without a specific branch, assume current active, even if `main`.
 - Before coding: state assumptions; if multiple interpretations exist, present them — don't pick silently; if unclear, ask. Push back when a simpler approach exists.
 - Minimum code that solves the problem. No speculative features, abstractions, or configurability.
 - Touch only what the request requires. Match existing style. Remove only orphans YOUR changes created; mention (don't delete) pre-existing dead code.
