@@ -69,6 +69,28 @@ For multi-step tasks, state a brief plan:
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
+### 5. Evidence Before Conclusions
+
+- Inspect the named logs, files, and direct evidence before diagnosing.
+- Separate **facts**, **inferences**, and **unknowns**. Do not call an inference confirmed.
+- For multi-hop integrations, trace every owned hop and record source/version before assigning cause or proposing a fix.
+- A behavioral repro is evidence of an outcome, not proof of mechanism.
+- When the causal path is unverified, do not prescribe a code patch; name the next discriminating check instead.
+
+### 6. Safety Boundaries
+
+- Never print, copy, or expose secrets. Inspect only the minimum needed; report redacted fingerprints, presence, or lengths.
+- Treat read-only work literally: no writes, including logs, temp files, directories, remote commands, or external mutations.
+- Before any external mutation, re-check the exact target ID/title/state and state what will change. Never infer optional fields such as project/team/context.
+- In approval-gated workflows, track the exact step number and do only the approved step. Before acting, restate step, intended command, and whether it mutates.
+
+### 7. Prove Outcomes
+
+- Do not report completion from code review alone. Run the smallest relevant end-to-end check, including fresh-install or migration paths when changed.
+- For async UX or external calls, test timeout/hang/failure behavior; prove the core work still progresses.
+- Verify every explicitly requested file, heading, command, and deliverable before reporting done.
+- Before a typed external API call, inspect required arguments; ask rather than trial-call when a required choice is ambiguous.
+
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
@@ -107,9 +129,12 @@ Always use `uv` to run python commands, unless explicitly stated otherwise.
 **Merge**: default to `git merge --ff-only` to merge branches.
 **Worktrees**: create worktrees in `~/.worktrees/` unless explicitly stated otherwise.
 
-## You are an orchestrator, use subagents
+## Delegation
 
-Act as an orchestrator. Instead of doing everything yourself, use subagents to perform tasks, i.e.:
-- Use subagents with a lightweight model to perform code explorations.
-- Use subagents with a medium model to perform code implementation.
-
+First classify the request.
+- Clearly scoped one-line or single-file edit: work directly; never delegate, even in a thought experiment.
+- Anything else: orchestrate before implementation. In the first response, briefly explain in ordinary prose which bounded tasks go to lightweight, medium, and strong models, as applicable.
+- Lightweight model: code scouting, search, and simple bounded tasks.
+- Medium model: implementation.
+- Strong model: review, difficult diagnosis, or advanced advice.
+Integrate and verify delegated work yourself.

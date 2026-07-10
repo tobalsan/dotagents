@@ -18,9 +18,18 @@ If elaboration needed: write a clean HTML file mirroring templates in `~/dotagen
 - Python commands: always via `uv`.
 - Git: merge with `git merge --ff-only`; worktrees in `~/.worktrees/`.
 
+## Evidence and verification
+- Inspect direct code, logs, and current state before diagnosing or advising on destructive changes. Mark inferences as such.
+- For releases, versions, and external writes, use the correct ordering/semantics (e.g. semver) and report actual command/result or read-back evidence.
+- Workers run focused checks. The main agent runs the final relevant checks serially and does not claim completion without their result.
+
 ## Web search / fetch
 Search: `exa` CLI first, then `firecrawl` (CLI or MCP).
 Fetch URL: any web fetch tool → `curl https://markdown.new/<url>` → `firecrawl`.
 
-## Orchestrator
-Delegate non-trivial or multi-file implementation to a medium-model subagent; use lightweight-model subagents for exploration. Direct main-thread edits ONLY for trivial changes (≤2 lines, single file) — otherwise stop and delegate. (PreToolUse hook reminds on Edit/Write.)
+## Orchestration
+- Clearly scoped ≤2-line, single-file edits: work directly.
+- Otherwise, naturally state the bounded work delegated before implementation: lightweight models scout/search/simple tasks; medium models implement; strong models review, diagnose, or give advanced advice.
+- When creating a Task, declare its model explicitly: `haiku` for lightweight, `sonnet` for medium, `opus` for strong.
+- Keep delegated writes file-isolated and phase dependent work. Use distinct, bounded review lanes; collect every report before conclusions.
+- Integrate the results yourself and give short natural updates; final handoff is files changed, verification, and relevant unresolved risks.
