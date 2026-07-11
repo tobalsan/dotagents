@@ -21,6 +21,9 @@ council --no-revise "Quick question"
 # Show each member's answer before synthesis
 council --verbose "Design question"
 
+# Neutral members (no stances) — preferred for ideation / open-ended exploration
+council --no-stance "Brainstorm approaches to X"
+
 # Attach file context (files, directories, globs; comma-separated)
 council --file "src/**/*.ts,!src/**/*.test.ts" "Review architecture risks"
 
@@ -35,6 +38,7 @@ council test head "prompt" --file src/index.ts
 ## Flags
 
 - `-f, --file <patterns>` — attach file/directory/glob context to the prompt. Supports comma-separated values and repeated flags. Prefix with `!` to exclude (e.g. `!src/**/*.test.ts`). Fails fast on missing paths, zero matches, or files >1 MB.
+- `--no-stance` — disable per-member stance mandates, making all members neutral. Preferred for ideation and open-ended exploration. Without this flag, members adopt their configured stances (e.g. Devil's Advocate), which is preferred for critical review of an existing idea or plan.
 - `--no-revise` — skip round 2 (revision)
 - `--verbose` — print member answers before head synthesis
 - `--help` — show usage
@@ -54,6 +58,7 @@ Located at `~/.council/council.json`. Structure:
 ```
 
 - `api_key`: literal key or `$ENV_VAR` reference
+- `stance` (optional, per member): a hard behavioral mandate (e.g. Devil's Advocate) injected as the member's highest-priority instruction. Active by default; disable per run with `--no-stance`.
 - `timeout`: per-node overrides global, global overrides default (120s)
 - OpenAI/xAI endpoints use Responses API; others use Chat Completions
 
