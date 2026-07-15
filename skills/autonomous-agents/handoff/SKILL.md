@@ -5,12 +5,13 @@ description: Summarize the current conversation and produce a comprehensive hand
 
 # Handoff
 
-Create a per-session hand-off document at `./docs/handoff/<YYYY-mm-dd>_<short_descriptive_title_for_session>.md` containing a comprehensive report that allows another agent (or this same agent in a fresh context window) to bootstrap and continue the work without loss of fidelity.
+Create a per-session hand-off document containing a comprehensive report that allows another agent (or this same agent in a fresh context window) to bootstrap and continue the work without loss of fidelity.
 
 ## Output location
 
-- Path: `./docs/handoff/<YYYY-mm-dd>_<short_descriptive_title_for_session>.md` (relative to the current working directory).
-- Create the `./docs/handoff/` directory if it does not exist.
+- Path:
+  - at user-provided path if user specified it,
+  - or at `./docs/handoff/<YYYY-mm-dd>_<short_descriptive_title_for_session>.md` (relative to the current working directory). Create the `./docs/handoff/` directory if it does not exist.
 - Use one file per session to avoid merge conflicts and a single oversized handoff file.
 - If you are continuing the same session handoff, update that session's existing file instead of creating a duplicate.
 
