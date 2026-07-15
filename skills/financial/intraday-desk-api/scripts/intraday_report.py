@@ -42,6 +42,35 @@ def classify_leader(pct, nq_pct):
     return "confirms" if (pct > 0) == (nq_pct > 0) else "diverging"
 
 
+def volatility_conditions(state):
+    if state == "contango":
+        return "calm conditions; short-dated volatility below 3-month volatility"
+    if state == "backwardation":
+        return "acute stress; short-dated volatility above 3-month volatility"
+    return "mixed volatility conditions"
+
+
+def render_volatility(volatility):
+    if "_error" in volatility:
+        return [f"- not available ({volatility['_error']})"]
+
+    vix = volatility.get("vix", {})
+    term = volatility.get("term_structure", {})
+    return [
+        (
+            f"- VIX {fmt(vix.get('last'))} | chg {fmt(vix.get('change_abs'))} "
+            f"({fmt(vix.get('change_pct'))}%) | H {fmt(vix.get('session_high'))} "
+            f"/ L {fmt(vix.get('session_low'))}"
+        ),
+        (
+            f"- Term structure: {term.get('state', 'n/a')} | "
+            f"9D/VIX {fmt(term.get('vix9d_vix_ratio'), 3)} | "
+            f"VIX/3M {fmt(term.get('vix_vix3m_ratio'), 3)}"
+        ),
+        f"- {volatility_conditions(term.get('state'))}",
+    ]
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument(
@@ -58,6 +87,7 @@ def main():
     futures = fetch(base, "/api/tv/futures")
     levels = fetch(base, f"/api/tv/levels/{sym}")
     internals = fetch(base, "/api/tv/internals")
+    volatility = fetch(base, "/api/tv/vol")
     gex = fetch(base, "/api/tv/gex/summary")
     profile = fetch(base, f"/api/tv/profile/{sym}")
     leaders = fetch(base, "/api/tv/leaders")
@@ -140,6 +170,10 @@ def main():
         )
 
     out.append("")
+    out.append("## Volatility")
+    out.extend(render_volatility(volatility))
+
+    out.append("")
     out.append("## Gamma (GEX)")
     if "_error" in gex:
         out.append(f"- not available ({gex['_error']})")
@@ -201,7 +235,7 @@ def main():
         (n, d["_error"])
         for n, d in [
             ("session", session), ("futures", futures), ("levels", levels),
-            ("gex", gex), ("profile", profile),
+            ("volatility", volatility), ("gex", gex), ("profile", profile),
         ]
         if isinstance(d, dict) and "_error" in d
     ]
