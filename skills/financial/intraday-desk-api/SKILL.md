@@ -19,6 +19,7 @@ GET {base}/api/tv/session
 GET {base}/api/tv/futures
 GET {base}/api/tv/levels/{symbol}
 GET {base}/api/tv/internals          # RTH only — 404 outside 09:30–16:00 ET
+GET {base}/api/tv/vol                # VIX term structure; cached off-hours
 GET {base}/api/tv/gex/summary
 GET {base}/api/tv/profile/{symbol}
 ```
@@ -44,11 +45,12 @@ If Python is unavailable, `curl` the same endpoints and synthesize manually.
 ## Payload notes
 
 - `/futures` → `{session, last_updated, futures: {SYM: {price, change_pct, change_abs, session_high, session_low, prev_close, volume}}}`.
-- `/levels/{sym}` → flat dict: `prev_day_high/low/close`, `session_high/low`, `prev_week_high/low`, `ema20`, `vwap`, `poc_1d`, `vah_1d`, `val_1d`, `poc_5d`, `vah_5d`, `val_5d`.
+- `/levels/{sym}` → flat dict: `month_high/low` (MH/ML), `prev_month_high/low` (PMH/PML), `prev_week_high/low` (PWH/PWL), `prev_day_high/low/close` (PDH/PDL/PDC), `session_high/low`, `ema20`, `vwap`, `poc_1d`, `vah_1d`, `val_1d`, `poc_5d`, `vah_5d`, `val_5d`. Monthly/weekly values are completed-period references except MH/ML, which are current-month ranges.
 - `/internals` → `{tick, tick_high, tick_low, trin, adv, dec, adv_ratio, timestamp}`.
+- `/vol` → `{last_updated, session, vix, vix9d, vix3m, vx_front, term_structure, vvix?}`. `vx_front` and `vvix` can be null. Term state: `backwardation` > 1.00, `contango` < 0.95, otherwise `flat`.
 - `/gex/summary` → `{spy, qqq}`, each `{spot_price, call_wall, put_wall, gamma_wall, gamma_flip, regime, regime_implication, timestamp, source}`. `/gex/{sym}` adds `strikes[]` with per-expiration `{call_gamma, put_gamma, net_gamma, dte}`.
-- `/profile/{sym}` → `{current_price, yesterday, five_day}`, each profile `{poc, vah, val, buckets[], total_volume}`; buckets carry `{price_low, price_high, volume, pct_of_total, is_poc, is_value_area}`.
-- Server refresh cadence: futures/levels every 30s during RTH (5 min otherwise); volume profile 5 min; GEX 15 min; internals 30s RTH-only. `last_updated` is ET ISO.
+- `/profile/{sym}` → `{current_price, yesterday, five_day}`, each profile `{poc, vah, val, buckets[], total_volume}`; buckets carry `{price_low, price_high, volume, pct_of_total, is_poc, is_value_area}`. Profiles are available for `ES NQ YM GC CL TNX DX`; use `CL`, `TNX`, or `DX` when that market is working symbol.
+- Server refresh cadence: futures/levels and VIX every 30s during RTH (5 min otherwise); volume profile 5 min; GEX 15 min; internals 30s RTH-only. `last_updated` is ET ISO.
 
 ## Report structure
 
@@ -59,10 +61,11 @@ ALWAYS use this template:
 3. `Tape` — futures table: last, chg%, chg, session high/low.
 4. `Structure` — key-level ladder for the working symbol, sorted high→low, each tagged with price ABOVE/BELOW/AT; call out nearest resistance and support.
 5. `Internals` — TICK, TRIN, A/D with interpretation (omit gracefully outside RTH).
-6. `Gamma (GEX)` — SPY and QQQ: regime, flip, call/put walls, implication, source, timestamp.
-7. `Volume profile` — yesterday + 5-day POC/VAH/VAL; where current price sits vs value.
-8. `Leaders & sectors` — mega-caps confirm/diverge vs NQ; sector rotation ranked.
-9. `Caveats` — anything missing, stale, or low-quality.
+6. `Volatility` — VIX range/change, VIX9D/VIX and VIX/VIX3M ratios, term state; omit VX when null. Describe conditions only.
+7. `Gamma (GEX)` — SPY and QQQ: regime, flip, call/put walls, implication, source, timestamp.
+8. `Volume profile` — yesterday + 5-day POC/VAH/VAL; supports `ES NQ YM GC CL TNX DX`; where current price sits vs value.
+9. `Leaders & sectors` — mega-caps confirm/diverge vs NQ; sector rotation ranked.
+10. `Caveats` — anything missing, stale, or low-quality.
 
 ## Inference rules
 

@@ -7,7 +7,9 @@ import urllib.error
 import urllib.request
 
 LEVEL_NAMES = [
-    ("WKLY H", "prev_week_high"),
+    ("MH", "month_high"),
+    ("PMH", "prev_month_high"),
+    ("PWH", "prev_week_high"),
     ("PDH", "prev_day_high"),
     ("VAH", "vah_1d"),
     ("POC", "poc_1d"),
@@ -16,7 +18,9 @@ LEVEL_NAMES = [
     ("VWAP", "vwap"),
     ("VAL", "val_1d"),
     ("PDL", "prev_day_low"),
-    ("WKLY L", "prev_week_low"),
+    ("PWL", "prev_week_low"),
+    ("PML", "prev_month_low"),
+    ("ML", "month_low"),
 ]
 
 
