@@ -1,0 +1,28 @@
+{
+  "skill_name": "obsidian-excalidraw",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "Create a mind map about 'Learning in public' in my Obsidian vault at <VAULT>. Central topic in the middle, around 5 main branches (e.g. blogging, open source, social media, feedback, consistency), each with 2-3 sub-nodes. Save it as Excalidraw/learning-in-public.excalidraw.md so it opens in the Excalidraw plugin.",
+      "expected_output": "A valid .excalidraw.md file that the obsidian-excalidraw-plugin can open: correct frontmatter, Text Elements section with block refs, Drawing JSON with a central node, branch nodes laid out radially, and arrows/lines connecting them.",
+      "files": [],
+      "assertions": [
+        "Mind-map connectors are arrow elements bound at both ends to real shapes (unbound lines do not count as connectors)"
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "Make a flowchart in my Obsidian vault (<VAULT>) showing a CI/CD pipeline: commit -> tests -> build -> deploy to staging -> manual approval (decision) -> deploy to prod, with a 'fix and retry' loop back from failed tests. Save as Excalidraw/cicd.excalidraw.md (Excalidraw plugin format).",
+      "expected_output": "Valid .excalidraw.md flowchart: labeled shapes (diamond for the decision), arrows bound to shapes with labels on the yes/no branches, top-down layout without overlaps.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "In my Obsidian vault at <VAULT> there is an existing Excalidraw drawing Excalidraw/mini.excalidraw.md. Add a new rectangle labeled 'Ship it' to the right of the existing 'Done' ellipse and connect 'Done' to it with a labeled arrow ('celebrate'). Don't break anything already in the drawing.",
+      "expected_output": "The existing drawing still contains all original elements (which are stored compressed); a new labeled rectangle and a bound labeled arrow are added; the Text Elements section is updated; the file still opens in the plugin.",
+      "files": [
+        "sandbox-vault/Excalidraw/mini.excalidraw.md"
+      ]
+    }
+  ]
+}
