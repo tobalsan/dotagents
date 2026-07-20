@@ -916,7 +916,7 @@ async function cmdDraftsUpdate(args) {
     } else {
       // Default to draft's existing enabled platforms
       platformList = Object.entries(existing.platforms || {})
-        .filter(([, config]) => config.enabled)
+        .filter(([, config]) => config && config.enabled)
         .map(([platform]) => platform);
 
       if (platformList.length === 0) {
@@ -935,7 +935,7 @@ async function cmdDraftsUpdate(args) {
       // Extract posts from the first enabled platform
       let existingPosts = [];
       for (const [, config] of Object.entries(existing.platforms || {})) {
-        if (config.enabled && config.posts) {
+        if (config && config.enabled && config.posts) {
           existingPosts = config.posts;
           break;
         }
