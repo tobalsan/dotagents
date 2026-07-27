@@ -19,7 +19,7 @@ If inside an existing codebase, explore first (subagents in parallel) only to av
 
 ### 2. Outcome Interview
 
-Use `AskUserQuestion` (preferred), or sequential text questions. Drill these lenses—they are angles to probe, not a checklist to march through:
+Use interview-specific tools at your disposal, such as `AskUserQuestion`, or `interview`, if available. Otherwise, ask sequential text questions. Drill these lenses—they are angles to probe, not a checklist to march through:
 
 - **The win**: What does the world look like when this works? What observably changes?
 - **Who & why**: Who feels what differently? Why does this matter enough to build?
@@ -30,12 +30,13 @@ Use `AskUserQuestion` (preferred), or sequential text questions. Drill these len
 
 Guidelines:
 - **Every "how" question is a smell.** Tech stack, screens, data model, edge cases—skip them. Ask a how-question ONLY when the answer would change the *goal* itself. Default: don't.
-- **ONE decision per turn. Never batch.** No "Q1/Q2/Q3", no "Round 1 of N", no "while you're thinking, also...". Ask one decision, wait, then ask the next.
+- **If using simple sequential text questions, one decision per turn. Never batch.** No "Q1/Q2/Q3", no "Round 1 of N", no "while you're thinking, also...". Ask one decision, wait, then ask the next. 
   - Why: batched questions force context-switching across unrelated decisions and produce shallow answers. Single questions let each answer reshape the next.
   - **Sub-parts count as batching.** A "Q3" with parts (a)(b)(c)(d) is four questions in a trench coat. Pick the single most-blocking decision; ask only that.
   - **Allowed:** one decision with mutually-exclusive options (a/b/c), user picks one. Multiple sub-decisions each with their own options is not.
   - Test: if the user could answer part and leave the rest, you batched. Cut.
-- Ask non-obvious, probing questions—skip anything Claude can infer
+  - It's fine to batch questions when using interview-specific tools, since they usually present one question at a time anyway.
+- Ask non-obvious, probing questions—skip anything you can infer
 - Go deep on the current answer before moving on; let it reshape the next question
 - Challenge assumptions; surface the implicit intent behind a stated feature
 - Do not ask what to build next. Ask what must become true for the user, customer, or business.
