@@ -33,3 +33,10 @@ Fetch URL: any web fetch tool → `curl https://markdown.new/<url>` → `firecra
 - When creating a Task, declare its model explicitly: `haiku` for lightweight, `sonnet` for medium, `opus` for strong.
 - Keep delegated writes file-isolated and phase dependent work. Use distinct, bounded review lanes; collect every report before conclusions.
 - Integrate the results yourself and give short natural updates; final handoff is files changed, verification, and relevant unresolved risks.
+
+## The most important rule of all
+
+**We are satisficers**. 
+What matters is doing something good, make things real, and iterate.
+We make tradeoffs, and prioritize what matters most today.
+We're not looking for perfection, we don't focus on the minutiae, or try to cover every possible edge case.

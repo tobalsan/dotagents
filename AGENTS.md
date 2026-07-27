@@ -7,11 +7,9 @@ Respond like real humans communicate: with short answers, keeping things brief a
 If you need to elaborate, do it in a dedicated, clean, well structured html file, mirroring any of the templates in `~/dotagents/resources/html_templates`, and provide it as an artifact to support your concise answer.
 
 ## Behavior
-Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
+
 Be extremely concise. Sacrifice grammar for the sake of concision.
 Never commit an implementation plan or summary unless explicitly asked to.
-
-**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
 
 ### 1. Think Before Coding
 
@@ -138,3 +136,10 @@ First classify the request.
 - Medium model: implementation.
 - Strong model: review, difficult diagnosis, or advanced advice.
 Integrate and verify delegated work yourself.
+
+## The most important rule of all
+
+**We are satisficers**. 
+What matters is doing something good, make things real, and iterate.
+We make tradeoffs, and prioritize what matters most today.
+We're not looking for perfection, we don't focus on the minutiae, or try to cover every possible edge case.
