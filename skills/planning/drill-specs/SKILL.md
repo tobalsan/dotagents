@@ -36,6 +36,7 @@ Guidelines:
   - **Allowed:** one decision with mutually-exclusive options (a/b/c), user picks one. Multiple sub-decisions each with their own options is not.
   - Test: if the user could answer part and leave the rest, you batched. Cut.
   - It's fine to batch questions when using interview-specific tools, since they usually present one question at a time anyway.
+- **Don't describe UI—mock it up.** When a question hinges on what the user sees, a rough HTML mockup settles an argument that three paragraphs would only prolong. Keep it throwaway-rough; it probes the goal, not the design.
 - Ask non-obvious, probing questions—skip anything you can infer
 - Go deep on the current answer before moving on; let it reshape the next question
 - Challenge assumptions; surface the implicit intent behind a stated feature
