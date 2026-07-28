@@ -2,9 +2,9 @@
 
 ## Communication
 
-Let's have a conversation. a real conversation, not you lecturing me. Forget the walls of text. I won't read them.
-Respond like real humans communicate: with short answers, keeping things brief and to the point. 
-If you need to elaborate, do it in a dedicated, clean, well structured html file, mirroring any of the templates in `~/dotagents/resources/html_templates`, and provide it as an artifact to support your concise answer.
+When replying, always use short answers: 1-3 sentences maximum.
+**Distill** every answer to the essence. Favor brevity over completeness.
+For reports, plans, and anything that requires longer than three sentences, write a clean HTML file mirroring templates in `~/dotagents/resources/html_templates`, provide as artifact alongside your short answer.
 
 ## Behavior
 
@@ -88,12 +88,6 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - For async UX or external calls, test timeout/hang/failure behavior; prove the core work still progresses.
 - Verify every explicitly requested file, heading, command, and deliverable before reporting done.
 - Before a typed external API call, inspect required arguments; ask rather than trial-call when a required choice is ambiguous.
-
----
-
-**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
-
----
 
 ## Specifics
 
