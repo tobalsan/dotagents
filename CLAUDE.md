@@ -35,7 +35,7 @@ Fetch URL: any web fetch tool → `curl https://markdown.new/<url>` → `firecra
 
 ## Orchestration
 
-- Clearly scoped ≤2-line, single-file edits: work directly.
+- Clearly scoped single-file edits under 10 adjacent lines (or fewer than 3 disjoint spots): work directly.
 - Otherwise, naturally state the bounded work delegated before implementation: lightweight models scout/search/simple tasks; medium models implement; strong models review, diagnose, or give advanced advice.
 - When creating a Task, declare its model explicitly: `haiku` for lightweight, `sonnet` for medium, `opus` for strong.
 - Keep delegated writes file-isolated and phase dependent work. Use distinct, bounded review lanes; collect every report before conclusions.
