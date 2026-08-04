@@ -13,7 +13,7 @@ This skill takes the current conversation context and codebase understanding and
 
 A deep module (as opposed to a shallow module) is one which encapsulates a lot of functionality in a simple, testable interface which rarely changes.
 
-Check with the user that these modules match their expectations. Check with the user which modules they want tests written for.
+Confirm the modules with the user via a question tool. The question text itself must carry the entire sketch — one line per module: `Name — responsibility`. Options: accept / adjust. Ask which modules get tests in the same dialog. Never present the sketch as text earlier in the same turn — text preceding a tool call may not render.
 
 3. Write the PRD using the template below, then publish it to the project issue tracker or write it to a markdown file in `./docs/specs`, according to user preference.
 
