@@ -14,6 +14,7 @@ indexed path prints the existing doc_id and exits without re-indexing.
 """
 import argparse
 import json
+import os
 import sys
 import tempfile
 import uuid
@@ -24,6 +25,10 @@ from _pageindex_env import resolve_repo, setup_llm_env, default_workspace
 
 # PyMuPDF sniffs by content, so these all round-trip through convert_to_pdf().
 EBOOK_SUFFIXES = {".epub", ".mobi", ".fb2", ".azw3"}
+
+# Passed explicitly so the skill never has to edit the repo's config.yaml,
+# which is only consulted when summary_model is None.
+DEFAULT_SUMMARY_MODEL = "deepseek-v4-flash"
 
 
 def find_existing(workspace: Path, source_path: str) -> str | None:
@@ -87,7 +92,11 @@ def main() -> None:
         pdf_path = tmp_pdf_path
 
     try:
-        tree = page_index_flash(str(pdf_path), summary=not args.no_summary)
+        tree = page_index_flash(
+            str(pdf_path),
+            summary=not args.no_summary,
+            summary_model=os.environ.get("PAGEINDEX_SUMMARY_MODEL", DEFAULT_SUMMARY_MODEL),
+        )
         doc = fitz.open(str(pdf_path))
         pages = [{"page": i + 1, "content": doc[i].get_text()} for i in range(doc.page_count)]
         doc.close()

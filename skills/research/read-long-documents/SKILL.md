@@ -43,12 +43,13 @@ print('API key resolves OK')
 echo "PREFLIGHT OK"
 ```
 
-One more one-time repo-level fix if you cloned fresh: `pageindex/config.yaml`'s
-`model`, `summary_model`, `retrieve_model` must name a model your endpoint actually
-serves (the shipped defaults, e.g. `gpt-4o-2024-11-20`, are placeholders and will
-403/404 against most non-OpenAI endpoints). This checkout already has all three set to
-`deepseek-v4-flash` to match its `.env`'s `https://api.deepseek.com` endpoint — if you
-point `.env` at a different provider, update `config.yaml` to match.
+Leave the checkout pristine — no edits to `pageindex/config.yaml` are needed. Its
+shipped `model` / `summary_model` defaults (e.g. `gpt-4o-2024-11-20`) would 403/404
+against a non-OpenAI endpoint, but they are only a fallback: `index_book.py` passes
+`summary_model=` explicitly, defaulting to `deepseek-v4-flash` to match the `.env`'s
+`https://api.deepseek.com` endpoint. Point `.env` at a different provider and set
+`PAGEINDEX_SUMMARY_MODEL` to a model it serves. Retrieval never reads the config at
+all.
 
 Both scripts below handle the remaining two blockers themselves on every run: they add
 `$PAGEINDEX_REPO` to `sys.path`, and — only when about to make an LLM call (node
