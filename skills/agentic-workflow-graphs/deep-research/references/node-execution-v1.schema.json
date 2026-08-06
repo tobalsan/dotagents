@@ -1,0 +1,404 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "node-execution-v1.schema.json",
+  "title": "Deep research node execution v1",
+  "definitions": {
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?![\\\\/])(?![A-Za-z]:)(?!.*(?:^|[\\\\/])\\.\\.(?:[\\\\/]|$))[^\\r\\n]+$"
+    },
+    "nodeKind": {
+      "type": "string",
+      "enum": [
+        "scope",
+        "plan",
+        "researcher",
+        "extract",
+        "skeptic",
+        "merge",
+        "persist",
+        "synthesize"
+      ]
+    },
+    "identity": {
+      "type": "object",
+      "required": [
+        "iteration_id",
+        "node_id",
+        "node_kind",
+        "attempt"
+      ],
+      "properties": {
+        "iteration_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "node_kind": {
+          "$ref": "#/definitions/nodeKind"
+        },
+        "lane": {
+          "type": "string",
+          "minLength": 1
+        },
+        "attempt": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "exit_code": {
+          "type": "integer"
+        }
+      }
+    },
+    "input": {
+      "type": "object",
+      "required": [
+        "iteration_id",
+        "node_id",
+        "node_kind",
+        "attempt",
+        "goal",
+        "dependencies",
+        "campaign_state_paths",
+        "output_dir",
+        "retrieval_skills",
+        "limits"
+      ],
+      "properties": {
+        "iteration_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "node_kind": {
+          "$ref": "#/definitions/nodeKind"
+        },
+        "lane": {
+          "type": "string",
+          "minLength": 1
+        },
+        "attempt": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "goal": {
+          "type": "string",
+          "minLength": 1
+        },
+        "dependencies": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "node_id",
+              "result_path"
+            ],
+            "properties": {
+              "node_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "result_path": {
+                "$ref": "#/definitions/relativePath"
+              }
+            }
+          }
+        },
+        "campaign_state_paths": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/relativePath"
+          }
+        },
+        "output_dir": {
+          "$ref": "#/definitions/relativePath"
+        },
+        "retrieval_skills": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "timeout_seconds",
+            "max_concurrency"
+          ],
+          "properties": {
+            "timeout_seconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "max_concurrency": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "budget": {
+              "type": "object",
+              "additionalProperties": false,
+              "minProperties": 1,
+              "properties": {
+                "max_cost": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "currency": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "max_tokens": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              },
+              "dependencies": {
+                "max_cost": [
+                  "currency"
+                ],
+                "currency": [
+                  "max_cost"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "required": [
+        "iteration_id",
+        "node_id",
+        "node_kind",
+        "attempt",
+        "status",
+        "summary",
+        "artifacts",
+        "sources",
+        "citations"
+      ],
+      "properties": {
+        "iteration_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "node_kind": {
+          "$ref": "#/definitions/nodeKind"
+        },
+        "lane": {
+          "type": "string",
+          "minLength": 1
+        },
+        "attempt": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "completed",
+            "retryable",
+            "failed",
+            "cancelled"
+          ]
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "artifacts": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/relativePath"
+          }
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "url"
+            ],
+            "properties": {
+              "canonical_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "citation_ids": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "artifact_path": {
+                "$ref": "#/definitions/relativePath"
+              }
+            }
+          }
+        },
+        "citations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "citation_id",
+              "source_url",
+              "locator"
+            ],
+            "properties": {
+              "citation_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "source_url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "locator": {
+                "type": "string",
+                "minLength": 1
+              },
+              "artifact_path": {
+                "$ref": "#/definitions/relativePath"
+              }
+            }
+          }
+        },
+        "retry_reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "error": {
+          "$ref": "#/definitions/error"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "completed"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "error"
+                  ]
+                },
+                {
+                  "required": [
+                    "retry_reason"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "retryable"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "error",
+              "retry_reason"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "failed",
+                  "cancelled"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "error"
+            ]
+          }
+        }
+      ],
+      "additionalProperties": false
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/definitions/input"
+    },
+    {
+      "$ref": "#/definitions/result"
+    }
+  ]
+}

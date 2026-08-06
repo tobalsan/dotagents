@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "source-ledger-v1.schema.json",
+  "title": "Source ledger v1 row",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "canonical_id",
+    "status",
+    "url",
+    "observed_at"
+  ],
+  "properties": {
+    "canonical_id": {
+      "type": "string",
+      "pattern": "^(sha256:[a-f0-9]{64}|(doi|arxiv|youtube|isbn):.+)$"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["seen", "fetched", "extracted", "rejected"]
+    },
+    "url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "content_id": {
+      "type": "string",
+      "pattern": "^(doi|arxiv|youtube|isbn):.+$"
+    },
+    "work_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "source_type": {
+      "type": "string"
+    },
+    "retrieved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "lane_id": {
+      "type": "string"
+    },
+    "pass_id": {
+      "type": "string"
+    },
+    "collision": {
+      "type": "boolean"
+    }
+  }
+}

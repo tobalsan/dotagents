@@ -15,15 +15,51 @@ scope (once) → [ plan → fan-out researchers → extract → skeptic → merg
 
 ## Durable state
 
-Three artifacts in a working directory. An iteration must be able to start knowing nothing but what it reads from them — findings held only in context are lost at the next reset. **Structure them however suits the research**; these are roles, not schemas.
+Five durable artifact roles live in a working directory. An iteration must be able to start knowing nothing but what it reads from them — findings held only in context are lost at the next reset. **Structure them however suits the research** except where a contract is named.
 
 - **Coverage map** — a taxonomy of the question space. What territory exists, and how well each branch is covered. Updated, never regenerated.
-- **Source ledger** — every source encountered. Its one hard invariant: **every source carries a canonical ID (normalized URL hash or equivalent), and dedup runs against that ID.** Without it the campaign can't tell new ground from re-tread, and never converges.
+- **Source ledger** — every source encountered, each under a canonical ID. See the contract below and [`references/source-ledger-v1.md`](references/source-ledger-v1.md) ([schema](references/source-ledger-v1.schema.json)); it's the one part of this skill that isn't negotiable.
 - **Notes** — claims with their evidence and citations. The raw material synthesis is built from.
+- **Gap reports** — one durable report per iteration, at a stable path recorded in its manifest. The next planner reads the latest verified report.
+- **Iteration manifests** — one event stream per iteration recording graph execution and terminal outcome.
 
 Rejected sources and knocked-down claims stay in the ledger, marked. Deleting them means re-fetching them later.
 
+### The ledger contract
+
+Structure the rest as you see fit. Get this part wrong and the campaign either re-treads ground forever or reports a source count that isn't real.
+
+**Merge is the only writer.** Researchers read the ledger to skip what they've already seen; they never append to it. Writes stay single-threaded — one pass, one writer — so parallel lanes can't race. Two lanes fetching the same URL in the same pass is tolerated: Merge dedups before writing, so it costs a wasted fetch, not a wrong count. Merge reports those collisions in the gap report, and the planner stops issuing overlapping lanes — the fix belongs in planning, not in worker coordination.
+
+**Identity.** Every source carries a canonical ID: a normalized URL hash by default, and a namespaced content ID when one exists — `doi:…`, `arxiv:…`, `youtube:…`, `isbn:…` — which dedup prefers. That's what collapses aliases of one work: an arXiv abstract page, its PDF, and a journal mirror are one source. Genuinely different manifestations stay separate — a conference talk and a podcast recording of the same argument are two sources — joined by an optional `work_id` when the link matters. Normalization is mechanical and unforgiving (`youtu.be` vs `watch?v=`, `/abs` vs `/pdf` vs `v2`, tracking params, Reddit share links); compute it with a script rather than asking a model to judge it consistently across thousands of rows.
+
+**The fold.** The ledger is append-only, and a source's status moves as it goes — seen, fetched, extracted, rejected. Reading it means reducing last-write-wins per canonical ID: the current state of a source is its most recent row, not its first.
+
+**Counting.** Any target is a predicate over that fold, and it must name which statuses count. "N sources" means nothing until you've decided whether rejected ones are among them.
+
+### The iteration manifest contract
+
+Each iteration has one append-only JSONL manifest, with one event per line validated against [`references/iteration-manifest-v1.schema.json`](references/iteration-manifest-v1.schema.json). Follow [`references/iteration-manifest-v1.md`](references/iteration-manifest-v1.md) for states, attempts, routing evidence, artifact references, errors, retries, dependencies, timing, and terminal outcomes. Readers fold file order last-write-wins by `node_id`; event uniqueness, ordering, and legal transitions are runtime invariants.
+
+The main orchestrator is the manifest's sole writer and owns transitions and retries. A single-pass caller stops after a verified terminal event. A campaign caller starts another pass only from `completed`, evaluates termination from `saturated`, and stops advancement on `failed`; no caller infers completion from prose, ledger rows, or a partial manifest.
+
 Because all state is on disk, iterations are independent: they can run back-to-back in one session, or be driven by an outer harness that restarts a fresh agent each pass.
+
+### State guardrail CLI
+
+Use stdlib-only `scripts/research_state.py` with Python 3.11+. Campaign files and artifact roots are always explicit; the CLI validates and persists state but never plans, routes, retries, or dispatches work.
+
+```bash
+python3 scripts/research_state.py normalize 'https://youtu.be/VIDEO_ID'
+python3 scripts/research_state.py ledger-append CAMPAIGN/source-ledger.jsonl --row '{...}'
+python3 scripts/research_state.py ledger-fold CAMPAIGN/source-ledger.jsonl
+python3 scripts/research_state.py ledger-count CAMPAIGN/source-ledger.jsonl --status extracted --source-type paper
+python3 scripts/research_state.py manifest-append CAMPAIGN/passes/pass-1/iteration-manifest.jsonl --row '{...}'
+python3 scripts/research_state.py manifest-verify CAMPAIGN/passes/pass-1/iteration-manifest.jsonl --artifact-root CAMPAIGN
+python3 scripts/research_state.py campaign-evaluate --config CAMPAIGN/termination.json --ledger CAMPAIGN/source-ledger.jsonl --manifest CAMPAIGN/passes/pass-1/iteration-manifest.jsonl --artifact-root CAMPAIGN --usage CAMPAIGN/usage.json --now 2026-01-31T00:00:00Z
+```
+
+Append commands lock the stream, validate existing and new events, append one line, and `fsync`. JSON goes to stdout; invalid input exits 2 and an unverified terminal state exits 3.
 
 ## Nodes
 
@@ -33,7 +69,7 @@ A cheap broad sweep to learn the terrain, then build the initial coverage map fr
 
 ### Plan
 
-Read the coverage map and the last gap report. Generate **3–5 research lanes** as *diffs against the map* — thin branches, contradictions, unexplored adjacencies. Never free-form from the original question; that re-treads ground.
+Read the coverage map and the last gap report. Generate **3–5 research lanes** as *diffs against the map* — thin branches, contradictions, unexplored adjacencies. Never free-form from the original question; that re-treads ground. The orchestrator records the plan node and its artifact path in the manifest.
 
 Five lanes while the map is broad and shallow. Three once the gaps are narrow and specific.
 
@@ -42,7 +78,9 @@ Five lanes while the map is broad and shallow. Three once the gaps are narrow an
 One subagent per lane, in parallel. Each searches, retrieves, and reports back. Subagents do not spawn sub-subagents.
 
 - **10 sources is the floor, 50 the ceiling.** The real stop is dryness: a lane ends when new sources stop changing its claims.
-- Check the ledger before fetching — skip anything already seen by canonical ID.
+- Read the ledger before fetching and skip anything already seen by canonical ID. Researchers never write to it.
+- The orchestrator records each lane as a stable researcher `node_id`, including dependencies, attempt, routing evidence, artifacts, and terminal state.
+- Execute every routed node through [`references/node-execution-v1.md`](references/node-execution-v1.md) ([schema](references/node-execution-v1.schema.json)); use an isolated attempt output directory and accept its result artifact, not stdout, as the handoff.
 - Retrieve with the skill that matches the source type, not by improvising.
 
 **Retrieval skills.** Each one encodes the cheap path and the traps for its source type; improvising costs a researcher several turns and often floods its context with raw text.
@@ -68,11 +106,11 @@ Turn raw sources into claims with evidence and citations. Mark evidence strength
 
 Runs after every lane reports, seeing all of them at once. That placement is deliberate: it catches cross-lane contradictions and consensus illusions a per-lane critic can't.
 
-It challenges sourcing, not conclusions it dislikes. Whatever it knocks down becomes a gap-report entry — there is no re-research bounce inside an iteration. The next iteration's planner picks it up.
+It challenges sourcing, not conclusions it dislikes. Whatever it knocks down becomes a gap-report entry — there is no re-research bounce inside an iteration. The next iteration's planner picks it up. The orchestrator records the skeptic transition and report artifact after cross-lane review.
 
 ### Merge
 
-Write claims into notes, sources into the ledger, and update the coverage map with what's now covered. Emit a **gap report**: what's still thin, what contradicted, what the skeptic rejected. That report is what aims the next iteration.
+Write claims into notes, sources into the ledger — Merge is the ledger's only writer — and update the coverage map with what's now covered. Emit a **gap report**: what's still thin, what contradicted, what the skeptic rejected, and which sources two lanes fetched twice. That report is what aims the next iteration. The orchestrator records merge/persist transitions, output paths, duration, and errors; persist is the final durable-write stage, not a separate research result.
 
 Merge does **not** write prose. See below.
 
@@ -84,13 +122,17 @@ Because it's regenerable, the campaign is readable at iteration 3 as well as ite
 
 ## Termination
 
+Campaign termination is optional and follows [`references/campaign-termination-v1.md`](references/campaign-termination-v1.md) ([config schema](references/campaign-termination-v1.schema.json), [result schema](references/campaign-evaluation-result-v1.schema.json)). Without a configured target, execution remains one pass. With one, evaluate only explicit state paths and explicit `--now`; exit codes distinguish continue, complete, and failed. Exceeded hard deadline/budget limits fail unless an identical positive target predicate contributes to a completed target; nesting beneath `not` or an incomplete compound target grants no exemption. Invalid or missing state always fails, never completes.
+
 Iterate until the research saturates: the coverage map stops gaining branches, the gap report comes back empty, and lanes go dry on arrival across several consecutive iterations. One quiet iteration is noise — look for a run of them.
 
 If the caller supplies an external stopping condition (a source count, a deadline, a budget), honor it, but still report saturation when it arrives first. Grinding out volume past that point buys duplicates, not coverage.
 
+After durable outputs are verified, the orchestrator appends the terminal iteration event: `completed`, `saturated`, or `failed`, with the gap-report path. Incomplete node folds resume from recorded attempts; callers act only from the verified terminal event.
+
 ## Model routing
 
-Use `autonomous-agents/choose-llm-for-task` to route each node; it picks across the available harnesses and accounts for real quota limits — which matters here, since a campaign burns through them. As a shape: strong models for scope, plan, skeptic and merge; cheaper models for the researcher fan-out and extraction.
+Use `autonomous-agents/choose-llm-for-task` to route each node; it picks across the available harnesses and accounts for real quota limits — which matters here, since a campaign burns through them. Then follow the harness-neutral [`references/node-execution-v1.md`](references/node-execution-v1.md) contract ([schema](references/node-execution-v1.schema.json)): load and obey the selected `autonomous-agents/<harness>` skill rather than embedding harness commands here. Record chosen harness, model, thinking level, rationale, and policy reference in manifest events; keep routing policy out of the schema. As a shape: strong models for scope, plan, skeptic and merge; cheaper models for the researcher fan-out and extraction.
 
 ## Principles
 
