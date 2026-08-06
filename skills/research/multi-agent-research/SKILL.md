@@ -1,9 +1,9 @@
 ---
-name: deep-research
-description: Conduct thorough multi-source research on complex topics. Use when user asks to research, investigate, or deeply explore a subject. Triggers on queries like "research X", "what's the current state of Y", "help me understand Z", "find out about", or any request requiring synthesis from multiple sources. NOT for simple factual lookups or single-source queries.
+name: multi-agent-research
+description: Conduct thorough multi-source research on complex topics within a single session, using parallel subagents and bounded rounds. Use when user asks to research, investigate, or deeply explore a subject. Triggers on queries like "research X", "what's the current state of Y", "help me understand Z", "find out about", or any request requiring synthesis from multiple sources. NOT for simple factual lookups or single-source queries, and NOT for long-horizon research campaigns that run past one context window — use deep-research for those.
 ---
 
-# Deep Research
+# Multi-Agent Research
 
 Systematic research workflow: clarify intent → generate subqueries → parallel search → synthesize → report.
 
