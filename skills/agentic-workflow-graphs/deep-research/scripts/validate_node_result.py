@@ -14,7 +14,7 @@ from urllib.parse import urlsplit
 KINDS = {"scope", "plan", "researcher", "extract", "skeptic", "merge", "persist", "synthesize"}
 STATUSES = {"completed", "retryable", "failed", "cancelled"}
 RELATIVE = re.compile(r"^(?![\\/])(?![A-Za-z]:)(?!.*(?:^|[\\/])\.\.(?:[\\/]|$))[^\r\n]+$")
-INPUT_KEYS = {"iteration_id", "node_id", "node_kind", "lane", "attempt", "goal", "dependencies", "campaign_state_paths", "output_dir", "retrieval_skills", "limits"}
+INPUT_KEYS = {"iteration_id", "node_id", "node_kind", "lane", "attempt", "goal", "dependencies", "campaign_state_paths", "output_dir", "retrieval_skills", "repair", "limits"}
 RESULT_KEYS = {"iteration_id", "node_id", "node_kind", "lane", "attempt", "status", "summary", "artifacts", "sources", "citations", "retry_reason", "error"}
 DEFAULT_SCHEMA = Path(__file__).parents[1] / "references" / "node-execution-v1.schema.json"
 
@@ -48,7 +48,7 @@ def validate_input(value: Any) -> dict[str, Any]:
     if not isinstance(value, dict): raise Invalid("input must be object")
     unknown=set(value)-INPUT_KEYS
     if unknown: raise Invalid("input has unknown fields: " + ", ".join(sorted(unknown)))
-    required=INPUT_KEYS-{"lane"}; missing=required-set(value)
+    required=INPUT_KEYS-{"lane","repair"}; missing=required-set(value)
     if missing: raise Invalid("input missing fields: " + ", ".join(sorted(missing)))
     identity(value,"input"); nonempty(value["goal"],"input.goal"); relative(value["output_dir"],"input.output_dir")
     for field in ("dependencies","campaign_state_paths","retrieval_skills"):
@@ -64,6 +64,17 @@ def validate_input(value: Any) -> dict[str, Any]:
     if len(value["campaign_state_paths"])!=len(set(value["campaign_state_paths"])): raise Invalid("input.campaign_state_paths must be unique")
     for i,name in enumerate(value["retrieval_skills"]): nonempty(name,f"input.retrieval_skills[{i}]")
     if len(value["retrieval_skills"])!=len(set(value["retrieval_skills"])): raise Invalid("input.retrieval_skills must be unique")
+    if "repair" in value:
+        repair=value["repair"]
+        if not isinstance(repair,dict) or set(repair)!={"mode","prior_attempt","readable_paths"}: raise Invalid("input.repair invalid")
+        if repair["mode"]!="contract_only": raise Invalid("input.repair.mode invalid")
+        prior=repair["prior_attempt"]
+        if isinstance(prior,bool) or not isinstance(prior,int) or prior != value["attempt"]-1: raise Invalid("input.repair.prior_attempt invalid")
+        paths=repair["readable_paths"]
+        if not isinstance(paths,list) or not paths: raise Invalid("input.repair.readable_paths invalid")
+        for i,path in enumerate(paths): relative(path,f"input.repair.readable_paths[{i}]")
+        if len(paths)!=len(set(paths)): raise Invalid("input.repair.readable_paths must be unique")
+        if value["dependencies"] or value["campaign_state_paths"] or value["retrieval_skills"]: raise Invalid("contract repair cannot declare dependencies, campaign state, or retrieval skills")
     limits=value["limits"]
     if not isinstance(limits,dict) or set(limits)-{"timeout_seconds","max_concurrency","budget"}: raise Invalid("input.limits invalid")
     for key in ("timeout_seconds","max_concurrency"):
@@ -150,7 +161,7 @@ def validate_schema(path: Path) -> None:
     schema=load(path)
     definitions=schema.get("definitions") if isinstance(schema,dict) else None
     if schema.get("$schema") != "http://json-schema.org/draft-07/schema#" or not isinstance(definitions,dict): raise Invalid("unsupported node schema")
-    for name,keys in (("input",INPUT_KEYS-{"lane"}),("result",{"iteration_id","node_id","node_kind","attempt","status","summary","artifacts","sources","citations"})):
+    for name,keys in (("input",INPUT_KEYS-{"lane","repair"}),("result",{"iteration_id","node_id","node_kind","attempt","status","summary","artifacts","sources","citations"})):
         definition=definitions.get(name)
         if not isinstance(definition,dict) or definition.get("additionalProperties") is not False or not keys<=set(definition.get("required",[])): raise Invalid(f"node schema {name} contract mismatch")
 

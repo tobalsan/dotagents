@@ -73,6 +73,32 @@
         }
       }
     },
+    "contractRepair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "prior_attempt",
+        "readable_paths"
+      ],
+      "properties": {
+        "mode": {
+          "const": "contract_only"
+        },
+        "prior_attempt": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "readable_paths": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/relativePath"
+          }
+        }
+      }
+    },
     "input": {
       "type": "object",
       "required": [
@@ -149,6 +175,9 @@
             "type": "string",
             "minLength": 1
           }
+        },
+        "repair": {
+          "$ref": "#/definitions/contractRepair"
         },
         "limits": {
           "type": "object",

@@ -61,4 +61,16 @@ class ValidateNodeResultTests(unittest.TestCase):
             root=Path(tmp); inp,res,result,_=self.fixture(root); result["citations"].append({"citation_id":"c2","source_url":"https://example.com/unlisted","locator":"line 2"}); res.write_text(json.dumps(result))
             with self.assertRaisesRegex(validator.Invalid,"no matching source"): validator.run(inp,res,root,0)
 
+    def test_accepts_retrieval_free_contract_repair_input(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp); inp,res,_,_=self.fixture(root); value=json.loads(inp.read_text()); value["attempt"]=2; value["dependencies"]=[]; value["campaign_state_paths"]=[]; value["retrieval_skills"]=[]; value["repair"]={"mode":"contract_only","prior_attempt":1,"readable_paths":["passes/pass-1/attempts/researcher-a-1/node-result.json"]}; value["output_dir"]="passes/pass-1/attempts/researcher-a-2"; output=root/value["output_dir"]; output.mkdir(); repaired=output/"node-result.json"; result=json.loads(res.read_text()); result["attempt"]=2; repaired.write_text(json.dumps(result)); (output/"report.md").write_text("report"); (output/"evidence.txt").write_text("evidence"); inp=output/"node-input.json"; inp.write_text(json.dumps(value))
+            self.assertTrue(validator.run(inp,repaired,root,0)["valid"])
+
+    def test_rejects_contract_repair_with_research_access(self):
+        base={"mode":"contract_only","prior_attempt":1,"readable_paths":["passes/pass-1/attempts/researcher-a-1/node-result.json"]}
+        for field,value in (("dependencies",[{"node_id":"plan","result_path":"plan.json"}]),("campaign_state_paths",["source-ledger.jsonl"]),("retrieval_skills",["research/exa"])):
+            with self.subTest(field=field), tempfile.TemporaryDirectory() as tmp:
+                root=Path(tmp); inp,_,_,_=self.fixture(root); node=json.loads(inp.read_text()); node["attempt"]=2; node["repair"]=base; node[field]=value; inp.write_text(json.dumps(node))
+                with self.assertRaisesRegex(validator.Invalid,"contract repair cannot declare"): validator.validate_input(node)
+
 if __name__ == "__main__": unittest.main()

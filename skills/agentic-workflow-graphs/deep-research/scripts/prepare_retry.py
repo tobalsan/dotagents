@@ -47,7 +47,7 @@ def inside(candidate: Path, parent: Path) -> bool:
     try: candidate.relative_to(parent); return True
     except ValueError: return False
 
-def verify_manifest(rows: list[dict[str,Any]], prior: dict[str,Any], reason: str) -> None:
+def verify_manifest(rows: list[dict[str,Any]], prior: dict[str,Any], reason: str, contract_repair: bool) -> dict[str,Any]:
     current={}
     for row in rows:
         node=row.get("node_id")
@@ -57,6 +57,9 @@ def verify_manifest(rows: list[dict[str,Any]], prior: dict[str,Any], reason: str
     expected={"iteration_id":prior.get("iteration_id"),"node_kind":prior.get("node_kind"),"attempt":prior.get("attempt"),"state":"failed","retry_decision":"retry","retry_reason":reason}
     mismatches=[key for key,value in expected.items() if event.get(key)!=value]
     if mismatches: raise Invalid("manifest retry state mismatch: " + ", ".join(mismatches))
+    error=event.get("error")
+    if contract_repair and (not isinstance(error,dict) or error.get("code")!="invalid_node_result_format"): raise Invalid("contract repair requires invalid_node_result_format manifest error")
+    return event
 
 def main(argv: list[str] | None=None) -> int:
     parser=argparse.ArgumentParser(description=__doc__)
@@ -68,6 +71,8 @@ def main(argv: list[str] | None=None) -> int:
     parser.add_argument("--dependency",action="append",default=[],type=parse_dependency)
     parser.add_argument("--campaign-state",action="append",default=[])
     parser.add_argument("--allow-prior-attempts",action="store_true")
+    parser.add_argument("--contract-repair",action="store_true",help="prepare a retrieval-free repair for invalid_node_result")
+    parser.add_argument("--repair-read",action="append",default=[],help="prior-attempt file readable by contract repair")
     args=parser.parse_args(argv); temporary=None
     try:
         prior=load(args.input); rows=load_manifest(args.manifest); safe(args.output_dir,"output_dir")
@@ -77,19 +82,32 @@ def main(argv: list[str] | None=None) -> int:
         required={"iteration_id","node_id","node_kind","goal","retrieval_skills","limits","output_dir"}; missing=required-set(prior)
         if missing: raise Invalid("prior input missing fields: " + ", ".join(sorted(missing)))
         safe(prior["output_dir"],"prior output_dir")
-        verify_manifest(rows,prior,args.reason)
+        verify_manifest(rows,prior,args.reason,args.contract_repair)
         dependencies=args.dependency; states=args.campaign_state
         if len({json.dumps(x,sort_keys=True) for x in dependencies}) != len(dependencies): raise Invalid("dependencies must be unique")
         for path in states: safe(path,"campaign-state path")
         if len(set(states)) != len(states): raise Invalid("campaign-state paths must be unique")
+        for path in args.repair_read: safe(path,"repair-readable path")
+        if len(set(args.repair_read)) != len(args.repair_read): raise Invalid("repair-readable paths must be unique")
+        if args.contract_repair:
+            if dependencies or states or args.allow_prior_attempts: raise Invalid("contract repair cannot declare dependencies, campaign state, or broad prior-attempt access")
+            if not args.repair_read: raise Invalid("contract repair requires --repair-read")
+        elif args.repair_read:
+            raise Invalid("--repair-read requires --contract-repair")
         root=args.artifact_root.resolve(); output=(root/args.output_dir).resolve(); prior_output=(root/prior["output_dir"]).resolve()
         try: output.relative_to(root)
         except ValueError as exc: raise Invalid("output_dir escapes artifact root") from exc
         if output.exists(): raise Invalid("fresh output_dir already exists")
         if not output.parent.is_dir(): raise Invalid("output_dir parent must already exist")
-        readable=[x["result_path"] for x in dependencies]+states
+        readable=args.repair_read if args.contract_repair else [x["result_path"] for x in dependencies]+states
         resolved_readable=[(path,(root/path).resolve()) for path in readable]
-        if not args.allow_prior_attempts:
+        if args.contract_repair:
+            expected_result=(Path(prior["output_dir"])/"node-result.json").as_posix()
+            if expected_result not in {Path(path).as_posix() for path in readable}: raise Invalid("contract repair must read prior node-result.json")
+            for path,resolved in resolved_readable:
+                if not inside(resolved,prior_output): raise Invalid(f"contract repair read escapes prior output: {path}")
+                if not resolved.is_file(): raise Invalid(f"contract repair readable file missing: {path}")
+        elif not args.allow_prior_attempts:
             offending=[]
             for path,resolved in resolved_readable:
                 lexical=ATTEMPT.search(path.replace("\\","/")) is not None
@@ -103,8 +121,11 @@ def main(argv: list[str] | None=None) -> int:
         new_attempt=expected+1
         node_input={key:prior[key] for key in ("iteration_id","node_id","node_kind")}
         if "lane" in prior: node_input["lane"]=prior["lane"]
-        node_input.update({"attempt":new_attempt,"goal":prior["goal"],"dependencies":dependencies,"campaign_state_paths":states,"output_dir":args.output_dir,"retrieval_skills":prior["retrieval_skills"],"limits":prior["limits"]})
-        preparation={"manifest_mutated":False,"readable_paths":readable,"prior_attempt_policy":"allow" if args.allow_prior_attempts else "deny","instructions":["Orchestrator validates node-input.json before dispatch.","Orchestrator appends retrying for the verified failed attempt.","Orchestrator appends pending or running for the new attempt only when dispatch begins."],"event_templates":[{"node_id":prior["node_id"],"attempt":expected,"state":"retrying"},{"node_id":prior["node_id"],"attempt":new_attempt,"state":"pending"}]}
+        node_input.update({"attempt":new_attempt,"goal":prior["goal"],"dependencies":[] if args.contract_repair else dependencies,"campaign_state_paths":[] if args.contract_repair else states,"output_dir":args.output_dir,"retrieval_skills":[] if args.contract_repair else prior["retrieval_skills"],"limits":prior["limits"]})
+        if args.contract_repair: node_input["repair"]={"mode":"contract_only","prior_attempt":expected,"readable_paths":readable}
+        instructions=["Orchestrator validates node-input.json before dispatch.","Orchestrator appends retrying for the verified failed attempt.","Orchestrator appends pending or running for the new attempt only when dispatch begins."]
+        if args.contract_repair: instructions += ["Worker may only normalize declared prior files into the new output directory.","Worker must not use retrieval, network, workspace discovery, or subagents."]
+        preparation={"manifest_mutated":False,"readable_paths":readable,"prior_attempt_policy":"contract-repair" if args.contract_repair else ("allow" if args.allow_prior_attempts else "deny"),"instructions":instructions,"event_templates":[{"node_id":prior["node_id"],"attempt":expected,"state":"retrying"},{"node_id":prior["node_id"],"attempt":new_attempt,"state":"pending"}]}
         temporary=Path(tempfile.mkdtemp(prefix=f".{output.name}.tmp-",dir=output.parent))
         (temporary/"node-input.json").write_text(json.dumps(node_input,indent=2)+"\n",encoding="utf-8")
         (temporary/"retry-preparation.json").write_text(json.dumps(preparation,indent=2)+"\n",encoding="utf-8")

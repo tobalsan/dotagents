@@ -48,6 +48,17 @@ class NodeExecutionContractTests(unittest.TestCase):
         self.assertIn("must resolve to exactly one entry in `citations`", contract)
         self.assertIn("orchestrator must enforce them at runtime", contract)
 
+    def test_contract_packet_and_repair_boundary_are_explicit(self):
+        definitions = self.schema["definitions"]
+        self.assertEqual(definitions["contractRepair"]["properties"]["mode"]["const"], "contract_only")
+        self.assertIn("repair", definitions["input"]["properties"])
+        contract = CONTRACT_PATH.read_text()
+        self.assertIn("prepare_node_contract.py", contract)
+        self.assertIn("self-validate.sh", contract)
+        self.assertIn("Do not rerun expensive work for a format-only rejection", contract)
+        self.assertIn("tool allowlist permitting only declared-file reads and fresh-output writes", contract)
+        self.assertIn("Prohibit retrieval, network, workspace discovery, and subagents", contract)
+
 
 if __name__ == "__main__":
     unittest.main()

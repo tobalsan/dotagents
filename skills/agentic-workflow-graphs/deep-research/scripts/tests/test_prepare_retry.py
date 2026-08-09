@@ -64,4 +64,20 @@ class PrepareRetryTests(unittest.TestCase):
             root=Path(tmp); self.prior(root); (root/"passes/pass-1/attempts/extract-a-2").mkdir(); completed=self.run_retry(root)
             self.assertEqual(completed.returncode,2); self.assertIn("already exists",completed.stderr)
 
+    def test_prepares_retrieval_free_contract_repair(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp); prior_input=self.prior(root); prior_output=root/"passes/pass-1/attempts/extract-a-1"; prior_output.mkdir(); (prior_output/"node-result.json").write_text("{invalid"); (prior_output/"report.md").write_text("evidence")
+            manifest=self.manifest(root,error={"code":"invalid_node_result_format","message":"bad shape"})
+            completed=subprocess.run([sys.executable,str(SCRIPT),"--input",str(prior_input),"--manifest",str(manifest),"--artifact-root",str(root),"--output-dir","passes/pass-1/attempts/extract-a-2","--reason",REASON,"--contract-repair","--repair-read","passes/pass-1/attempts/extract-a-1/node-result.json","--repair-read","passes/pass-1/attempts/extract-a-1/report.md"],text=True,capture_output=True)
+            self.assertEqual(completed.returncode,0,completed.stderr); node=json.loads((root/"passes/pass-1/attempts/extract-a-2/node-input.json").read_text())
+            self.assertEqual(node["repair"]["mode"],"contract_only"); self.assertEqual(node["retrieval_skills"],[]); self.assertEqual(node["dependencies"],[]); self.assertEqual(node["campaign_state_paths"],[])
+
+    def test_contract_repair_requires_format_only_manifest_error(self):
+        for code in (None,"invalid_node_result","identity_mismatch","artifact_path_escape","citation_source_mismatch"):
+            with self.subTest(code=code), tempfile.TemporaryDirectory() as tmp:
+                root=Path(tmp); prior_input=self.prior(root); prior_output=root/"passes/pass-1/attempts/extract-a-1"; prior_output.mkdir(); (prior_output/"node-result.json").write_text("{}")
+                overrides={} if code is None else {"error":{"code":code,"message":"not format-only"}}
+                completed=subprocess.run([sys.executable,str(SCRIPT),"--input",str(prior_input),"--manifest",str(self.manifest(root,**overrides)),"--artifact-root",str(root),"--output-dir","passes/pass-1/attempts/extract-a-2","--reason",REASON,"--contract-repair","--repair-read","passes/pass-1/attempts/extract-a-1/node-result.json"],text=True,capture_output=True)
+                self.assertEqual(completed.returncode,2); self.assertIn("requires invalid_node_result_format",completed.stderr)
+
 if __name__ == "__main__": unittest.main()
