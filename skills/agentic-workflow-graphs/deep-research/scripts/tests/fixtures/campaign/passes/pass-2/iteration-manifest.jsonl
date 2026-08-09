@@ -1,0 +1,2 @@
+{"event_id":"p2-e1","iteration_id":"pass-2","node_id":"plan","node_kind":"plan","state":"pending","attempt":1,"observed_at":"2026-08-02T00:00:00Z","dependencies":[]}
+{"event_id":"p2-e2","iteration_id":"pass-2","node_id":"plan","node_kind":"plan","state":"running","attempt":1,"observed_at":"2026-08-02T00:00:01Z","started_at":"2026-08-02T00:00:01Z","harness":"codex","model":"model-c","dependencies":[]}

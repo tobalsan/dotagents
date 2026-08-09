@@ -168,6 +168,8 @@ Then follow the harness-neutral [`references/node-execution-v1.md`](references/n
 
 Execution and observability are separate. Workers publish attempt-local artifacts and diagnostic logs; the orchestrator alone publishes manifest state. Before launch, offer monitoring modes supported by the current coding harness: on-demand log/manifest checks, a harness-native scheduled read-only monitor, or an external scheduler. Monitoring must never mutate research artifacts or stand in for acceptance validation. Record the chosen mode and clean up recurring monitors when the campaign reaches a verified terminal state; if no scheduler exists, use on-demand checks.
 
+For on-demand checks, `scripts/graph_view.py --campaign <root> --serve` — read-only campaign graph dashboard on 127.0.0.1.
+
 Every `failed` event MUST carry `error.code` drawn from the closed set documented in [`references/iteration-manifest-v1.md`](references/iteration-manifest-v1.md) ([schema](references/iteration-manifest-v1.schema.json)), with `error.message` as free prose explaining the specific failure.
 
 ## Principles
