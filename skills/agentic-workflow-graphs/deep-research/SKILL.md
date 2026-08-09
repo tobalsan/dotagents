@@ -13,6 +13,14 @@ Expensive and long-running by design. Confirm the scope with the user before sta
 scope (once) → [ plan → fan-out researchers → extract → skeptic → merge → persist ] ↻ → synthesize (any time)
 ```
 
+## Start confirmation
+
+Before creating campaign state or dispatching any node, route the planned graph with `autonomous-agents/choose-llm-for-task`, then ask the user to confirm one concise list containing each node kind or lane, coding harness, model, and thinking level. Reconfirm only entries whose routing later changes; do not repeatedly approve unchanged routes.
+
+After routing confirmation, separately offer an optional full graph-node preflight covering provider/auth availability, model smoke calls, required tools and CLI binaries, regional eligibility, resolved paths, filesystem permissions, and launcher dependencies. Run it only when the user confirms. Without it, rely on graph fail-fast behavior rather than silently performing mandatory smoke tests.
+
+Before researcher fan-out, classify planned routes by model tier. Scope, plan, skeptic, and merge normally use strong reasoning routes; researcher and extraction fan-out normally use cheaper throughput routes. If three or more researcher lanes resolve to strong or scarce models, warn and block dispatch until the user explicitly confirms that fan-out. Do not invent a cost estimate.
+
 ## Durable state
 
 Five durable artifact roles live in a working directory. An iteration must be able to start knowing nothing but what it reads from them — findings held only in context are lost at the next reset. **Structure them however suits the research** except where a contract is named.
@@ -43,6 +51,8 @@ Each iteration has one append-only JSONL manifest, with one event per line valid
 
 The main orchestrator is the manifest's sole writer and owns transitions and retries. A single-pass caller stops after a verified terminal event. A campaign caller starts another pass only from `completed`, evaluates termination from `saturated`, and stops advancement on `failed`; no caller infers completion from prose, ledger rows, or a partial manifest.
 
+**Graph fail-fast.** On the first node failure, cancellation, timeout, missing result, or failed acceptance check, stop scheduling new downstream nodes and request cancellation of owned in-flight siblings. Persist the failing attempt and diagnostics, classify retryability, then either prepare a fresh retry or append a terminal failed event. Resume only from manifest-verified dependencies; never restart successful nodes merely because a sibling failed.
+
 Because all state is on disk, iterations are independent: they can run back-to-back in one session, or be driven by an outer harness that restarts a fresh agent each pass.
 
 ### State guardrail CLI
@@ -60,6 +70,20 @@ python3 scripts/research_state.py campaign-evaluate --config CAMPAIGN/terminatio
 ```
 
 Append commands lock the stream, validate existing and new events, append one line, and `fsync`. JSON goes to stdout; invalid input exits 2 and an unverified terminal state exits 3.
+
+### Harness-neutral node launch pattern
+
+For every routed attempt, materialize the `node-execution-v1` input envelope in a fresh campaign-local attempt directory. Enumerate exact readable dependency and campaign-state paths; prior-attempt paths are denied unless explicitly declared as dependencies. Start the selected harness from the smallest common ancestor containing approved inputs and outputs, write only beneath the isolated `output_dir`, and retain stdout/stderr plus process metadata as diagnostics. Never set a harness single-output override: worker-owned artifacts and `node-result.json` remain authoritative. Harness commands, authentication, and sandbox details belong only in the selected autonomous-harness skill. Enforce deadlines with harness-native supervision or owned-process control; never assume GNU `timeout` exists.
+
+After process exit, run the stdlib-only acceptance check before appending `completed`:
+
+```bash
+python3 scripts/validate_node_result.py --input ATTEMPT/node-input.json --result ATTEMPT/node-result.json --schema references/node-execution-v1.schema.json --artifact-root CAMPAIGN --process-exit 0
+```
+
+The validator checks the contract's structural subset plus identity, attempt, result status, process exit, citation uniqueness and URL equality, path existence, and symlink containment. If an artifact named `counts` is declared, it must be machine-readable JSON with any of `sources`, `citations`, or `artifacts`; those values are checked against the result. Prose counts are never parsed heuristically.
+
+For a retry, use `scripts/prepare_retry.py` with the read-only iteration `--manifest` to create only a fresh input bundle and event templates. It verifies that the manifest's current folded node event authorizes this exact retry but never mutates the manifest; the orchestrator remains sole writer. Supply the exact dependency and campaign-state allowlist and use `--allow-prior-attempts` only when previous-attempt artifacts are intentional inputs.
 
 ## Nodes
 
@@ -100,13 +124,13 @@ Long sources are where campaigns die: one book read end-to-end can outweigh a la
 
 ### Extract
 
-Turn raw sources into claims with evidence and citations. Mark evidence strength: widely agreed / likely / disputed / thin.
+Turn raw sources into claims with evidence and citations. Mark evidence strength: widely agreed / likely / disputed / thin. Extraction is a bounded transformation: enumerate exact input files, prohibit workspace reconnaissance and web/search/list tools, and require an early write checkpoint before extensive processing. A final zero-token event with unknown reason and no result artifact is retryable infrastructure failure, not successful empty extraction.
 
 ### Skeptic — once, before merge
 
 Runs after every lane reports, seeing all of them at once. That placement is deliberate: it catches cross-lane contradictions and consensus illusions a per-lane critic can't.
 
-It challenges sourcing, not conclusions it dislikes. Whatever it knocks down becomes a gap-report entry — there is no re-research bounce inside an iteration. The next iteration's planner picks it up. The orchestrator records the skeptic transition and report artifact after cross-lane review.
+It challenges sourcing, not conclusions it dislikes. Its checklist must include: prose counts versus structured arrays; primary evidence versus secondary-source inflation; duplicate URLs, aliases, and manifestations; and whether each material claim is supported by the exact cited passage rather than merely by a topically related source. Whatever it knocks down becomes a gap-report entry — there is no re-research bounce inside an iteration. The next iteration's planner picks it up. The orchestrator records the skeptic transition and report artifact after cross-lane review.
 
 ### Merge
 
@@ -132,7 +156,13 @@ After durable outputs are verified, the orchestrator appends the terminal iterat
 
 ## Model routing
 
-Use `autonomous-agents/choose-llm-for-task` to route each node; it picks across the available harnesses and accounts for real quota limits — which matters here, since a campaign burns through them. Then follow the harness-neutral [`references/node-execution-v1.md`](references/node-execution-v1.md) contract ([schema](references/node-execution-v1.schema.json)): load and obey the selected `autonomous-agents/<harness>` skill rather than embedding harness commands here. Record chosen harness, model, thinking level, rationale, and policy reference in manifest events; keep routing policy out of the schema. As a shape: strong models for scope, plan, skeptic and merge; cheaper models for the researcher fan-out and extraction.
+Use `autonomous-agents/choose-llm-for-task` to route each node; it picks across available harnesses and accounts for real quota limits. Map scope, plan, skeptic, and merge to strong reasoning categories; map researcher and extraction fan-out to cheaper throughput categories unless lane complexity specifically warrants elevation. Apply the start-confirmation and three-strong-researcher guardrail above.
+
+Then follow the harness-neutral [`references/node-execution-v1.md`](references/node-execution-v1.md) contract ([schema](references/node-execution-v1.schema.json)): load and obey the selected `autonomous-agents/<harness>` skill rather than embedding harness commands here. Record chosen harness, model, thinking level, rationale, and policy reference in manifest events; keep routing policy out of the schema.
+
+## Observability
+
+Execution and observability are separate. Workers publish attempt-local artifacts and diagnostic logs; the orchestrator alone publishes manifest state. Before launch, offer monitoring modes supported by the current coding harness: on-demand log/manifest checks, a harness-native scheduled read-only monitor, or an external scheduler. Monitoring must never mutate research artifacts or stand in for acceptance validation. Record the chosen mode and clean up recurring monitors when the campaign reaches a verified terminal state; if no scheduler exists, use on-demand checks.
 
 ## Principles
 

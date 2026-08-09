@@ -175,14 +175,32 @@ REVIEW=$(mktemp -d) && git clone https://github.com/user/repo.git "$REVIEW" && c
 
 ## Parallel Work Pattern
 
-Use separate workdirs/worktrees to avoid collisions:
+Parallel OpenCode processes must not share workspace or session database. Keep every lane beneath one high-level task/campaign workspace, launch from the smallest common ancestor containing approved inputs, and give each lane a unique `XDG_DATA_HOME`, output directory, and diagnostic files.
 
 ```bash
-cd /tmp/issue-101 && opencode run 'Fix issue #101 and commit'   # backgrounded
-cd /tmp/issue-102 && opencode run 'Add parser regression tests and commit'   # backgrounded
+ROOT="$PWD/research/campaign"                 # high-level campaign workspace
+CWD="$PWD"                                  # common ancestor of approved inputs/outputs
+AUTH="${XDG_DATA_HOME:-$HOME/.local/share}/opencode/auth.json"
+
+for lane in lane-a lane-b; do
+  lane_root="$ROOT/runtime/$lane"
+  data="$lane_root/xdg-data"
+  out="$ROOT/attempts/$lane-1"
+  mkdir -p "$data/opencode" "$out"
+  test ! -e "$data/opencode/auth.json" && test -f "$AUTH" && \
+    ln -s "$AUTH" "$data/opencode/auth.json"
+
+  (
+    cd "$CWD"
+    XDG_DATA_HOME="$data" opencode run --format json \
+      --model provider/model "Run $lane; write only beneath $out" \
+      >"$out/opencode-events.jsonl" 2>"$out/opencode-stderr.log"
+  ) &
+  printf '%s\n' "$!" >"$out/opencode.pid"
+done
 ```
 
-Then poll each run's log (or tmux pane) until both finish.
+Authentication remains read-only through per-lane links; never copy secrets into prompts or artifacts. Use recorded PIDs, harness-native controls, or an owned process supervisor for cancellation/timeouts—do not assume GNU `timeout`. Poll each event/stderr file independently, and accept work only from required result artifacts rather than process exit or logs.
 
 ## Session & Cost Management
 
@@ -198,7 +216,7 @@ opencode stats --days 7 --models anthropic/claude-sonnet-4
 - `/exit` is NOT a valid command — it opens an agent selector. Use Ctrl+C to exit the TUI.
 - PATH mismatch can select the wrong OpenCode binary/model config.
 - If OpenCode appears stuck, inspect logs before killing it.
-- Avoid sharing one working directory across parallel OpenCode sessions.
+- Parallel runs must not share working directories or `XDG_DATA_HOME`; shared OpenCode session databases can fail with `database is locked`.
 - Enter may need to be pressed twice to submit in the TUI (once to finalize text, once to send).
 
 ## Verification
