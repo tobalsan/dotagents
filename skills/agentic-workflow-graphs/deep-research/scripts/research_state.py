@@ -19,6 +19,7 @@ MANIFEST_FIELDS = {"event_id", "iteration_id", "node_id", "node_kind", "state", 
 KINDS = {"iteration", "scope", "plan", "researcher", "extract", "skeptic", "merge", "persist", "synthesize"}
 STATES = {"pending", "running", "completed", "failed", "retrying", "saturated"}
 TERMINAL = {"completed", "saturated", "failed"}
+ERROR_CODES = ("invalid_node_result", "invalid_node_result_format", "harness_infrastructure", "provider_empty_termination", "nonzero_exit", "timeout", "cancelled", "precondition_failed")
 TRACKING = {"fbclid", "gclid", "dclid", "mc_cid", "mc_eid", "ref", "ref_source", "share_id", "context"}
 CONTENT_ID = re.compile(r"(?:doi|arxiv|youtube|isbn):.+")
 RFC3339 = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})")
@@ -89,7 +90,7 @@ def validate_ledger(row: Any) -> None:
     if row["canonical_id"] != expected: raise Invalid("canonical_id does not match URL identity or content_id")
     if "collision" in row and not isinstance(row["collision"], bool): raise Invalid("collision must be boolean")
 
-def validate_manifest(event: Any) -> None:
+def validate_manifest(event: Any, *, enforce_error_code: bool = False) -> None:
     if not isinstance(event, dict): raise Invalid("manifest event must be object")
     if set(event) - MANIFEST_FIELDS: raise Invalid("unknown manifest fields: " + ", ".join(sorted(set(event)-MANIFEST_FIELDS)))
     for key in ("event_id", "iteration_id", "node_id", "node_kind", "state", "attempt", "observed_at", "dependencies"):
@@ -111,6 +112,10 @@ def validate_manifest(event: Any) -> None:
         error = event.get("error")
         if not isinstance(error, dict) or set(error)-{"code","message"} or "message" not in error: raise Invalid("failed state requires valid error")
         nonempty(error["message"], "error.message")
+        if "code" in error: nonempty(error["code"], "error.code")
+        if enforce_error_code:
+            if "code" not in error: raise Invalid("failed state requires error.code")
+            if error["code"] not in ERROR_CODES: raise Invalid(f"invalid error.code: {error['code']}")
         if event.get("retry_decision") not in {"retry", "do_not_retry"}: raise Invalid("failed state requires retry_decision")
     if event.get("retry_decision") == "retry" and "retry_reason" not in event: raise Invalid("retry requires retry_reason")
     if "retry_decision" in event and event["retry_decision"] not in {"retry", "do_not_retry"}: raise Invalid("invalid retry_decision")
@@ -176,7 +181,9 @@ def fsync_parent(path: Path) -> None:
 
 def append_line(path: Path, row: dict[str, Any], kind: str) -> None:
     validator = validate_ledger if kind == "ledger" else validate_manifest
-    validator(row); parent_existed=path.parent.exists(); path.parent.mkdir(parents=True, exist_ok=True); created=not path.exists()
+    if kind == "manifest": validate_manifest(row, enforce_error_code=True)
+    else: validate_ledger(row)
+    parent_existed=path.parent.exists(); path.parent.mkdir(parents=True, exist_ok=True); created=not path.exists()
     if not parent_existed: fsync_parent(path.parent)
     with path.open("a+", encoding="utf-8") as fh:
         lock_file(fh); fh.seek(0)

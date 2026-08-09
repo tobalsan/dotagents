@@ -100,4 +100,34 @@ class StateTests(unittest.TestCase):
             with path.open("a+") as fh, mock.patch.object(os,"name","other"):
                 with self.assertRaisesRegex(rs.Invalid,"locking unsupported"): rs.lock_file(fh)
 
+    def failed_event(self,eid,code,**extra):
+        return self.event(eid,"failed",node_id="researcher-1",node_kind="researcher",error={"code":code,"message":"boom"},retry_decision="do_not_retry",**extra)
+
+    def test_append_rejects_bad_error_code_but_accepts_good_one(self):
+        with tempfile.TemporaryDirectory() as d:
+            path=Path(d)/"m.jsonl"
+            rs.append_line(path,self.event("e1","pending",node_id="researcher-1",node_kind="researcher"),"manifest")
+            bad=subprocess.run([sys.executable,SCRIPT,"manifest-append",path,"--row",json.dumps(self.failed_event("e2","not_a_real_code"))],text=True,capture_output=True)
+            self.assertEqual(bad.returncode,2); self.assertIn("invalid error.code",json.loads(bad.stderr)["error"])
+            good=subprocess.run([sys.executable,SCRIPT,"manifest-append",path,"--row",json.dumps(self.failed_event("e2","timeout"))],text=True,capture_output=True)
+            self.assertEqual(good.returncode,0); self.assertTrue(json.loads(good.stdout)["appended"])
+
+    def test_manifest_validate_accepts_legacy_free_text_error_code(self):
+        with tempfile.TemporaryDirectory() as d:
+            path=Path(d)/"m.jsonl"
+            rows=[self.event("e1","pending",node_id="researcher-1",node_kind="researcher"),
+                  self.failed_event("e2","empty_provider_termination")]
+            path.write_text("".join(json.dumps(r)+"\n" for r in rows))
+            out=subprocess.run([sys.executable,SCRIPT,"manifest-validate",path],text=True,capture_output=True)
+            self.assertEqual(out.returncode,0); self.assertTrue(json.loads(out.stdout)["valid"])
+
+    def test_pending_event_with_dependencies_appends_and_folds(self):
+        with tempfile.TemporaryDirectory() as d:
+            path=Path(d)/"m.jsonl"
+            rs.append_line(path,self.event("e1","pending",node_id="merge",node_kind="merge",dependencies=["researcher-1","extract"]),"manifest")
+            folded=subprocess.run([sys.executable,SCRIPT,"manifest-fold",path],text=True,capture_output=True)
+            self.assertEqual(folded.returncode,0)
+            row=json.loads(folded.stdout)["rows"][0]
+            self.assertEqual(row["dependencies"],["researcher-1","extract"]); self.assertEqual(row["state"],"pending")
+
 if __name__ == "__main__": unittest.main()

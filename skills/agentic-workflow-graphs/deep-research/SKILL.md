@@ -97,6 +97,8 @@ A cheap broad sweep to learn the terrain, then build the initial coverage map fr
 
 Read the coverage map and the last gap report. Generate **3–5 research lanes** as *diffs against the map* — thin branches, contradictions, unexplored adjacencies. Never free-form from the original question; that re-treads ground. The orchestrator records the plan node and its artifact path in the manifest.
 
+Once the plan node completes, the orchestrator appends a `pending` manifest event for every node the plan declares — every researcher lane plus extract, skeptic, merge, and persist — each with `dependencies` populated. This makes the full graph visible before any work starts; the existing `None -> pending -> running` transition already permits it.
+
 Five lanes while the map is broad and shallow. Three once the gaps are narrow and specific.
 
 ### Fan-out researchers
@@ -165,6 +167,8 @@ Then follow the harness-neutral [`references/node-execution-v1.md`](references/n
 ## Observability
 
 Execution and observability are separate. Workers publish attempt-local artifacts and diagnostic logs; the orchestrator alone publishes manifest state. Before launch, offer monitoring modes supported by the current coding harness: on-demand log/manifest checks, a harness-native scheduled read-only monitor, or an external scheduler. Monitoring must never mutate research artifacts or stand in for acceptance validation. Record the chosen mode and clean up recurring monitors when the campaign reaches a verified terminal state; if no scheduler exists, use on-demand checks.
+
+Every `failed` event MUST carry `error.code` drawn from the closed set documented in [`references/iteration-manifest-v1.md`](references/iteration-manifest-v1.md) ([schema](references/iteration-manifest-v1.schema.json)), with `error.message` as free prose explaining the specific failure.
 
 ## Principles
 

@@ -19,6 +19,23 @@ Minimal lifecycle:
 {"event_id":"evt-plan-2","iteration_id":"pass-2","node_id":"plan","node_kind":"plan","state":"completed","attempt":1,"observed_at":"2026-01-01T00:01:00Z","dependencies":[],"artifact_paths":{"plan":"passes/pass-2/plan.json"},"finished_at":"2026-01-01T00:01:00Z","duration_ms":60000}
 ```
 
+## Error codes
+
+A `failed` event's `error.code` names why, so failures are groupable and the graph stays nameable across passes.
+
+| code | when to use it |
+| --- | --- |
+| `invalid_node_result` | node result violates the contract and is not repairable |
+| `invalid_node_result_format` | node result is malformed but repairable (field names, types, required/extra fields, envelope shape only) |
+| `harness_infrastructure` | the harness, launcher, or provider broke, or the process exited without an authoritative node-result.json |
+| `provider_empty_termination` | provider returned nothing / terminated empty |
+| `nonzero_exit` | process exited non-zero with no more specific cause |
+| `timeout` | wall-clock budget exceeded |
+| `cancelled` | externally cancelled or blocked |
+| `precondition_failed` | a required input or path was rejected before the node ran |
+
+This enum is enforced on the **write path** only, i.e. by `manifest-append`. Readers (`manifest-validate`, `manifest-fold`, `manifest-verify`, `campaign-evaluate`) accept any non-empty string for `error.code`, so historical manifests written before this taxonomy existed keep validating.
+
 Terminal event:
 
 ```jsonl
