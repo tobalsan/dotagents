@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "campaign-termination-v1.schema.json",
+  "title": "Deep research campaign termination configuration",
+  "$defs": {
+    "predicate": {
+      "oneOf": [
+        {"type":"object","additionalProperties":false,"required":["type","at_least","statuses"],"properties":{"type":{"const":"count"},"at_least":{"type":"integer","minimum":0},"statuses":{"type":"array","minItems":1,"uniqueItems":true,"items":{"enum":["seen","fetched","extracted","rejected"]}},"source_types":{"type":"array","uniqueItems":true,"items":{"type":"string","minLength":1}}}},
+        {"type":"object","additionalProperties":false,"required":["type","streak"],"properties":{"type":{"const":"saturation"},"streak":{"type":"integer","minimum":1}}},
+        {"type":"object","additionalProperties":false,"required":["type","at"],"properties":{"type":{"const":"deadline"},"at":{"type":"string","format":"date-time"}}},
+        {"type":"object","additionalProperties":false,"required":["type","metric","limit"],"properties":{"type":{"const":"budget"},"metric":{"enum":["cost_usd","tokens"]},"limit":{"type":"number","minimum":0}}},
+        {"type":"object","additionalProperties":false,"required":["type","predicates"],"properties":{"type":{"enum":["all","any"]},"predicates":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/predicate"}}}},
+        {"type":"object","additionalProperties":false,"required":["type","predicate"],"properties":{"type":{"const":"not"},"predicate":{"$ref":"#/$defs/predicate"}}}
+      ]
+    }
+  },
+  "type":"object",
+  "additionalProperties":false,
+  "required":["version","target"],
+  "properties":{"version":{"const":1},"target":{"$ref":"#/$defs/predicate"},"limits":{"type":"array","items":{"oneOf":[{"type":"object","additionalProperties":false,"required":["type","at"],"properties":{"type":{"const":"deadline"},"at":{"type":"string","format":"date-time"}}},{"type":"object","additionalProperties":false,"required":["type","metric","limit"],"properties":{"type":{"const":"budget"},"metric":{"enum":["cost_usd","tokens"]},"limit":{"type":"number","minimum":0}}}]}}}
+}
