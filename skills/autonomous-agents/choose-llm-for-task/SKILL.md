@@ -64,7 +64,7 @@ Find the task type in the routing table below. Take the top-3 picks **in order**
 - `gemini-3.6-flash` — Fast frontier-ish, strong agentic + built-in computer-use preview. $1.50/$7.50, real API cost.
 - `gemini-3.5-flash-lite` — Fastest/cheapest Gemini, unusually strong for lite tier. $0.30/$2.50. Not for multi-step reasoning/agentic coding.
 
-**OpenCode Go**
+**OpenCode Go** — CLI needs provider-qualified IDs: `opencode run -m opencode-go/<model>` (bare `<model>` fails with a generic "Unexpected server error").
 - `kimi-k3` — #3 Intelligence Index, #1 AutomationBench, native vision. Costly + slow on long runs. SCARCE (110/5hr) — high-value single shots only.
 - `qwen3.8-max` — #1 reasoning/instruction-following, GPQA 90%. Strong reasoning but slow (~46 tok/s) and scarce on Go (160/5hr).
 - `qwen3.7-plus` — Cheap multimodal GUI/agent workhorse, screen reading, ~4.3k req/5hr.
