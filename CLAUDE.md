@@ -30,7 +30,7 @@ For reports, plans, and anything that requires longer than three sentences, writ
 
 ## Web search / fetch
 
-Search: `exa` CLI first, then `firecrawl` (CLI or MCP).
+Search: `exa` CLI first (basic use: `exa search "<query>"`), then `firecrawl` (CLI or MCP).
 Fetch URL: any web fetch tool → `curl https://markdown.new/<url>` → `firecrawl`.
 
 ## Orchestration

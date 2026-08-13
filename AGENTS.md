@@ -94,7 +94,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 ### Web Search and Web Fetch
 
 If asked to do a web search, you must use the following tools in order, only using the next if the previous is not sufficient:
-1. `exa` cli tool (specifically for search first)
+1. `exa` cli tool (specifically for search first. Basic use: `exa search "<query>"`)
 2. `firecrawl` cli or MCP (whichever is available)
 
 If given an URL to fetch a webpage, you must use the following tools in order, only using the next if the previous is not sufficient:
