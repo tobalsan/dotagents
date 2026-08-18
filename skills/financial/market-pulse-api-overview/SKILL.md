@@ -36,7 +36,7 @@ GET {base}/api/sources
 Use bundled script when available:
 
 ```bash
-python scripts/market_pulse_report.py --base http://127.0.0.1:8010 --days 7 --limit 12
+python3 scripts/market_pulse_report.py --base http://127.0.0.1:8010 --days 7 --limit 12
 ```
 
 If Python unavailable, use `curl` and synthesize manually from same endpoints.
