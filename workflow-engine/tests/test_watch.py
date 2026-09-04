@@ -181,6 +181,51 @@ def test_fold_resume_duplicates_are_not_double_counted(tmp_path: Path) -> None:
     assert state["counts"]["replayed"] == 1
 
 
+def test_attempt_selector_defaults_latest_and_scopes_calls_counts_and_phases(tmp_path: Path) -> None:
+    run_dir = _run_dir(tmp_path)
+    write_journal(
+        run_dir,
+        [
+            run_start(),
+            phase("first"),
+            call_start("A"),
+            call_end("A", status="error"),
+            run_end(state="failed"),
+            run_start(ts="2026-08-10T11:00:00Z"),
+            phase("second"),
+            call_start("B"),
+            call_end("B"),
+            run_end(),
+        ],
+    )
+    write_status(run_dir, state="completed", calls=[status_call("B"), replayed_call("C")])
+
+    latest = build_state(run_dir.parent.parent, "run-1")
+    first = build_state(run_dir.parent.parent, "run-1", 1)
+
+    assert latest["attempts"] == [1, 2]
+    assert latest["attempt"] == 2
+    assert latest["phases"] == ["second"]
+    assert {c["call_key"] for c in latest["calls"]} == {"B", "C"}
+    assert latest["counts"]["total"] == 2
+    assert first["attempt"] == 1
+    assert first["state"] == "failed"
+    assert first["phases"] == ["first"]
+    assert [c["call_key"] for c in first["calls"]] == ["A"]
+    assert first["counts"]["total"] == 1
+    assert first["counts"]["error"] == 1
+    assert first["counts"]["replayed"] == 0
+
+
+def test_attempt_selector_rejects_invalid_and_unknown_attempts(tmp_path: Path) -> None:
+    run_dir = _run_dir(tmp_path)
+    write_journal(run_dir, [run_start(), run_end()])
+
+    assert build_state(run_dir.parent.parent, "run-1", "nope")["error"] == "invalid attempt: 'nope'"
+    assert build_state(run_dir.parent.parent, "run-1", 0)["error"] == "invalid attempt: 0"
+    assert build_state(run_dir.parent.parent, "run-1", 2)["error"] == "unknown attempt: 2"
+
+
 def test_build_state_without_status_json_shows_journal_calls_only(tmp_path: Path) -> None:
     """No status.json: build_state must not crash, and can only see what the journal recorded.
 
@@ -526,6 +571,25 @@ def test_api_state_on_empty_campaign_is_clean_json_not_500(tmp_path: Path, serve
     assert payload["calls"] == []
 
 
+def test_attempt_query_selects_segment_and_page_has_selector(tmp_path: Path, server) -> None:
+    run_dir = _run_dir(tmp_path)
+    write_journal(run_dir, [run_start(), call_start("A"), call_end("A"), run_end(), run_start(), run_end()])
+    write_status(run_dir, state="completed")
+    srv = server(run_dir.parent.parent)
+
+    status, body = _get(srv, "/api/state?run=run-1&attempt=1")
+    payload = json.loads(body)
+    page_status, page = _get(srv, "/")
+
+    assert status == 200
+    assert payload["attempt"] == 1
+    assert payload["attempts"] == [1, 2]
+    assert [call["call_key"] for call in payload["calls"]] == ["A"]
+    assert page_status == 200
+    assert b'id="attempts"' in page
+    assert b'query.set("attempt"' in page
+
+
 def test_run_query_param_rejects_traversal_and_embedded_slash(tmp_path: Path, server) -> None:
     """resolve_run_id validates before any run-dir path is built, so build_state never touches those paths."""
     campaign = tmp_path / "campaign"
@@ -581,7 +645,14 @@ def test_serving_a_populated_campaign_writes_nothing(tmp_path: Path, server) -> 
 
     before = _snapshot(campaign)
     srv = server(campaign)
-    for path in ("/", "/api/state", "/api/state?run=run-1", "/api/state?run=run-404", "/api/state?run=../x"):
+    for path in (
+        "/",
+        "/api/state",
+        "/api/state?run=run-1",
+        "/api/state?run=run-1&attempt=1",
+        "/api/state?run=run-404",
+        "/api/state?run=../x",
+    ):
         status, _ = _get(srv, path)
         assert status == 200
 

@@ -122,45 +122,46 @@ def _new_call(key: str, row: dict[str, Any], phase: str | None, segment: int, or
     }
 
 
-def fold_journal(rows: list[dict[str, Any]]) -> dict[str, Any]:
-    """Fold journal rows last-write-wins per call_key; a resumed run reuses the same journal."""
-    calls: dict[str, dict[str, Any]] = {}
-    open_keys: set[str] = set()
-    seen_phases: list[str] = []
-    phase_order: list[str] = []
+def fold_journal(rows: list[dict[str, Any]], attempt: int | None = None) -> dict[str, Any]:
+    """Fold one numbered run_start segment, defaulting to the latest."""
+    segments: list[dict[str, Any]] = []
+    current: dict[str, Any] | None = None
     current_phase: str | None = None
-    segment = 0
-    run_start: dict[str, Any] | None = None
-    run_end: dict[str, Any] | None = None
 
     for order, row in enumerate(rows):
         event = row.get("event")
 
         if event == "run_start":
-            for key in open_keys:
-                calls[key]["state"] = "interrupted"  # previous attempt died mid-call
-            open_keys.clear()
-            run_start, run_end = row, None
-            segment += 1
+            if current is not None:
+                for key in current["open_keys"]:
+                    current["calls"][key]["state"] = "interrupted"
+            current = {
+                "run_start": row,
+                "run_end": None,
+                "calls": {},
+                "phases": [],
+                "open_keys": set(),
+                "segment": len(segments) + 1,
+            }
+            segments.append(current)
             current_phase = None
-            phase_order = []
             continue
 
+        if current is None:
+            continue
         if event == "phase":
             title = row.get("title")
             if isinstance(title, str):
                 current_phase = title
-                if title not in phase_order:
-                    phase_order.append(title)
-                if title not in seen_phases:
-                    seen_phases.append(title)
+                if title not in current["phases"]:
+                    current["phases"].append(title)
             continue
 
         if event == "run_end":
-            for key in open_keys:
-                calls[key]["state"] = "interrupted"
-            open_keys.clear()
-            run_end = row
+            for key in current["open_keys"]:
+                current["calls"][key]["state"] = "interrupted"
+            current["open_keys"].clear()
+            current["run_end"] = row
             continue
 
         key = row.get("call_key")
@@ -168,15 +169,15 @@ def fold_journal(rows: list[dict[str, Any]]) -> dict[str, Any]:
             continue
 
         if event == "call_start":
-            calls[key] = _new_call(key, row, current_phase, segment, order)
-            open_keys.add(key)
+            current["calls"][key] = _new_call(key, row, current_phase, current["segment"], order)
+            current["open_keys"].add(key)
             continue
 
         if event == "call_end":
-            entry = calls.get(key)
+            entry = current["calls"].get(key)
             if entry is None:
-                entry = _new_call(key, row, current_phase, segment, order)
-                calls[key] = entry
+                entry = _new_call(key, row, current_phase, current["segment"], order)
+                current["calls"][key] = entry
             entry.update(
                 {
                     "label": row.get("label", entry["label"]),
@@ -192,18 +193,17 @@ def fold_journal(rows: list[dict[str, Any]]) -> dict[str, Any]:
                     "error": _error_of(row.get("error")),
                 }
             )
-            if entry["segment"] != segment:  # started before a resume, ended in this attempt
-                entry["segment"] = segment
-                entry["order"] = order
-            open_keys.discard(key)
+            current["open_keys"].discard(key)
 
-    return {
-        "run_start": run_start,
-        "run_end": run_end,
-        "calls": calls,
-        "phases": phase_order + [p for p in seen_phases if p not in phase_order],
-        "segment": segment,
-    }
+    if not segments:
+        return {"run_start": None, "run_end": None, "calls": {}, "phases": [], "segment": 0, "attempts": []}
+    selected = attempt or len(segments)
+    if selected < 1 or selected > len(segments):
+        raise WatchError(f"unknown attempt: {selected}")
+    folded = dict(segments[selected - 1])
+    folded.pop("open_keys")
+    folded["attempts"] = list(range(1, len(segments) + 1))
+    return folded
 
 
 def merge_calls(folded: dict[str, Any], status: dict[str, Any]) -> list[dict[str, Any]]:
@@ -214,7 +214,7 @@ def merge_calls(folded: dict[str, Any], status: dict[str, Any]) -> list[dict[str
     """
     by_key: dict[str, dict[str, Any]] = folded["calls"]
     segment = folded["segment"]
-    out = {k: dict(v) for k, v in by_key.items() if v["segment"] == segment}
+    out = {k: dict(v) for k, v in by_key.items()}
 
     rows = status.get("calls")
     rows = rows if isinstance(rows, list) else []
@@ -325,7 +325,7 @@ def read_overlay(campaign_dir: Path) -> dict[str, Any] | None:
 # --- state -----------------------------------------------------------------
 
 
-def build_state(campaign_dir: Path, run_id: str | None) -> dict[str, Any]:
+def build_state(campaign_dir: Path, run_id: str | None, attempt: int | str | None = None) -> dict[str, Any]:
     """Full dashboard payload for one run. Reports problems in "error"; never raises."""
     campaign_dir = Path(campaign_dir)
     state: dict[str, Any] = {
@@ -333,6 +333,8 @@ def build_state(campaign_dir: Path, run_id: str | None) -> dict[str, Any]:
         "run_id": None,
         "runs": list_runs(campaign_dir),
         "workflow": None,
+        "attempt": None,
+        "attempts": [],
         "state": "unknown",
         "raw_state": "unknown",
         "phase": None,
@@ -359,8 +361,22 @@ def build_state(campaign_dir: Path, run_id: str | None) -> dict[str, Any]:
     journal = run_dir / "journal.jsonl"
     status = _read_json(run_dir / "status.json")  # first: a call started between reads must not read as a replay
     status = status if isinstance(status, dict) else {}
-    folded = fold_journal(read_journal(journal))
-    calls = merge_calls(folded, status)
+    if isinstance(attempt, str):
+        try:
+            attempt = int(attempt)
+        except ValueError:
+            state["error"] = f"invalid attempt: {attempt!r}"
+            return state
+    if attempt is not None and (isinstance(attempt, bool) or attempt < 1):
+        state["error"] = f"invalid attempt: {attempt!r}"
+        return state
+    try:
+        folded = fold_journal(read_journal(journal), attempt)
+    except WatchError as exc:
+        state["error"] = str(exc)
+        return state
+    latest = folded["segment"] == len(folded["attempts"])
+    calls = merge_calls(folded, status if latest else {})
 
     counts = dict(ZERO_COUNTS)  # one source of truth: tiles can never disagree with the cards
     counts["total"] = len(calls)
@@ -371,7 +387,7 @@ def build_state(campaign_dir: Path, run_id: str | None) -> dict[str, Any]:
 
     run_start = folded["run_start"] or {}
     run_end = folded["run_end"] or {}
-    run_state = status.get("state") or run_end.get("state")
+    run_state = (status.get("state") if latest else None) or run_end.get("state")
     if not isinstance(run_state, str):
         run_state = "running" if any(c["state"] == "running" for c in calls) else "unknown"
 
@@ -393,13 +409,16 @@ def build_state(campaign_dir: Path, run_id: str | None) -> dict[str, Any]:
     state.update(
         {
             "run_id": resolved,
-            "workflow": status.get("workflow") or run_start.get("workflow"),
+            "workflow": (status.get("workflow") if latest else None) or run_start.get("workflow"),
+            "attempt": folded["segment"],
+            "attempts": folded["attempts"],
             "state": "stale" if stale else run_state,  # status.json keeps saying "running" after a SIGKILL
             "raw_state": run_state,
-            "phase": status.get("phase"),
-            "started_at": status.get("started_at") or run_start.get("ts"),
-            "updated_at": status.get("updated_at"),
-            "elapsed_s": status.get("elapsed_s"),
+            "phase": status.get("phase") if latest else None,
+            "started_at": (status.get("started_at") if latest else None) or run_start.get("ts"),
+            "updated_at": (status.get("updated_at") if latest else None) or run_end.get("ts"),
+            "elapsed_s": (status.get("elapsed_s") if latest else None)
+            or (run_end.get("duration_ms") / 1000 if isinstance(run_end.get("duration_ms"), (int, float)) else None),
             "counts": counts,
             "phases": phases,
             "calls": calls,
@@ -455,8 +474,10 @@ class WatchHandler(http.server.BaseHTTPRequestHandler):
             self._send(PAGE.encode("utf-8"), 200, "text/html; charset=utf-8")
             return
         if parsed.path == "/api/state":
-            requested = (parse_qs(parsed.query).get("run") or [None])[0]
-            payload = build_state(self.server.campaign_dir, requested or self.server.run_id)
+            query = parse_qs(parsed.query)
+            requested = (query.get("run") or [None])[0]
+            attempt = (query.get("attempt") or [None])[0]
+            payload = build_state(self.server.campaign_dir, requested or self.server.run_id, attempt)
             body = json.dumps(payload, ensure_ascii=False, default=str).encode("utf-8")
             self._send(body, 200, "application/json; charset=utf-8")
             return
@@ -634,6 +655,7 @@ select {
   <h1 id="run">—</h1>
   <span class="pill" id="state">…</span>
   <select id="runs" class="hidden" title="switch run"></select>
+  <select id="attempts" class="hidden" title="switch attempt"></select>
   <span class="sub" id="workflow"></span>
   <span class="sub num" id="elapsed"></span>
 </header>
@@ -786,6 +808,23 @@ function renderRuns(data) {
   sel.classList.toggle("hidden", !runs.length);
 }
 
+function renderAttempts(data) {
+  const sel = $("attempts");
+  const attempts = data.attempts || [];
+  const key = attempts.join("\n");
+  if (sel.dataset.attempts !== key) {
+    sel.textContent = "";
+    for (const attempt of attempts) {
+      const o = el("option", null, "attempt " + attempt);
+      o.value = attempt;
+      sel.appendChild(o);
+    }
+    sel.dataset.attempts = key;
+  }
+  if (data.attempt) sel.value = data.attempt;
+  sel.classList.toggle("hidden", attempts.length < 2);
+}
+
 function render(data) {
   $("run").textContent = data.run_id || data.campaign.split("/").pop();
   const pill = $("state");
@@ -795,6 +834,7 @@ function render(data) {
     ? "no journal activity for " + humanSeconds(data.journal_age_s) + "; process may be gone"
     : "";
   renderRuns(data);
+  renderAttempts(data);
   $("workflow").textContent = data.workflow ? data.workflow.split("/").pop() : "";
   $("elapsed").textContent = data.elapsed_s ? humanSeconds(data.elapsed_s) : "";
 
@@ -819,18 +859,25 @@ function render(data) {
   renderPhases(data);
 }
 
-function currentRun() {
-  return new URLSearchParams(window.location.search).get("run");
+function currentQuery() {
+  return new URLSearchParams(window.location.search);
 }
 
 $("runs").addEventListener("change", (ev) => {
   window.location.search = "?run=" + encodeURIComponent(ev.target.value);
 });
 
+$("attempts").addEventListener("change", (ev) => {
+  const query = currentQuery();
+  if (last && last.run_id) query.set("run", last.run_id);
+  query.set("attempt", ev.target.value);
+  window.location.search = "?" + query.toString();
+});
+
 async function poll() {
   try {
-    const run = currentRun();
-    const url = run ? "/api/state?run=" + encodeURIComponent(run) : "/api/state";
+    const query = currentQuery().toString();
+    const url = query ? "/api/state?" + query : "/api/state";
     const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) throw new Error("http " + res.status);
     last = await res.json();
