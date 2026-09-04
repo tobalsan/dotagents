@@ -1,6 +1,6 @@
 ---
 name: commit
-description: Create atomic commits with strict formatting rules. Use when user asks to commit changes with /commit or explicitly requests creating a git commit. Enforces 50-char max commit message, why-focused commit message/body, conventional commit format (feat/fix/refactor/docs/test/chore), and explicit file paths only (never git add . or commit -a).
+description: Create atomic commits with strict formatting rules. Use when user asks to commit changes with /commit or explicitly requests creating a git commit. Enforces 50-char max commit message, why-focused commit message/body, matching the repo's existing commit style (conventional commits only if no style can be inferred), and explicit file paths only (never git add . or commit -a).
 ---
 
 # Commit
@@ -38,11 +38,16 @@ git commit -m "<message>" -- path/to/file1 path/to/file2
 
 Never run `git add .` or `git commit -a` - breaks atomicity.
 
-### Conventional Commits Format
+### Match the repo's commit style
 
-Use: `<type>[(scope)][!]: <summary>`
+Before writing a message, inspect recent commits (`git log`) and follow that
+style: prefix, tense, capitalization, scope, body habits. Do not default to
+conventional commits when the repo already has a clear pattern (e.g.
+`skills: refresh choose-llm routing`).
 
-Types: `feat|fix|refactor|docs|test|chore`
+Use conventional commits (`feat|fix|refactor|docs|test|chore`,
+`<type>[(scope)][!]: <summary>`) **only** if no consistent style can be
+inferred (empty repo, mixed/one-off history, or first commit).
 
 ### Explain WHY, Not Just WHAT
 
@@ -58,7 +63,7 @@ like `2a1b7646bc3e` must have a body.
 Use up to 3 body lines. Each line should add decision context or grouped impact,
 not repeat the summary.
 
-Example:
+Fallback example (only if no repo style):
 ```git
 feat(auth): require TOTP for admins
 
