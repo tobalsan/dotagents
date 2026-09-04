@@ -13,7 +13,7 @@ Find the task type in the routing table below. Take the top-3 picks **in order**
 |---|---|---|
 | Claude Code | High-tier sub, comfortable | claude-fable-5-1, claude-opus-5, claude-sonnet-5, claude-haiku-4-5 |
 | Codex | High-tier sub, comfortable | gpt-5.6-sol, gpt-5.6-terra, gpt-5.6-luna; gpt-5.5 (superseded — avoid); gpt-5.3-codex-spark (separate rate limit, Pro preview) |
-| Grok CLI | FREE, promo "unlimited" — unreliable/temporary | grok-4.6, grok-build-0.1 — opportunistic only, never critical-path |
+| Grok CLI | PAID API, reliable | grok-4.6 ($2/$6, $4/$12 at ≥200k ctx); grok-build-0.1 ($1/$2, $2/$4 at ≥200k). Web search + X search $5/1k calls each on top of tokens. Prefer CLI over OpenCode (grok-4.6 only 169/5hr there) |
 | Pi | GLM Coding Plan Pro (flat-rate, generous) + Gemini via PAID API (real $) | glm-5.3 = cheap workhorse; gemini-* = use deliberately, prefer flash tiers |
 | OpenCode Go | $12/5hr, $30/wk, $60/mo ($-denominated) | cheap = near-unlimited (muse-spark-1.3-contributor ~45.3k req/5hr — frontier-strong, not a weak bulk model; limited regions; Meta trains on prompts — never sensitive data; mimo-v2.5 ~30.1k; omen-alpha ~11.6k; longcat-2.0 ~11.4k; deepseek-v4-flash ~7.6k; qwen3.8-flash ~5.4k; qwen3.7-plus/hy3 ~4.3k; minimax-m3 ~3.2k; glm-5.3-flash ~1.58k / 2x promo ~3.16k; gpt-5.6-luna ~2.05k); scarce/costly (hy4-preview 1.35k, glm-5.3 220, grok-4.6 169, qwen3.8-max 160, kimi-k3 110 — reach Grok/GLM/Kimi via their own harness instead) |
 
@@ -24,7 +24,7 @@ Find the task type in the routing table below. Take the top-3 picks **in order**
 | Hardest problems: architecture, deep diagnosis, gnarly debugging | claude-fable-5-1 | gpt-5.6-sol (high/max effort) | claude-opus-5 | Fable 5.1 = SOTA ceiling (Terminal-Bench 4.0 55.8%, CursorBench 73.4%); Sol close 2nd; Opus 5 near-frontier at half Fable price |
 | Everyday feature implementation (agentic default) | claude-sonnet-5 | gpt-5.6-terra | glm-5.3 (Pi) | Sonnet = fast/agentic default; Terra ≈Fable-class at 1/4 cost; GLM-5.3 cheap flat-rate fallback (open-weight coding SOTA vs 5.2) |
 | Large repo-scale refactor / hard coding | claude-opus-5 | gpt-5.6-sol | glm-5.3 | Opus 5: SWE-bench 96%; Sol: SOTA Coding Agent Index; GLM-5.3: true 1M ctx, big jump over 5.2 on long-horizon |
-| Code / PR review (cross-vendor second opinion valuable) | claude-opus-5 | gpt-5.6-sol | grok-4.6 (free extra lane) | Deliberately diversify vendor; Grok 4.6 matches Sol on AA Intelligence Index, free but unreliable |
+| Code / PR review (cross-vendor second opinion valuable) | claude-opus-5 | gpt-5.6-sol | grok-4.6 (Grok CLI) | Deliberately diversify vendor; Grok 4.6 matches Sol on AA Intelligence Index. Metered API — use when a third vendor is worth the cost |
 | Security review | gpt-5.6-sol (cyber SOTA; Trusted Access gated) | claude-fable-5-1 | claude-opus-5 | Sol ExploitBench SOTA but gated; Fable 5.1: 60% fewer cyber false positives, vuln *discovery* OK, not exploit-dev. Mythos 5.1 / Gemini 3.8 Flash Cyber = gated twins |
 | Quick scoped edits, boilerplate, test scaffolding | claude-haiku-4-5 | gpt-5.6-luna | grok-build-0.1 | All cheap/fast; Luna beats Opus 4.8 on Coding Agent Index at 1/4 cost |
 | Ultra-fast interactive iteration (pair loop) | gpt-5.3-codex-spark | claude-haiku-4-5 | gemini-3.8-flash | Spark 1000+ tok/s, separate quota; text-only, no deep reasoning. 3.8 Flash ~300 tok/s + agentic |
@@ -34,7 +34,7 @@ Find the task type in the routing table below. Take the top-3 picks **in order**
 | Cheap deep reasoning at volume | deepseek-v4-pro (OpenCode) | glm-5.3 (Pi) | glm-5.3-flash (OpenCode) | DeepSeek Pro: ~$0.04/task deep reasoning, verbose but absurdly cheap |
 | Long-context (huge docs / whole repos, up to 1M) | claude-fable-5-1 | glm-5.3 | gpt-5.6-sol | Fable 1M ctx best-in-class; GLM's 1M genuinely holds up in practice |
 | Multimodal (screenshots, PDFs, video, audio) | gemini-3.8-flash | claude-fable-5-1 (vision SOTA, no audio/video) | glm-5.3-flash or muse-spark-1.3-contributor (cheap bulk vision, OpenCode) | 3.8 Flash: text/image/video/audio/PDF + computer-use preview. Qwen3.8-flash / MiniMax-M3 also cheap bulk |
-| Real-time info / web + X research | grok-4.6 (built-in web/X search, free) | gpt-5.6-sol (BrowseComp SOTA 92.2%) | gemini-3.8-flash (search grounding) | Grok's X search is a unique differentiator |
+| Real-time / near-real-time research, scoping, recent sources | grok-4.6 via Grok CLI (web + X search) | gpt-5.6-sol (BrowseComp SOTA 92.2%) | gemini-3.8-flash (search grounding) | **Default this lane to Grok CLI + grok-4.6.** Native web search *and* X search — unique for live/recent, high-signal sources (posts, threads, breaking docs). Use it to scope a topic and find the newest reliable sources before deeper work. Costs tokens + $5/1k search calls; still cheaper than a wrong-source rabbit hole. Do not route this through OpenCode Grok |
 | Computer use / browser automation | claude-fable-5-1 (OSWorld 2.0 77.9% partial) | claude-opus-5 | gemini-3.8-flash | Fable 5.1 best-in-class computer-use; 3.8 Flash has computer-use preview |
 | Long-horizon agentic knowledge work (docs, office, workflows) | claude-fable-5-1 | kimi-k3 (OpenCode; ~110 req/5hr — single high-value shots only) | hy4-preview (OpenCode; 1M ctx, office/productivity) | Fable 5.1 AutomationBench 31.4%. Kimi #1 AutomationBench but scarce. Hy4 supersedes Hy3 |
 | Writing, docs, PRDs | claude-sonnet-5 | claude-fable-5-1 (quality paramount) | gpt-5.6-terra | Sonnet default; escalate to Fable 5.1 only when quality matters most |
@@ -54,9 +54,9 @@ Find the task type in the routing table below. Take the top-3 picks **in order**
 - `gpt-5.5` — Superseded by Terra — avoid.
 - `gpt-5.3-codex-spark` — Cerebras 1000+ tok/s pair-coding niche. Separate rate limit, Pro preview, text-only, doesn't auto-run tests.
 
-**Grok CLI**
-- `grok-4.6` — Matches Sol on AA Intelligence Index (61). Long-running agents, visual/interactive work, built-in web+X search. $2/$6 API, 500K ctx. Free-promo on CLI (unreliable). Prefer CLI over OpenCode (169/5hr).
-- `grok-build-0.1` — Fast/cheap agentic SWE, always-on reasoning, no effort dial. Notably behind frontier accuracy (SWE-bench Verified 70.8% vs 88.7%).
+**Grok CLI** — API-metered, reliable (no longer a free promo). Token rates below; web_search and x_search are extra at $5/1k calls each.
+- `grok-4.6` — Matches Sol on AA Intelligence Index (61). Long-running agents, visual/interactive work, 500K ctx. **Best harness for live/near-live research:** built-in web search + X search (posts, profiles, threads) — use it to scope topics and pull the most recent reliable sources. $2/$6 (<200k), $4/$12 (≥200k). Prefer CLI over OpenCode (169/5hr, no unique search stack).
+- `grok-build-0.1` — Fast/cheap agentic SWE, always-on reasoning, no effort dial. $1/$2 (<200k). Notably behind frontier accuracy (SWE-bench Verified 70.8% vs 88.7%).
 
 **Pi**
 - `glm-5.3` — Best open-weight coding model (post-train bump over 5.2: Terminal-Bench 3.0 28.3 vs 4.6, DeepSWE 66.9 vs 46.2). True 1M ctx, flat-rate generous quota. Text-only; verbose; behind closed frontier on hardest reasoning. Prefer Pi over OpenCode (220/5hr).
@@ -81,7 +81,8 @@ Find the task type in the routing table below. Take the top-3 picks **in order**
 
 ## Rules of thumb
 
-- Prefer free/flat-rate lanes (Grok CLI, GLM-5.3 via Pi, OpenCode cheap models) before spending on metered API (Gemini) or scarce quota.
+- Prefer free/flat-rate lanes (GLM-5.3 via Pi, OpenCode cheap models) before spending on metered API (Grok CLI, Gemini) or scarce quota.
+- For live or recent-source work (what's new, who said it, which docs/posts to trust): **Grok CLI + grok-4.6 first.** Web + X search is the differentiator — scope and explore there, then hand off to a coding/reasoning model. Worth the API + search-call cost.
 - Escalate exactly one tier after a cheaper pick fails twice — don't jump straight to the most expensive model on first friction.
 - Cross-vendor deliberately for reviews and second opinions (different training data/blind spots catch different bugs).
 - Never use MiMo-V2.5 for long agentic sessions — reproducible mid-response cutoff bug.
