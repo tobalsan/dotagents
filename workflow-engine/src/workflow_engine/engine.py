@@ -14,7 +14,7 @@ import os
 import sys
 import time
 from collections.abc import Awaitable, Callable, Iterable, Iterator, Sequence
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -52,7 +52,7 @@ class Ctx:
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def call_key(prompt: str, schema: dict[str, Any] | None, route: str, label: str | None) -> str:
@@ -322,7 +322,7 @@ class Run:
                     entry["state"] = "error"
                     entry["error"] = "interrupted"
                     raise
-                except Exception as exc:
+                except (OSError, RuntimeError, ValueError) as exc:
                     error = AgentError(key, "harness", f"{type(exc).__name__}: {exc}")
                     break
 
@@ -496,7 +496,7 @@ async def pipeline(items: Sequence[Any], *stages: Callable[[Any], Awaitable[Any]
                 current = await stage(current)
             except (asyncio.CancelledError, KeyboardInterrupt):
                 raise
-            except Exception:
+            except AgentError:
                 return None
         return current
 

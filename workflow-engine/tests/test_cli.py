@@ -6,8 +6,8 @@ import json
 from pathlib import Path
 
 import pytest
-
 from conftest import rows, spawns, write_workflow
+
 from workflow_engine.cli import build_parser, main
 
 ARGS_WF = """

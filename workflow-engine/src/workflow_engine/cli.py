@@ -6,7 +6,7 @@ import argparse
 import asyncio
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from workflow_engine.engine import Run, load_workflow
@@ -57,7 +57,7 @@ def cmd_run(ns: argparse.Namespace) -> int:
 
     try:
         load_workflow(workflow_path)
-    except Exception as e:
+    except (ImportError, OSError, SyntaxError, ValueError) as e:
         print(f"error: {e}", file=sys.stderr)
         return 2
 
@@ -77,7 +77,7 @@ def cmd_run(ns: argparse.Namespace) -> int:
     if ns.resume:
         run_id = ns.resume
     else:
-        run_id = f"{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}-{workflow_path.stem}"
+        run_id = f"{datetime.now(UTC):%Y%m%dT%H%M%SZ}-{workflow_path.stem}"
     run_dir = campaign_dir / "runs" / run_id
 
     run = Run(
@@ -93,7 +93,7 @@ def cmd_run(ns: argparse.Namespace) -> int:
         asyncio.run(run.execute(workflow_path, args))
     except KeyboardInterrupt:
         return 1
-    except Exception as e:
+    except (OSError, RuntimeError, ValueError) as e:
         print(f"error: {e}", file=sys.stderr)
         return 1
 

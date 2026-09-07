@@ -8,8 +8,8 @@ import time
 from pathlib import Path
 
 import pytest
-
 from conftest import make_run, read_journal, routes, rows, spawns, write_workflow
+
 from workflow_engine.engine import AgentError, call_key
 
 TWO_CALLS = """
