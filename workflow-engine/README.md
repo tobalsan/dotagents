@@ -39,8 +39,9 @@ wfe watch --campaign DIR [--run RUN_ID] [--port 8799]
   failed calls, `1` workflow raised / was interrupted / has ≥1 failed call, `2` usage/config
   error.
 - `wfe status RUN_DIR [--json]` — prints `state phase elapsed counts` plus one line per call
-  (`state route/model label duration`); `--json` dumps `status.json` verbatim. Missing
-  `status.json` → exit 2.
+  (`state route/model label duration`); `--json` dumps `status.json` verbatim. Persisted run states
+  are `running`, `completed`, `completed_with_errors` (workflow returned but tolerated call errors),
+  `failed` (workflow raised), and `interrupted`. Missing `status.json` → exit 2.
 - `wfe list [--campaign DIR]` — scans `<campaign>/runs/*/status.json`, newest first:
   `run_id state ok/error/total elapsed`.
 - `wfe watch --campaign DIR [--run RUN_ID] [--port 8799]` — read-only localhost dashboard

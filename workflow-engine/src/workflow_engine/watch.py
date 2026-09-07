@@ -580,6 +580,7 @@ header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 }
 .pill.running { color: var(--accent); border-color: var(--accent); animation: breathe 1.8s ease-in-out infinite; }
 .pill.completed { color: var(--ok); border-color: var(--ok); }
+.pill.completed_with_errors { color: var(--warn); border-color: var(--warn); }
 .pill.failed { color: var(--bad); border-color: var(--bad); }
 .pill.interrupted { color: var(--warn); border-color: var(--warn); }
 .pill.stale { color: var(--warn); border-color: var(--warn); }

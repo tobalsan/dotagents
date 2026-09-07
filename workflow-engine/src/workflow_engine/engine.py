@@ -421,7 +421,7 @@ class Run:
             self._finish("failed")
             raise
         else:
-            self._finish("failed" if self.counts["error"] else "completed")
+            self._finish("completed_with_errors" if self.counts["error"] else "completed")
             return result
         finally:
             _CURRENT.reset(token)

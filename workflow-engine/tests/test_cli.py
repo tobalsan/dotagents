@@ -98,6 +98,31 @@ def test_run_usage_errors(tmp_path: Path) -> None:
 # --- status / list ---------------------------------------------------------
 
 
+def test_status_and_list_accept_completed_with_errors(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    campaign = tmp_path / "campaign"
+    run_dir = campaign / "runs" / "run-errors"
+    run_dir.mkdir(parents=True)
+    (run_dir / "status.json").write_text(
+        json.dumps(
+            {
+                "run_id": "run-errors",
+                "state": "completed_with_errors",
+                "phase": None,
+                "started_at": "2026-08-10T10:00:00Z",
+                "elapsed_s": 4.0,
+                "counts": {"total": 1, "ok": 0, "error": 1, "running": 0, "replayed": 0},
+                "calls": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    assert main(["status", str(run_dir)]) == 0
+    assert "completed_with_errors" in capsys.readouterr().out
+    assert main(["list", "--campaign", str(campaign)]) == 0
+    assert "run-errors  completed_with_errors  0/1/1" in capsys.readouterr().out
+
+
 def test_status_and_list(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     campaign = campaign_with_routes(tmp_path)
     wf = write_workflow(tmp_path, ARGS_WF)

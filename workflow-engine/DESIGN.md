@@ -177,7 +177,7 @@ One JSON object per line, append-only, engine-written only (`open(..., "a")`, `w
 | `log` | `msg` |
 | `call_start` | `call_key`, `label`, `route`, `harness`, `model`, `started_at` |
 | `call_end` | `call_key`, `label`, `route`, `harness`, `model`, `attempts` (int), `status` (`"ok"`/`"error"`), `started_at`, `finished_at`, `duration_ms`, `cost_hint` (float\|null), and `result` **or** `result_path`, and `error` on failure |
-| `run_end` | `state` (`"completed"`/`"failed"`/`"interrupted"`), `duration_ms`, `counts` |
+| `run_end` | `state` (`"completed"`/`"completed_with_errors"`/`"failed"`/`"interrupted"`), `duration_ms`, `counts` |
 
 `error` is `{"kind": str, "message": str}`. Results serializing to more than 64 KiB are written to
 `results/<call_key>.json` and referenced by `result_path` (relative to `run_dir`); smaller results
@@ -186,7 +186,10 @@ are inlined under `result`.
 ## status.json
 
 Rewritten atomically after every state change (`json.dump` to `status.json.tmp` in `run_dir`, then
-`os.replace`). Never read by the engine; it exists so `wfe status` is instant.
+`os.replace`). Never read by the engine; it exists so `wfe status` is instant. Run `state` is
+`"running"`, `"completed"`, `"completed_with_errors"`, `"failed"`, or `"interrupted"`.
+`completed_with_errors` means workflow returned successfully but one or more calls produced tolerated
+errors; `failed` means workflow raised; `completed` means workflow returned with no call errors.
 
 ```json
 {

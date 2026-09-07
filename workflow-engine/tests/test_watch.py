@@ -14,6 +14,7 @@ import pytest
 
 from workflow_engine.watch import (
     DEFAULT_TIMEOUT_S,
+    PAGE,
     STALE_MARGIN_S,
     WatchError,
     WatchServer,
@@ -256,6 +257,21 @@ def test_build_state_without_status_json_shows_journal_calls_only(tmp_path: Path
     assert state["counts"]["running"] == 1
     assert state["counts"]["replayed"] == 0
     assert state["state"] == "running"
+
+
+def test_completed_with_errors_state_is_preserved_and_styled(tmp_path: Path) -> None:
+    run_dir = _run_dir(tmp_path)
+    write_journal(
+        run_dir,
+        [run_start(), call_start("A"), call_end("A", status="error"), run_end(state="completed_with_errors")],
+    )
+    write_status(run_dir, state="completed_with_errors", calls=[status_call("A", state="error")])
+
+    state = build_state(run_dir.parent.parent, "run-1")
+
+    assert state["state"] == "completed_with_errors"
+    assert state["raw_state"] == "completed_with_errors"
+    assert ".pill.completed_with_errors { color: var(--warn); border-color: var(--warn); }" in PAGE
 
 
 def test_in_flight_call_state_is_running(tmp_path: Path) -> None:

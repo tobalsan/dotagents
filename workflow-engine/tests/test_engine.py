@@ -202,6 +202,8 @@ async def run(args, ctx):
     run = make_run(tmp_path)
     assert asyncio.run(run.execute(write_workflow(tmp_path, body), {})) == ["1", None, "3"]
     assert run.counts["ok"] == 2 and run.counts["error"] == 1
+    assert json.loads((run.run_dir / "status.json").read_text())["state"] == "completed_with_errors"
+    assert rows(run.run_dir, "run_end")[0]["state"] == "completed_with_errors"
 
 
 def test_parallel_accepts_thunks_and_empty_batches(tmp_path: Path) -> None:
