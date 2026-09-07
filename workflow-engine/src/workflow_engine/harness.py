@@ -34,6 +34,9 @@ class Adapter(typing.Protocol):
     name: str
 
     def command(self, route: Route, prompt: str) -> tuple[list[str], str | None]: ...
+    # Optional: an adapter MAY additionally define
+    #   def command_with_cwd(self, route: Route, prompt: str, cwd: pathlib.Path) -> tuple[list[str], str | None]: ...
+    # for a CLI whose own workspace selection does not follow process cwd.
     def parse(self, stdout: str, stderr: str, exit_code: int) -> HarnessResult: ...
     # Optional: an adapter MAY additionally define
     #   def env(self, route: Route, call_dir: pathlib.Path) -> dict[str, str] | None: ...
@@ -57,13 +60,50 @@ def _json_lines(stdout: str) -> list[dict]:
     return events
 
 
+def _option_values(flags: list[str], *names: str) -> list[str | None]:
+    values = []
+    for index, flag in enumerate(flags):
+        for name in names:
+            if flag.startswith(f"{name}="):
+                values.append(flag.removeprefix(f"{name}="))
+            elif flag == name:
+                values.append(flags[index + 1] if index + 1 < len(flags) else None)
+    return values
+
+
+def _validate_extra_flags(route: Route) -> None:
+    flags = route.extra_flags
+    blocked = {
+        "codex": {"--dangerously-bypass-approvals-and-sandbox", "--yolo"},
+        "claude": {"--dangerously-skip-permissions", "--allow-dangerously-skip-permissions"},
+    }
+    forbidden = next(
+        (flag for flag in flags if flag.split("=", 1)[0] in blocked.get(route.harness, set())), None
+    )
+    if forbidden:
+        raise ValueError(f"{route.harness} route forbids unsafe flag {forbidden!r}")
+    if route.harness == "codex":
+        sandboxes = _option_values(flags, "-s", "--sandbox")
+        if len(sandboxes) > 1 or (sandboxes and sandboxes[0] != "workspace-write"):
+            raise ValueError("codex routes may set one workspace-write sandbox only")
+    if route.harness == "claude":
+        modes = _option_values(flags, "--permission-mode")
+        if len(modes) > 1 or modes == ["bypassPermissions"]:
+            raise ValueError("claude routes forbid duplicate or bypassPermissions permission modes")
+    if route.harness == "opencode" and _option_values(flags, "--dir"):
+        raise ValueError("opencode routes may not override engine-controlled --dir")
+
+
 class ClaudeAdapter:
     name = "claude"
 
     def command(self, route: Route, prompt: str) -> tuple[list[str], str | None]:
+        _validate_extra_flags(route)
         argv = ["claude", "-p", "--output-format", "json"]
         if route.model:
             argv += ["--model", route.model]
+        if not _option_values(route.extra_flags, "--permission-mode"):
+            argv += ["--permission-mode", "acceptEdits"]
         argv += list(route.extra_flags)
         return argv, prompt
 
@@ -83,9 +123,12 @@ class CodexAdapter:
     name = "codex"
 
     def command(self, route: Route, prompt: str) -> tuple[list[str], str | None]:
-        argv = ["codex", "exec", "--json", "--skip-git-repo-check", "-s", "read-only"]
+        _validate_extra_flags(route)
+        argv = ["codex", "exec", "--json", "--skip-git-repo-check"]
         if route.model:
             argv += ["-m", route.model]
+        if not _option_values(route.extra_flags, "-s", "--sandbox"):
+            argv += ["-s", "workspace-write"]
         argv += list(route.extra_flags)
         argv += ["-"]
         return argv, prompt
@@ -136,9 +179,20 @@ class OpencodeAdapter:
     name = "opencode"
 
     def command(self, route: Route, prompt: str) -> tuple[list[str], str | None]:
+        return self._command(route, prompt, None)
+
+    def command_with_cwd(self, route: Route, prompt: str, cwd: pathlib.Path) -> tuple[list[str], str | None]:
+        return self._command(route, prompt, cwd)
+
+    def _command(self, route: Route, prompt: str, cwd: pathlib.Path | None) -> tuple[list[str], str | None]:
+        _validate_extra_flags(route)
         argv = ["opencode", "run", "--format", "json"]
         if route.model:
             argv += ["-m", route.model]
+        if "--auto" not in route.extra_flags:
+            argv += ["--auto"]
+        if cwd is not None:
+            argv += ["--dir", str(cwd)]
         argv += list(route.extra_flags)
         argv += [prompt]
         return argv, None
@@ -235,7 +289,11 @@ async def spawn(
     call_dir: pathlib.Path | None = None,
 ) -> HarnessResult:
     adapter = ADAPTERS[route.harness]
-    argv, stdin_text = adapter.command(route, prompt)
+    command_with_cwd = getattr(adapter, "command_with_cwd", None)
+    if command_with_cwd is None:
+        argv, stdin_text = adapter.command(route, prompt)
+    else:
+        argv, stdin_text = command_with_cwd(route, prompt, cwd)
     stdin_bytes = stdin_text.encode() if stdin_text is not None else None
 
     env = None
@@ -256,14 +314,14 @@ async def spawn(
     )
     try:
         out, err = await asyncio.wait_for(proc.communicate(stdin_bytes), timeout_s)
-    except (asyncio.TimeoutError, asyncio.CancelledError) as exc:
+    except (TimeoutError, asyncio.CancelledError) as exc:
         try:
             os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
         except ProcessLookupError:
             pass
         try:
             await asyncio.wait_for(proc.wait(), 5)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             try:
                 os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
             except ProcessLookupError:

@@ -279,15 +279,22 @@ All four verified locally on 2026-08-09 (macOS, `which` found every binary). Mod
 whatever the route supplies; `extra_flags` is appended immediately before the prompt/stdin marker.
 
 **claude** — VERIFIED (`claude -p "…" --output-format json --model haiku`).
-argv: `claude -p --output-format json --model <model> <extra_flags>`; prompt on **stdin**.
+argv: `claude -p --output-format json --model <model> --permission-mode acceptEdits <extra_flags>`;
+prompt on **stdin**. Route-supplied `--permission-mode` replaces this default except
+`bypassPermissions`, which is rejected; dangerous skip-permission flags are also rejected.
+`acceptEdits` is approval behavior, not an OS sandbox: installed Claude exposes no OS sandbox
+selector. Engine-controlled cwd is intended workspace, not OS confinement; Claude may write
+outside it under tool permissions.
 stdout is a single JSON object. `text = obj["result"]`, `cost_hint = obj.get("total_cost_usd")`.
 Treat `obj.get("is_error") is True` or `obj.get("subtype") != "success"` as failure (`exit` = 1).
 Observed keys: `type:"result"`, `subtype:"success"`, `is_error`, `result`, `total_cost_usd`,
 `duration_ms`, `usage`, `modelUsage`, `session_id`.
 
-**codex** — VERIFIED (`codex exec --json --skip-git-repo-check -s read-only "…"`).
-argv: `codex exec --json --skip-git-repo-check -s read-only -m <model> <extra_flags> -`; the
-trailing `-` makes it read the prompt from **stdin**.
+**codex** — VERIFIED (`codex exec --json --skip-git-repo-check -s workspace-write "…"`).
+argv: `codex exec --json --skip-git-repo-check -m <model> -s workspace-write <extra_flags> -`;
+the trailing `-` makes it read the prompt from **stdin**. `workspace-write` is Codex OS/process
+sandbox setting. Route sandbox flags may only repeat `workspace-write`; dangerous bypass and
+`--yolo` flags are rejected.
 stdout is JSONL. Take the last `{"type":"item.completed","item":{"type":"agent_message","text":…}}`
 → `text = item["text"]`. Terminal event `{"type":"turn.completed","usage":{…}}` carries tokens only;
 `cost_hint = None`. `{"type":"turn.failed"}` or a missing `agent_message` ⇒ failure.
@@ -299,9 +306,13 @@ stdout is JSONL session events. Take the last `{"type":"message_end","message":{
 → `text = "".join(part["text"] for part in message["content"] if part["type"] == "text")`;
 `cost_hint = message["usage"]["cost"]["total"]`.
 
-**opencode** — VERIFIED (`opencode run --format json "…"`).
-argv: `opencode run --format json -m <provider/model> <extra_flags> <prompt>` — prompt is a
-**positional** argument (stdin support UNVERIFIED; do not rely on it).
+**opencode** — VERIFIED (`opencode run --format json --auto "…"`).
+argv: `opencode run --format json -m <provider/model> --auto --dir <engine cwd> <extra_flags>
+<prompt>` — prompt is a **positional** argument (stdin support UNVERIFIED; do not rely on it).
+Existing route `--auto` is not duplicated; route `--dir` overrides are rejected. `--auto`
+approves application permission prompts; installed OpenCode has no OS sandbox selector.
+Engine-controlled `--dir`/cwd is intended workspace, not OS confinement; OpenCode may write
+outside it under tool permissions.
 stdout is JSONL. `text` = concatenation of `part["text"]` for events with `type == "text"`, in
 order. `cost_hint` = `part["cost"]` from the last `{"type":"step_finish"}` event.
 

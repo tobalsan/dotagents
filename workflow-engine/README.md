@@ -63,11 +63,17 @@ harness + model:
 Adapters: `claude`, `codex`, `pi`, `opencode`, `fake` (tests only). See `DESIGN.md` for
 verified argv/parsing per adapter.
 
-Opencode gotchas:
+Write-capable defaults:
+- Codex runs in `workspace-write` sandbox. This is OS/process sandbox setting; do not add
+  `--dangerously-bypass-approvals-and-sandbox`, `--yolo`, or another sandbox mode.
+- Claude runs with `--permission-mode acceptEdits`; installed CLI has no equivalent OS sandbox
+  selector. Engine-controlled cwd is intended workspace, not OS confinement; Claude may write
+  outside it under tool permissions.
+- OpenCode runs with `--auto` (added once even when route already includes it); this approves
+  application permission prompts, not an OS sandbox. Engine-controlled cwd is intended workspace,
+  not OS confinement; OpenCode may write outside it under tool permissions.
 - Model must be provider-qualified: `"model": "opencode-go/<model>"` (bare model names don't
   resolve).
-- Headless opencode auto-rejects permission prompts (e.g. writing outside cwd) and kills the
-  lane mid-run unless you pass `"extra_flags": ["--auto"]`.
 - Concurrent `opencode run` calls share one SQLite db and hit "database is locked"; the engine
   isolates each call's `XDG_DATA_HOME` automatically (per-call scratch dir, symlinked
   `auth.json`) — no config needed.

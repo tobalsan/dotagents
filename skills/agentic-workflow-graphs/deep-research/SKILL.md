@@ -60,12 +60,14 @@ research lanes, which legitimately spend 15-40 min fetching and reading sources.
 already found (lanes skip sources already in the ledger).
 
 `routes.json` maps route names to harness/model. Route `strong` (plan, skeptic, and all closing
-nodes — reasoning work) and `throughput` (research, extract — cheap fan-out) must both be defined. Note: an
-`opencode` throughput route needs `"extra_flags": ["--auto"]` — headless opencode
-auto-rejects permission asks (e.g. writing outside cwd) and kills the lane mid-research
-otherwise. See
-`workflow-engine/DESIGN.md` for the format and adapter list. Route researcher/extraction fan-out
-to cheap models; escalate only if lane complexity specifically warrants it — never guess a cost.
+nodes — reasoning work) and `throughput` (research, extract — cheap fan-out) must both be defined.
+Harness defaults allow verification scripts, results, and HTML inside engine-controlled campaign
+workspace: Codex uses `workspace-write`; Claude uses `acceptEdits`; OpenCode adds `--auto` (no
+need to repeat it in `extra_flags`). Only Codex has an OS/process sandbox selector. Claude and
+OpenCode cwd is intended workspace, not OS confinement; either may write outside it under tool
+permissions. Never add Codex sandbox bypass/`--yolo` or Claude skip-permission flags. See
+`workflow-engine/DESIGN.md` for format and adapter list. Route researcher/extraction fan-out to
+cheap models; escalate only if lane complexity specifically warrants it — never guess a cost.
 
 `--arg` values are raw strings the workflow casts itself: `topic` (required), `max_passes`
 (default 8), `saturation_streak` (default 2, quiet passes in a row before stopping).

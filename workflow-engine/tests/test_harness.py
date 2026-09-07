@@ -7,8 +7,26 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 from workflow_engine import harness
-from workflow_engine.harness import HarnessResult, OpencodeAdapter, Route
+from workflow_engine.harness import (
+    ClaudeAdapter,
+    CodexAdapter,
+    HarnessResult,
+    OpencodeAdapter,
+    Route,
+)
+
+
+class _CwdProbeAdapter:
+    name = "cwdprobe"
+
+    def command(self, route: Route, prompt: str) -> tuple[list[str], str | None]:
+        return [sys.executable, "-c", "import pathlib; print(pathlib.Path.cwd())"], None
+
+    def parse(self, stdout: str, stderr: str, exit_code: int) -> HarnessResult:
+        return HarnessResult(text=stdout.strip(), exit=exit_code, cost_hint=None)
 
 
 class _EnvProbeAdapter:
@@ -45,6 +63,66 @@ def test_spawn_merges_adapter_env_hook_into_the_subprocess(tmp_path: Path, monke
     call_dir = tmp_path / "calls" / "k"
     result = asyncio.run(harness.spawn(route, "prompt", 5.0, log_prefix, tmp_path, call_dir=call_dir))
     assert result.text == "from-adapter-hook"
+
+
+def test_spawn_uses_supplied_workspace_as_child_cwd(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setitem(harness.ADAPTERS, "cwdprobe", _CwdProbeAdapter())
+    cwd = tmp_path / "campaign"
+    cwd.mkdir()
+    result = asyncio.run(harness.spawn(Route(harness="cwdprobe"), "prompt", 5.0, tmp_path / "logs" / "k.a1", cwd))
+    assert result.text == str(cwd)
+
+
+# --- write-capable adapter defaults ------------------------------------------
+
+
+def test_claude_defaults_to_edit_acceptance_without_duplicate_override() -> None:
+    argv, stdin = ClaudeAdapter().command(Route(harness="claude", model="sonnet"), "prompt")
+    assert argv == ["claude", "-p", "--output-format", "json", "--model", "sonnet", "--permission-mode", "acceptEdits"]
+    assert stdin == "prompt"
+
+
+def test_codex_defaults_to_workspace_write_sandbox() -> None:
+    argv, stdin = CodexAdapter().command(Route(harness="codex", model="gpt"), "prompt")
+    assert argv == ["codex", "exec", "--json", "--skip-git-repo-check", "-m", "gpt", "-s", "workspace-write", "-"]
+    assert stdin == "prompt"
+
+
+def test_opencode_defaults_to_auto_without_duplicate_flag() -> None:
+    argv, stdin = OpencodeAdapter().command(Route(harness="opencode", extra_flags=["--auto"]), "prompt")
+    assert argv.count("--auto") == 1
+    assert argv[-1] == "prompt" and stdin is None
+
+
+def test_opencode_spawn_command_sets_controlled_workspace_dir(tmp_path: Path) -> None:
+    argv, stdin = OpencodeAdapter().command_with_cwd(Route(harness="opencode"), "prompt", tmp_path)
+    assert argv[argv.index("--dir") + 1] == str(tmp_path)
+    assert argv[-1] == "prompt" and stdin is None
+
+
+@pytest.mark.parametrize("extra_flags", [["--dir", "/tmp/other"], ["--dir=/tmp/other"]])
+def test_opencode_rejects_route_dir_override(tmp_path: Path, extra_flags: list[str]) -> None:
+    with pytest.raises(ValueError, match="--dir"):
+        OpencodeAdapter().command_with_cwd(Route(harness="opencode", extra_flags=extra_flags), "prompt", tmp_path)
+
+
+@pytest.mark.parametrize(
+    ("adapter", "route"),
+    [
+        (CodexAdapter(), Route(harness="codex", extra_flags=["--dangerously-bypass-approvals-and-sandbox"])),
+        (CodexAdapter(), Route(harness="codex", extra_flags=["-s", "read-only"])),
+        (CodexAdapter(), Route(harness="codex", extra_flags=["-s", "workspace-write", "--sandbox=read-only"])),
+        (ClaudeAdapter(), Route(harness="claude", extra_flags=["--dangerously-skip-permissions"])),
+        (ClaudeAdapter(), Route(harness="claude", extra_flags=["--permission-mode", "bypassPermissions"])),
+        (
+            ClaudeAdapter(),
+            Route(harness="claude", extra_flags=["--permission-mode=acceptEdits", "--permission-mode", "bypassPermissions"]),
+        ),
+    ],
+)
+def test_write_defaults_reject_bypass_or_non_write_sandbox(adapter, route: Route) -> None:
+    with pytest.raises(ValueError):
+        adapter.command(route, "prompt")
 
 
 # --- OpencodeAdapter.env ------------------------------------------------------
