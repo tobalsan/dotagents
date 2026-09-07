@@ -6,13 +6,14 @@ import asyncio
 import json
 from pathlib import Path
 
-import pytest
-
+import closing
 import contracts
+import pytest
 import workflow
 from conftest import DEEP_RESEARCH, make_run, routes, rows, spawns
 
 WORKFLOW = DEEP_RESEARCH / "workflow.py"
+CLOSING = DEEP_RESEARCH / "closing.py"
 
 
 # --- contracts: URL normalization -----------------------------------------
@@ -271,6 +272,201 @@ def test_workflow_second_run_continues_without_clobbering_prior_passes(tmp_path:
     assert (campaign / "passes" / "pass-2" / "gap-report.json").is_file()  # fresh, newly-numbered work
     assert spawns(counter) > spawns_after_first
     assert result["passes_run"] == 2
+
+
+# --- closing.py end to end --------------------------------------------------
+
+
+def _seed_closing_campaign(campaign: Path) -> tuple[str, str]:
+    campaign.mkdir(parents=True, exist_ok=True)
+    ledger = campaign / "source-ledger.jsonl"
+    notes = campaign / "notes.jsonl"
+    ledger_text = "\n".join(
+        json.dumps({"canonical_id": f"sha256:source-{i:02d}", "url": f"https://example.com/{i}"})
+        for i in range(45)
+    ) + "\n"
+    notes_text = "\n".join(
+        json.dumps({"claim": f"claim {i}", "citation": f"sha256:source-{i:02d}", "strength": "thin" if i >= 35 else "likely"})
+        for i in range(45)
+    ) + "\n"
+    ledger.write_text(ledger_text, encoding="utf-8")
+    notes.write_text(notes_text, encoding="utf-8")
+    (campaign / "brief.md").write_text("Verbatim research brief", encoding="utf-8")
+    (campaign / "coverage-map.json").write_text(json.dumps({"branches": [{"id": "x", "status": "covered"}]}), encoding="utf-8")
+    gap_dir = campaign / "passes" / "pass-2"
+    gap_dir.mkdir(parents=True)
+    (gap_dir / "gap-report.json").write_text(json.dumps({"gaps": ["named uncertainty", "other uncertainty"]}), encoding="utf-8")
+    return ledger_text, notes_text
+
+
+def test_closing_runs_three_phases_without_mutating_research_state(tmp_path: Path) -> None:
+    campaign = tmp_path / "campaign"
+    ledger_before, notes_before = _seed_closing_campaign(campaign)
+    run = make_run(tmp_path, campaign_dir=campaign, routes=routes(mode="research"), run_id="close-1")
+
+    result = asyncio.run(run.execute(CLOSING, {}))
+
+    assert result == {"closing_dir": str(campaign / "closing" / "close-1"), "status": "confirmed", "targets": 8}
+    assert [row["title"] for row in rows(run.run_dir, "phase")] == [
+        "closing: verification", "closing: synthesis", "closing: final review"
+    ]
+    assert [row["label"] for row in rows(run.run_dir, "call_end")] == [
+        "verify-close", "synthesize-close", "review-close"
+    ]
+    closing = campaign / "closing" / "close-1"
+    assert {path.name for path in closing.iterdir()} == {"snapshot", "evidence.json", "verification.json", "synthesis.md", "review.json", "final.md"}
+    evidence = json.loads((closing / "evidence.json").read_text())
+    assert evidence["counts"] == {"notes": 45, "source_rows": 45, "target_limit": 8}
+    assert len(evidence["verification_targets"]) == 8
+    assert "claim 0" in (closing / "snapshot" / "notes.jsonl").read_text(encoding="utf-8")
+    assert "sha256:source-00" in (closing / "snapshot" / "source-ledger.jsonl").read_text(encoding="utf-8")
+    assert ledger_before == (campaign / "source-ledger.jsonl").read_text(encoding="utf-8")
+    assert notes_before == (campaign / "notes.jsonl").read_text(encoding="utf-8")
+    assert not (campaign / "passes" / "pass-3").exists()
+
+
+def test_closing_resume_replays_calls_and_fresh_run_versions_artifacts(tmp_path: Path, counter: Path) -> None:
+    campaign = tmp_path / "campaign"
+    _seed_closing_campaign(campaign)
+    first = make_run(tmp_path, campaign_dir=campaign, routes=routes(mode="research"), run_id="close-1")
+    asyncio.run(first.execute(CLOSING, {}))
+    first_spawns = spawns(counter)
+    first_final = (campaign / "closing" / "close-1" / "final.md").read_text(encoding="utf-8")
+
+    # Resume must reuse evidence captured before first call, even if campaign later changes.
+    (campaign / "notes.jsonl").write_text('{"claim": "new campaign claim"}\n', encoding="utf-8")
+    resumed = make_run(tmp_path, campaign_dir=campaign, routes=routes(mode="research"), run_id="close-1", resume=True)
+    asyncio.run(resumed.execute(CLOSING, {}))
+    assert spawns(counter) == first_spawns
+    assert (campaign / "closing" / "close-1" / "final.md").read_text(encoding="utf-8") == first_final
+    snapshot_notes = (campaign / "closing" / "close-1" / "snapshot" / "notes.jsonl").read_text(encoding="utf-8")
+    assert "claim 0" in snapshot_notes and "new campaign claim" not in snapshot_notes
+
+    fresh = make_run(tmp_path, campaign_dir=campaign, routes=routes(mode="research"), run_id="close-2")
+    asyncio.run(fresh.execute(CLOSING, {}))
+    assert (campaign / "closing" / "close-2" / "final.md").is_file()
+    assert spawns(counter) == first_spawns + 3
+
+
+@pytest.mark.parametrize("mode, timeout", [("echo", 900.0), ("close-timeout", 0.01)])
+def test_closing_verification_failure_stops_downstream_calls(tmp_path: Path, mode: str, timeout: float) -> None:
+    from workflow_engine.engine import AgentError
+
+    campaign = tmp_path / "campaign"
+    _seed_closing_campaign(campaign)
+    run = make_run(tmp_path, campaign_dir=campaign, routes=routes(mode=mode), default_timeout_s=timeout)
+    with pytest.raises(AgentError):
+        asyncio.run(run.execute(CLOSING, {}))
+    assert [row["label"] for row in rows(run.run_dir, "call_end")] == ["verify-close"]
+    assert not (campaign / "closing" / "run-1" / "synthesis.md").exists()
+
+
+def test_closing_removes_stale_final_before_reentered_verification(tmp_path: Path) -> None:
+    from workflow_engine.engine import AgentError
+
+    campaign = tmp_path / "campaign"
+    _seed_closing_campaign(campaign)
+    closing = campaign / "closing" / "run-1"
+    closing.mkdir(parents=True)
+    (closing / "final.md").write_text("stale", encoding="utf-8")
+    run = make_run(tmp_path, campaign_dir=campaign, routes=routes(mode="echo"))
+
+    with pytest.raises(AgentError):
+        asyncio.run(run.execute(CLOSING, {}))
+
+    assert not (closing / "final.md").exists()
+
+
+def test_closing_review_failure_preserves_synthesis(tmp_path: Path) -> None:
+    from workflow_engine.engine import AgentError
+
+    campaign = tmp_path / "campaign"
+    _seed_closing_campaign(campaign)
+    run = make_run(tmp_path, campaign_dir=campaign, routes=routes(mode="badclose-review"))
+    with pytest.raises(AgentError):
+        asyncio.run(run.execute(CLOSING, {}))
+    closing = campaign / "closing" / "run-1"
+    assert (closing / "synthesis.md").is_file()
+    assert not (closing / "review.json").exists()
+    assert not (closing / "final.md").exists()
+
+
+def test_closing_downgrades_confirmed_review_with_blockers(tmp_path: Path) -> None:
+    campaign = tmp_path / "campaign"
+    _seed_closing_campaign(campaign)
+    run = make_run(tmp_path, campaign_dir=campaign, routes=routes(mode="close-blocker"))
+
+    result = asyncio.run(run.execute(CLOSING, {}))
+
+    review = json.loads((campaign / "closing" / "run-1" / "review.json").read_text(encoding="utf-8"))
+    assert result["status"] == "conditional"
+    assert review["status"] == "conditional"
+    assert review["blockers"] == ["unsupported conclusion"]
+
+
+def test_closing_marks_missing_execution_artifact_unresolved(tmp_path: Path) -> None:
+    campaign = tmp_path / "campaign"
+    _seed_closing_campaign(campaign)
+    run = make_run(tmp_path, campaign_dir=campaign, routes=routes(mode="close-missing-artifact"))
+
+    asyncio.run(run.execute(CLOSING, {}))
+
+    verification = json.loads((campaign / "closing" / "run-1" / "verification.json").read_text(encoding="utf-8"))
+    assert verification["targets"][0]["status"] == "unresolved"
+
+
+def test_closing_requires_distinct_resolved_execution_artifacts(tmp_path: Path) -> None:
+    campaign = tmp_path / "campaign"
+    artifacts = campaign / "closing" / "run-1" / "verification-artifacts"
+    artifacts.mkdir(parents=True)
+    script = artifacts / "check.py"
+    result = artifacts / "result.json"
+    script.write_text("print(2 + 2)\n", encoding="utf-8")
+    result.write_text('{"result": 4}\n', encoding="utf-8")
+    alias = artifacts / "check-alias.py"
+    alias.symlink_to(script)
+    verification = closing._validate_verification(
+        {"targets": [
+            {
+                "target": "duplicate aliases",
+                "status": "confirmed",
+                "evidence_references": ["sha256:source-a"],
+                "execution_claimed": True,
+                "artifact_paths": [
+                    "./closing/run-1/verification-artifacts/check.py",
+                    "closing/run-1/verification-artifacts/check-alias.py",
+                ],
+            },
+            {
+                "target": "distinct script and result",
+                "status": "confirmed",
+                "evidence_references": ["sha256:source-a"],
+                "execution_claimed": True,
+                "artifact_paths": [
+                    "closing/run-1/verification-artifacts/check.py",
+                    "closing/run-1/verification-artifacts/result.json",
+                ],
+            },
+        ]},
+        campaign / "closing" / "run-1",
+        campaign,
+    )
+
+    assert [target["status"] for target in verification["targets"]] == ["unresolved", "confirmed"]
+
+
+def test_closing_accepts_existing_execution_artifacts(tmp_path: Path) -> None:
+    campaign = tmp_path / "campaign"
+    _seed_closing_campaign(campaign)
+    run = make_run(tmp_path, campaign_dir=campaign, routes=routes(mode="close-execution-artifacts"))
+
+    asyncio.run(run.execute(CLOSING, {}))
+
+    closing = campaign / "closing" / "run-1"
+    verification = json.loads((closing / "verification.json").read_text(encoding="utf-8"))
+    assert verification["targets"][0]["status"] == "confirmed"
+    assert (closing / "verification-artifacts" / "check.py").is_file()
+    assert (closing / "verification-artifacts" / "result.json").is_file()
 
 
 def test_all_lanes_dead_fails_the_pass(tmp_path: Path) -> None:

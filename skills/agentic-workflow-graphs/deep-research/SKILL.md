@@ -23,7 +23,7 @@ prompts; the brief is the durable record of what was actually asked. Synthesis r
 
 Before the first run, build `routes.json` by routing each route name with
 `autonomous-agents/choose-llm-for-task`, then present the team as one concise table —
-route → harness, model, and which graph nodes it serves (`strong`: plan, skeptic;
+route → harness, model, and which graph nodes it serves (`strong`: plan, skeptic, closing verification, synthesis, final review;
 `throughput`: scope [first run on an empty coverage map only], research, extract lanes) —
 plus pass count, and wait for the user's confirmation before dispatching. Note that merge
 is plain code, not an agent — it has no route or model. If `throughput` resolves to a strong or scarce model,
@@ -59,8 +59,8 @@ research lanes, which legitimately spend 15-40 min fetching and reading sources.
 `wfe run` against the same campaign directory continues research, reading what earlier passes
 already found (lanes skip sources already in the ledger).
 
-`routes.json` maps route names to harness/model. Route `strong` (plan, skeptic — reasoning
-work) and `throughput` (research, extract — cheap fan-out) must both be defined. Note: an
+`routes.json` maps route names to harness/model. Route `strong` (plan, skeptic, and all closing
+nodes — reasoning work) and `throughput` (research, extract — cheap fan-out) must both be defined. Note: an
 `opencode` throughput route needs `"extra_flags": ["--auto"]` — headless opencode
 auto-rejects permission asks (e.g. writing outside cwd) and kills the lane mid-research
 otherwise. See
@@ -91,13 +91,29 @@ uv run --project /Users/thinh/dotagents/workflow-engine wfe run workflow.py \
   --arg topic="the research question" --resume <run_id>
 ```
 
-## Synthesize
+## Close and synthesize
 
-Synthesis is not a graph node — it's a separate step you run any time by reading
-`CAMPAIGN_DIR/brief.md` (the verbatim request and its style intent), then
-`CAMPAIGN_DIR/notes.jsonl` (and, if useful, `coverage-map.json`), and writing the document. Regenerate it **from scratch** every time; never revise a previous synthesis in
-place — that anchors the whole campaign to whatever the early passes happened to find. Because
-it's regenerable, the campaign is readable after pass 3 as well as pass 50.
+Closing is separate engine-managed graph: bounded verification → synthesis → one final review.
+After route confirmation, run it with same campaign and routing; it reads `brief.md`, ledger,
+notes, coverage map, and latest gap report, but never changes research ledger or pass state.
+
+```bash
+uv run --project /Users/thinh/dotagents/workflow-engine wfe run \
+  /Users/thinh/dotagents/skills/agentic-workflow-graphs/deep-research/closing.py \
+  --campaign CAMPAIGN_DIR --routing CAMPAIGN_DIR/routes.json --timeout 2700
+```
+
+Before first closing call, engine copies full campaign evidence into
+`CAMPAIGN_DIR/closing/<run_id>/snapshot/` and records hashes in its manifest. Agents receive a bounded
+summary and read relevant full snapshot files from campaign workspace, so prompt budget does not discard old
+notes or sources. Resume same closing run reuses this immutable snapshot even if campaign later changes.
+
+Each closing run writes `evidence.json` (bounded decision-changing target selection, maximum eight),
+`verification.json`, `synthesis.md`, `review.json`, and `final.md`. Verification may targeted-fetch primary
+sources already referenced by snapshot evidence and run reproducible calculations; it must save fetched or
+execution artifacts under closing run directory, otherwise outcome stays unresolved. It never mutates ledger
+or expands into broad research. Final review is one pass: confirmed status publishes only when blockers and
+material citation issues are empty; no revision or retry loop. A fresh close creates versioned artifacts.
 
 ## Termination
 

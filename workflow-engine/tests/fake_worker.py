@@ -11,6 +11,7 @@ import os
 import re
 import sys
 import time
+from pathlib import Path
 
 
 def _count() -> None:
@@ -65,7 +66,7 @@ def _trace(traces: str) -> int:
     return 0
 
 
-def _research(prompt: str, badskeptic: bool = False) -> int:
+def _research(prompt: str, badskeptic: bool = False, badreview: bool = False, blocker: bool = False, missing_artifact: bool = False, execution_artifacts: bool = False) -> int:
     """Answers the five deep-research prompt shapes with schema-valid payloads."""
     if "You are the skeptic" in prompt and badskeptic:
         sys.stdout.write("not json, sorry")
@@ -101,6 +102,33 @@ def _research(prompt: str, badskeptic: bool = False) -> int:
     elif "You are the skeptic" in prompt:
         payload = {"rejections": [{"claim_ref": "lane-b:0", "reason": "single secondary source"}],
                    "summary": "one rejection"}
+    elif "You are closing a deep-research campaign" in prompt:
+        artifact_paths: list[str] = []
+        if missing_artifact:
+            artifact_paths = ["closing/run-1/verification-artifacts/missing.py", "closing/run-1/verification-artifacts/missing.json"]
+        if execution_artifacts:
+            artifacts = Path("closing/run-1/verification-artifacts")
+            artifacts.mkdir(parents=True, exist_ok=True)
+            (artifacts / "check.py").write_text("print(2 + 2)\n", encoding="utf-8")
+            (artifacts / "result.json").write_text('{"result": 4}\n', encoding="utf-8")
+            artifact_paths = [str(artifacts / "check.py"), str(artifacts / "result.json")]
+        payload = {
+            "targets": [{
+                "target": "verified claim",
+                "status": "confirmed",
+                "evidence_references": ["sha256:source-a"],
+                "execution_claimed": missing_artifact or execution_artifacts,
+                "artifact_paths": artifact_paths,
+            }],
+        }
+    elif "Write complete final research report" in prompt:
+        sys.stdout.write("# Research report\n\nConfirmed finding [sha256:source-a].")
+        return 0
+    elif "Perform one final review" in prompt:
+        if badreview:
+            sys.stdout.write("not json, sorry")
+            return 0
+        payload = {"status": "confirmed", "blockers": ["unsupported conclusion"] if blocker else [], "material_claims": [], "citation_issues": []}
     else:
         sys.stderr.write(f"unrecognized prompt: {prompt[:120]}\n")
         return 1
@@ -121,6 +149,17 @@ def main() -> int:
     if mode == "research":
         badskeptic = len(sys.argv) > 2 and sys.argv[2] == "badskeptic"
         return _research(prompt, badskeptic)
+    if mode == "close-timeout":
+        time.sleep(0.2)
+        return _research(prompt)
+    if mode == "badclose-review":
+        return _research(prompt, badreview=True)
+    if mode == "close-blocker":
+        return _research(prompt, blocker=True)
+    if mode == "close-missing-artifact":
+        return _research(prompt, missing_artifact=True)
+    if mode == "close-execution-artifacts":
+        return _research(prompt, execution_artifacts=True)
     sys.stderr.write(f"unknown fake mode: {mode}\n")
     return 2
 
