@@ -99,7 +99,7 @@ class ClaudeAdapter:
 
     def command(self, route: Route, prompt: str) -> tuple[list[str], str | None]:
         _validate_extra_flags(route)
-        argv = ["claude", "-p", "--output-format", "json"]
+        argv = ["claude", "-p", "--output-format", "stream-json", "--verbose"]
         if route.model:
             argv += ["--model", route.model]
         if not _option_values(route.extra_flags, "--permission-mode"):
@@ -108,13 +108,15 @@ class ClaudeAdapter:
         return argv, prompt
 
     def parse(self, stdout: str, stderr: str, exit_code: int) -> HarnessResult:
-        try:
-            obj = json.loads(stdout)
-        except json.JSONDecodeError:
+        result = None
+        for obj in _json_lines(stdout):
+            if obj.get("type") == "result":
+                result = obj
+        if result is None:
             return HarnessResult(text="", exit=exit_code or 1, cost_hint=None)
-        text = obj.get("result", "")
-        cost_hint = obj.get("total_cost_usd")
-        if obj.get("is_error") is True or obj.get("subtype") != "success":
+        text = result.get("result", "")
+        cost_hint = result.get("total_cost_usd")
+        if result.get("is_error") is True or result.get("subtype") != "success":
             return HarnessResult(text=text, exit=1, cost_hint=cost_hint)
         return HarnessResult(text=text, exit=exit_code, cost_hint=cost_hint)
 
@@ -303,38 +305,43 @@ async def spawn(
         if extra_env:
             env = {**os.environ, **extra_env}
 
-    proc = await asyncio.create_subprocess_exec(
-        *argv,
-        stdin=asyncio.subprocess.PIPE,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-        start_new_session=True,
-        cwd=cwd,
-        env=env,
-    )
+    log_prefix.parent.mkdir(parents=True, exist_ok=True)
+    stdout_path = log_prefix.with_name(log_prefix.name + ".stdout.txt")
+    stderr_path = log_prefix.with_name(log_prefix.name + ".stderr.txt")
+    stdout_file = await asyncio.to_thread(open, stdout_path, "wb")
+    stderr_file = await asyncio.to_thread(open, stderr_path, "wb")
     try:
-        out, err = await asyncio.wait_for(proc.communicate(stdin_bytes), timeout_s)
-    except (TimeoutError, asyncio.CancelledError) as exc:
+        proc = await asyncio.create_subprocess_exec(
+            *argv,
+            stdin=asyncio.subprocess.PIPE,
+            stdout=stdout_file,
+            stderr=stderr_file,
+            start_new_session=True,
+            cwd=cwd,
+            env=env,
+        )
         try:
-            os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
-        except ProcessLookupError:
-            pass
-        try:
-            await asyncio.wait_for(proc.wait(), 5)
-        except TimeoutError:
+            await asyncio.wait_for(proc.communicate(stdin_bytes), timeout_s)
+        except (TimeoutError, asyncio.CancelledError) as exc:
             try:
-                os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+                os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
             except ProcessLookupError:
                 pass
-            await proc.wait()
-        if isinstance(exc, asyncio.CancelledError):
-            raise
-        raise TimeoutError(f"timed out after {timeout_s}s") from exc
+            try:
+                await asyncio.wait_for(proc.wait(), 5)
+            except TimeoutError:
+                try:
+                    os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                await proc.wait()
+            if isinstance(exc, asyncio.CancelledError):
+                raise
+            raise TimeoutError(f"timed out after {timeout_s}s") from exc
+    finally:
+        stdout_file.close()
+        stderr_file.close()
 
-    log_prefix.parent.mkdir(parents=True, exist_ok=True)
-    log_prefix.with_name(log_prefix.name + ".stdout.txt").write_bytes(out)
-    log_prefix.with_name(log_prefix.name + ".stderr.txt").write_bytes(err)
-
-    stdout_text = out.decode(errors="replace")
-    stderr_text = err.decode(errors="replace")
+    stdout_text = stdout_path.read_bytes().decode(errors="replace")
+    stderr_text = stderr_path.read_bytes().decode(errors="replace")
     return adapter.parse(stdout_text, stderr_text, proc.returncode)

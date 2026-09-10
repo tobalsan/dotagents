@@ -280,17 +280,23 @@ own `opencode.db` while still authenticating off the one real `auth.json`.
 All four verified locally on 2026-08-09 (macOS, `which` found every binary). Model flag values are
 whatever the route supplies; `extra_flags` is appended immediately before the prompt/stdin marker.
 
-**claude** — VERIFIED (`claude -p "…" --output-format json --model haiku`).
-argv: `claude -p --output-format json --model <model> --permission-mode acceptEdits <extra_flags>`;
-prompt on **stdin**. Route-supplied `--permission-mode` replaces this default except
-`bypassPermissions`, which is rejected; dangerous skip-permission flags are also rejected.
-`acceptEdits` is approval behavior, not an OS sandbox: installed Claude exposes no OS sandbox
-selector. Engine-controlled cwd is intended workspace, not OS confinement; Claude may write
-outside it under tool permissions.
-stdout is a single JSON object. `text = obj["result"]`, `cost_hint = obj.get("total_cost_usd")`.
-Treat `obj.get("is_error") is True` or `obj.get("subtype") != "success"` as failure (`exit` = 1).
-Observed keys: `type:"result"`, `subtype:"success"`, `is_error`, `result`, `total_cost_usd`,
-`duration_ms`, `usage`, `modelUsage`, `session_id`.
+**claude** — VERIFIED (`claude -p "…" --output-format stream-json --verbose --model haiku`;
+`stream-json` under `-p` requires `--verbose`).
+argv: `claude -p --output-format stream-json --verbose --model <model> --permission-mode
+acceptEdits <extra_flags>`; prompt on **stdin**. Route-supplied `--permission-mode` replaces this
+default except `bypassPermissions`, which is rejected; dangerous skip-permission flags are also
+rejected. `acceptEdits` is approval behavior, not an OS sandbox: installed Claude exposes no OS
+sandbox selector. Engine-controlled cwd is intended workspace, not OS confinement; Claude may
+write outside it under tool permissions.
+stdout is JSONL (`system`/`assistant`/`rate_limit_event`/… lines while the turn runs, so the log
+can be tailed live). Take the last `{"type":"result", …}` line — same fields the old single object
+had: `text = result["result"]`, `cost_hint = result.get("total_cost_usd")`. Treat
+`result.get("is_error") is True` or `result.get("subtype") != "success"` as failure (`exit` = 1); no
+`result` line at all is also a failure. Observed line types: `system` (subtypes `init`,
+`hook_started`, `hook_response`, `thinking_tokens`, …), `assistant` (`message.content` blocks of
+type `thinking`/`text`/`tool_use`), `rate_limit_event`, and the terminal `result` line with
+`subtype:"success"`, `is_error`, `result`, `total_cost_usd`, `duration_ms`, `usage`, `modelUsage`,
+`session_id`.
 
 **codex** — VERIFIED (`codex exec --json --skip-git-repo-check -s workspace-write "…"`).
 argv: `codex exec --json --skip-git-repo-check -m <model> -s workspace-write <extra_flags> -`;

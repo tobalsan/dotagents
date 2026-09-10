@@ -56,6 +56,16 @@ def test_spawn_without_env_hook_still_works(tmp_path: Path) -> None:
     assert result.text == "ok" and result.exit == 0
 
 
+def test_spawn_writes_stdout_and_stderr_log_files(tmp_path: Path) -> None:
+    """Logs stream to disk during the run; both files hold the child's output once spawn returns."""
+    route = Route(harness="fake", extra_flags=["echo"])
+    log_prefix = tmp_path / "logs" / "k.a1"
+    result = asyncio.run(harness.spawn(route, "@@FAIL@@", 5.0, log_prefix, tmp_path))
+    assert result.exit == 1
+    assert (tmp_path / "logs" / "k.a1.stdout.txt").read_bytes() == b"worker exploded"
+    assert (tmp_path / "logs" / "k.a1.stderr.txt").read_bytes() == b"boom\n"
+
+
 def test_spawn_merges_adapter_env_hook_into_the_subprocess(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setitem(harness.ADAPTERS, "envprobe", _EnvProbeAdapter())
     route = Route(harness="envprobe")
@@ -78,8 +88,44 @@ def test_spawn_uses_supplied_workspace_as_child_cwd(tmp_path: Path, monkeypatch)
 
 def test_claude_defaults_to_edit_acceptance_without_duplicate_override() -> None:
     argv, stdin = ClaudeAdapter().command(Route(harness="claude", model="sonnet"), "prompt")
-    assert argv == ["claude", "-p", "--output-format", "json", "--model", "sonnet", "--permission-mode", "acceptEdits"]
+    assert argv == [
+        "claude",
+        "-p",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--model",
+        "sonnet",
+        "--permission-mode",
+        "acceptEdits",
+    ]
     assert stdin == "prompt"
+
+
+def test_claude_parse_folds_stream_json_and_takes_the_last_result_line() -> None:
+    stdout = "\n".join(
+        [
+            json.dumps({"type": "system", "subtype": "init"}),
+            json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": "ok"}]}}),
+            json.dumps(
+                {"type": "result", "subtype": "success", "is_error": False, "result": "ok", "total_cost_usd": 0.01}
+            ),
+        ]
+    )
+    result = ClaudeAdapter().parse(stdout, "", exit_code=0)
+    assert result.text == "ok" and result.exit == 0 and result.cost_hint == 0.01
+
+
+def test_claude_parse_treats_missing_result_line_as_failure() -> None:
+    stdout = json.dumps({"type": "system", "subtype": "init"})
+    result = ClaudeAdapter().parse(stdout, "", exit_code=0)
+    assert result.exit == 1 and result.text == ""
+
+
+def test_claude_parse_treats_error_result_as_failure() -> None:
+    stdout = json.dumps({"type": "result", "subtype": "error", "is_error": True, "result": "boom"})
+    result = ClaudeAdapter().parse(stdout, "", exit_code=0)
+    assert result.exit == 1 and result.text == "boom"
 
 
 def test_codex_defaults_to_workspace_write_sandbox() -> None:

@@ -21,6 +21,7 @@ from workflow_engine.watch import (
     build_state,
     make_server,
     read_journal,
+    read_live,
     read_overlay,
     read_ralph_overlay,
     resolve_run_id,
@@ -440,6 +441,244 @@ def test_crash_truncated_tail_line_is_skipped(tmp_path: Path) -> None:
 
     assert len(rows) == 4
     assert rows[-1]["call_key"] == "A"
+
+
+# --- live tail -----------------------------------------------------------------
+
+
+def _write_log(run_dir: Path, call_key: str, attempt: int, rows: list[dict] | str) -> Path:
+    logs = run_dir / "logs"
+    logs.mkdir(parents=True, exist_ok=True)
+    text = rows if isinstance(rows, str) else "\n".join(json.dumps(r) for r in rows) + "\n"
+    path = logs / f"{call_key}.a{attempt}.stdout.txt"
+    path.write_text(text, encoding="utf-8")
+    return path
+
+
+def test_read_live_returns_trailing_agent_message(tmp_path: Path) -> None:
+    run_dir = _run_dir(tmp_path)
+    _write_log(
+        run_dir,
+        "A",
+        1,
+        [
+            {"type": "item.started", "item": {"type": "reasoning", "text": "thinking"}},
+            {"type": "item.completed", "item": {"type": "agent_message", "text": "done here"}},
+            {"type": "turn.completed"},
+        ],
+    )
+
+    live = read_live(run_dir, "A")
+
+    assert live == {"kind": "assistant", "text": "done here"}
+
+
+def test_read_live_maps_command_execution(tmp_path: Path) -> None:
+    run_dir = _run_dir(tmp_path)
+    _write_log(
+        run_dir,
+        "A",
+        1,
+        [{"type": "item.completed", "item": {"type": "command_execution", "command": "pytest -q"}}],
+    )
+
+    live = read_live(run_dir, "A")
+
+    assert live == {"kind": "command", "text": "pytest -q"}
+
+
+def test_read_live_picks_the_highest_attempt(tmp_path: Path) -> None:
+    run_dir = _run_dir(tmp_path)
+    _write_log(run_dir, "A", 1, [{"type": "item.completed", "item": {"type": "agent_message", "text": "old"}}])
+    _write_log(run_dir, "A", 2, [{"type": "item.completed", "item": {"type": "agent_message", "text": "new"}}])
+    _write_log(run_dir, "A", 10, [{"type": "item.completed", "item": {"type": "agent_message", "text": "newest"}}])
+
+    live = read_live(run_dir, "A")
+
+    assert live == {"kind": "assistant", "text": "newest"}
+
+
+def test_read_live_reads_pi_assistant_text(tmp_path: Path) -> None:
+    run_dir = _run_dir(tmp_path)
+    _write_log(
+        run_dir,
+        "A",
+        1,
+        [
+            {"type": "turn_start"},
+            {
+                "type": "message_end",
+                "message": {
+                    "role": "assistant",
+                    "content": [{"type": "thinking", "thinking": "let me see"}, {"type": "text", "text": "hi there"}],
+                },
+            },
+        ],
+    )
+
+    live = read_live(run_dir, "A")
+
+    assert live == {"kind": "assistant", "text": "hi there"}
+
+
+def test_read_live_maps_pi_tool_call_and_tool_result(tmp_path: Path) -> None:
+    run_dir = _run_dir(tmp_path)
+    _write_log(
+        run_dir,
+        "A",
+        1,
+        [
+            {
+                "type": "message_update",
+                "message": {
+                    "role": "assistant",
+                    "content": [{"type": "toolCall", "id": "t1", "name": "grep", "arguments": {"q": "foo"}}],
+                },
+            }
+        ],
+    )
+    live = read_live(run_dir, "A")
+    assert live == {"kind": "tool", "text": 'grep {"q":"foo"}'}
+
+    _write_log(
+        run_dir,
+        "B",
+        1,
+        [
+            {
+                "type": "message_end",
+                "message": {"role": "toolResult", "content": [{"type": "text", "text": "3 matches"}]},
+            }
+        ],
+    )
+    live = read_live(run_dir, "B")
+    assert live == {"kind": "tool_result", "text": "3 matches"}
+
+
+def test_read_live_skips_pi_user_role(tmp_path: Path) -> None:
+    run_dir = _run_dir(tmp_path)
+    _write_log(
+        run_dir,
+        "A",
+        1,
+        [
+            {"type": "message_end", "message": {"role": "assistant", "content": [{"type": "text", "text": "earlier"}]}},
+            {"type": "message_start", "message": {"role": "user", "content": [{"type": "text", "text": "next prompt"}]}},
+        ],
+    )
+
+    live = read_live(run_dir, "A")
+
+    assert live == {"kind": "assistant", "text": "earlier"}
+
+
+def test_read_live_reads_claude_stream_json_assistant_text(tmp_path: Path) -> None:
+    run_dir = _run_dir(tmp_path)
+    _write_log(
+        run_dir,
+        "A",
+        1,
+        [
+            {"type": "system", "subtype": "init"},
+            {
+                "type": "assistant",
+                "message": {"content": [{"type": "thinking", "thinking": "hmm"}, {"type": "text", "text": "ok"}]},
+            },
+        ],
+    )
+
+    live = read_live(run_dir, "A")
+
+    assert live == {"kind": "assistant", "text": "ok"}
+
+
+def test_read_live_maps_claude_tool_use_and_tool_result(tmp_path: Path) -> None:
+    run_dir = _run_dir(tmp_path)
+    _write_log(
+        run_dir,
+        "A",
+        1,
+        [
+            {
+                "type": "assistant",
+                "message": {"content": [{"type": "tool_use", "name": "Bash", "input": {"command": "ls"}}]},
+            }
+        ],
+    )
+    live = read_live(run_dir, "A")
+    assert live == {"kind": "tool", "text": 'Bash {"command":"ls"}'}
+
+    _write_log(
+        run_dir,
+        "B",
+        1,
+        [
+            {
+                "type": "user",
+                "message": {"content": [{"type": "tool_result", "content": [{"type": "text", "text": "done"}]}]},
+            }
+        ],
+    )
+    live = read_live(run_dir, "B")
+    assert live == {"kind": "tool_result", "text": "done"}
+
+
+def test_read_live_reads_opencode_text_and_error(tmp_path: Path) -> None:
+    run_dir = _run_dir(tmp_path)
+    _write_log(
+        run_dir,
+        "A",
+        1,
+        [
+            {"type": "text", "part": {"text": "working on it"}},
+            {"type": "step_finish", "part": {"cost": 0.02}},
+        ],
+    )
+
+    live = read_live(run_dir, "A")
+
+    assert live == {"kind": "assistant", "text": "working on it"}
+
+    _write_log(run_dir, "B", 1, [{"type": "error", "message": "provider auth failed"}])
+    live = read_live(run_dir, "B")
+    assert live == {"kind": "error", "text": '{"type":"error","message":"provider auth failed"}'}
+
+
+def test_read_live_maps_opencode_tool_event(tmp_path: Path) -> None:
+    run_dir = _run_dir(tmp_path)
+    _write_log(run_dir, "A", 1, [{"type": "tool", "part": {"tool": "bash", "state": "running"}}])
+
+    live = read_live(run_dir, "A")
+
+    assert live == {"kind": "tool", "text": "bash running"}
+
+
+def test_read_live_falls_back_to_raw_last_line(tmp_path: Path) -> None:
+    run_dir = _run_dir(tmp_path)
+    _write_log(run_dir, "A", 1, "plain progress line one\nplain progress line two\n")
+
+    live = read_live(run_dir, "A")
+
+    assert live == {"kind": "raw", "text": "plain progress line two"}
+
+
+def test_read_live_returns_none_when_no_log_file(tmp_path: Path) -> None:
+    run_dir = _run_dir(tmp_path)
+
+    assert read_live(run_dir, "A") is None
+
+
+def test_build_state_attaches_live_only_to_running_calls(tmp_path: Path) -> None:
+    run_dir = _run_dir(tmp_path)
+    write_journal(run_dir, [run_start(), phase("p1"), call_start("A"), call_end("A", status="ok"), call_start("B")])
+    _write_log(run_dir, "B", 1, [{"type": "item.completed", "item": {"type": "agent_message", "text": "working"}}])
+
+    state = build_state(run_dir.parent.parent, "run-1")
+    calls = {c["call_key"]: c for c in state["calls"]}
+
+    assert calls["B"]["state"] == "running"
+    assert calls["B"]["live"] == {"kind": "assistant", "text": "working"}
+    assert "live" not in calls["A"]
 
 
 # --- missing run / empty campaign --------------------------------------------

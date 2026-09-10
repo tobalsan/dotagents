@@ -6,6 +6,7 @@ import argparse
 import http.server
 import json
 import os
+import re
 import sys
 import time
 from pathlib import Path
@@ -14,6 +15,7 @@ from urllib.parse import parse_qs, urlsplit
 
 DEFAULT_TIMEOUT_S = 900.0  # engine's default per-call timeout; run_start carries the real one
 STALE_MARGIN_S = 60.0  # a healthy run journals nothing while one call is in flight
+LIVE_TAIL_BYTES = 4 * 1024 * 1024  # pi events repeat the full message per line; single lines exceed 64KB
 CALL_STATES = ("ok", "error", "running", "interrupted")
 ZERO_COUNTS = {"total": 0, "ok": 0, "error": 0, "running": 0, "interrupted": 0, "replayed": 0, "unknown": 0}
 
@@ -58,6 +60,212 @@ def read_journal(path: Path) -> list[dict[str, Any]]:
     except OSError:
         return rows
     return rows
+
+
+_PI_EVENT_TYPES = {
+    "session",
+    "agent_start",
+    "turn_start",
+    "message_start",
+    "message_update",
+    "message_end",
+    "tool_execution_start",
+    "tool_execution_update",
+    "tool_execution_end",
+    "turn_end",
+    "agent_end",
+    "agent_settled",
+}
+
+
+def _compact_json(value: Any) -> str:
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+
+
+def _codex_live(row: dict[str, Any]) -> tuple[str, str] | None:
+    """`codex exec --json`: {"type": "item.completed"/"item.started", "item": {...}}."""
+    if row.get("type") not in ("item.completed", "item.started"):
+        return None
+    item = row.get("item")
+    if not isinstance(item, dict):
+        return None
+    item_type = item.get("type")
+    if item_type == "agent_message":
+        return "assistant", str(item.get("text") or "")
+    if item_type == "reasoning":
+        return "reasoning", str(item.get("text") or item.get("summary") or "")
+    if item_type == "command_execution":
+        return "command", str(item.get("command") or item.get("aggregated_output") or "")
+    if item_type == "file_change":
+        changes = item.get("changes") or []
+        paths = [str(c.get("path")) for c in changes if isinstance(c, dict) and c.get("path")]
+        return "edit", ", ".join(paths)
+    if item_type == "collab_tool_call":
+        bits = [str(item.get("tool") or ""), str(item.get("status") or "")]
+        prompt = item.get("prompt")
+        if prompt:
+            bits.append(str(prompt))
+        return "collab", " ".join(b for b in bits if b)
+    return str(item_type), str(item.get("text") or "")
+
+
+def _pi_content_block(block: dict[str, Any]) -> tuple[str, str] | None:
+    block_type = block.get("type")
+    if block_type == "text" and block.get("text"):
+        return "assistant", str(block["text"])
+    if block_type == "thinking" and block.get("thinking"):
+        return "reasoning", str(block["thinking"])
+    if block_type == "toolCall":
+        name = str(block.get("name") or "")
+        return "tool", (name + " " + _compact_json(block.get("arguments") or {})).strip()
+    return None
+
+
+def _pi_live(row: dict[str, Any]) -> tuple[str, str] | None:
+    """`pi -p --mode json`: session/message_*/tool_execution_*/turn_*/agent_* events."""
+    if row.get("type") not in _PI_EVENT_TYPES:
+        return None
+    message = row.get("message")
+    if not isinstance(message, dict):
+        return None
+    role = message.get("role")
+    if role == "assistant":
+        content = message.get("content")
+        if not isinstance(content, list):
+            return None
+        for block in reversed(content):
+            if isinstance(block, dict):
+                found = _pi_content_block(block)
+                if found:
+                    return found
+        return None
+    if role == "toolResult":
+        content = message.get("content")
+        texts = [
+            str(block["text"])
+            for block in (content if isinstance(content, list) else [])
+            if isinstance(block, dict) and block.get("type") == "text" and block.get("text")
+        ]
+        return ("tool_result", " ".join(texts)) if texts else None
+    return None  # user/custom roles carry nothing worth tailing
+
+
+def _claude_tool_result_text(content: Any) -> str:
+    if isinstance(content, list):
+        return " ".join(
+            str(block["text"])
+            for block in content
+            if isinstance(block, dict) and block.get("type") == "text" and block.get("text")
+        )
+    return str(content) if content else ""
+
+
+def _claude_live(row: dict[str, Any]) -> tuple[str, str] | None:
+    """`claude -p --output-format stream-json`: {"type": "assistant"/"user", "message": {...}}."""
+    if row.get("type") not in ("assistant", "user"):
+        return None
+    message = row.get("message")
+    if not isinstance(message, dict):
+        return None
+    content = message.get("content")
+    if not isinstance(content, list):
+        return None
+    for block in reversed(content):
+        if not isinstance(block, dict):
+            continue
+        block_type = block.get("type")
+        if block_type == "text" and block.get("text"):
+            return "assistant", str(block["text"])
+        if block_type == "thinking" and block.get("thinking"):
+            return "reasoning", str(block["thinking"])
+        if block_type == "tool_use":
+            name = str(block.get("name") or "")
+            return "tool", (name + " " + _compact_json(block.get("input") or {})).strip()
+        if block_type == "tool_result":
+            text = _claude_tool_result_text(block.get("content"))
+            if text:
+                return "tool_result", text
+    return None
+
+
+def _opencode_live(row: dict[str, Any]) -> tuple[str, str] | None:
+    """`opencode run --format json`: flat or `{"part": {...}}`-nested events."""
+    row_type = row.get("type")
+    if not isinstance(row_type, str) or row_type == "step_finish":
+        return None
+    part = row.get("part") if isinstance(row.get("part"), dict) else row
+    if row_type == "text":
+        text = part.get("text") or ""
+        return ("assistant", str(text)) if text else None
+    if row_type == "error":
+        return "error", _compact_json(row)
+    if "tool" in row_type.lower():
+        name = part.get("tool") or part.get("name")
+        if name:
+            state = part.get("state")
+            return "tool", str(name) + (f" {state}" if state else "")
+        return "tool", _compact_json(part)
+    return None
+
+
+def _line_live(row: dict[str, Any]) -> dict[str, Any] | None:
+    """Try each harness's disjoint JSONL shape in turn; None if this row has nothing to show."""
+    for shape in (_codex_live, _pi_live, _claude_live, _opencode_live):
+        found = shape(row)
+        if found is None:
+            continue
+        kind, text = found
+        if text:
+            return {"kind": kind, "text": _truncate_live(text)}
+    return None
+
+
+def _truncate_live(text: str) -> str:
+    return text if len(text) <= 400 else text[:400] + "…"
+
+
+def read_live(run_dir: Path, call_key: str) -> dict[str, Any] | None:
+    """Tail the running call's latest-attempt stdout log; None when there is nothing to show yet."""
+    try:
+        candidates = list((Path(run_dir) / "logs").glob(f"{call_key}.a*.stdout.txt"))
+    except OSError:
+        return None
+    best: tuple[int, Path] | None = None
+    for path in candidates:
+        match = re.search(r"\.a(\d+)\.stdout\.txt$", path.name)
+        if match and (best is None or int(match.group(1)) > best[0]):
+            best = (int(match.group(1)), path)
+    if best is None:
+        return None
+
+    try:
+        with open(best[1], "rb") as fh:
+            fh.seek(0, os.SEEK_END)
+            fh.seek(max(0, fh.tell() - LIVE_TAIL_BYTES))
+            text = fh.read().decode(errors="replace")
+    except OSError:
+        return None
+
+    last_line = None
+    for line in reversed(text.splitlines()):
+        line = line.strip()
+        if not line:
+            continue
+        if last_line is None:
+            last_line = line
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(row, dict):
+            continue
+        live = _line_live(row)
+        if live is not None:
+            return live
+
+    if last_line is not None:
+        return {"kind": "raw", "text": _truncate_live(last_line)}
+    return None
 
 
 def list_runs(campaign_dir: Path) -> list[str]:
@@ -421,6 +629,10 @@ def build_state(campaign_dir: Path, run_id: str | None, attempt: int | str | Non
         return state
     latest = folded["segment"] == len(folded["attempts"])
     calls = merge_calls(folded, status if latest else {})
+    if latest:
+        for call in calls:
+            if call["state"] == "running":
+                call["live"] = read_live(run_dir, call["call_key"])
 
     counts = dict(ZERO_COUNTS)  # one source of truth: tiles can never disagree with the cards
     counts["total"] = len(calls)
@@ -676,7 +888,7 @@ select {
 .cards { display: flex; flex-wrap: wrap; gap: 8px; }
 .card {
   background: var(--panel); border: 1px solid var(--border); border-left: 3px solid var(--dim);
-  border-radius: 5px; padding: 8px 10px; width: 232px; overflow: hidden;
+  border-radius: 5px; padding: 8px 10px; width: 340px; overflow: hidden;
 }
 .card.ok { border-left-color: var(--ok); }
 .card.error { border-left-color: var(--bad); background: color-mix(in srgb, var(--bad) 7%, var(--panel)); }
@@ -687,6 +899,11 @@ select {
 .card .meta {
   color: var(--dim); font-size: 10px; margin-top: 3px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.card .live {
+  margin-top: 5px; font-size: 11px; color: var(--dim); background: var(--raised);
+  border: 1px solid var(--border); border-radius: 4px; padding: 5px 7px;
+  white-space: pre-wrap; overflow-wrap: anywhere; max-height: 72px; overflow: hidden;
 }
 .card .foot { display: flex; gap: 6px; align-items: center; margin-top: 5px; flex-wrap: wrap; }
 .card .dur { font-variant-numeric: tabular-nums; font-size: 11px; }
@@ -838,6 +1055,12 @@ function card(c) {
   n.appendChild(el("div", "label", c.label || c.call_key));
   const bits = [c.route, c.model].filter(Boolean);
   n.appendChild(el("div", "meta", bits.join(" · ") || c.call_key));
+
+  if (c.live && c.live.text) {
+    const live = el("div", "live", "[" + c.live.kind + "] " + c.live.text);
+    live.title = c.live.text;
+    n.appendChild(live);
+  }
 
   const foot = el("div", "foot");
   const dur = humanMs(c.duration_ms);
