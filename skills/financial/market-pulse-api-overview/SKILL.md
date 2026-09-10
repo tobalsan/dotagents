@@ -41,6 +41,14 @@ python3 scripts/market_pulse_report.py --base http://127.0.0.1:8010 --days 7 --l
 
 If Python unavailable, use `curl` and synthesize manually from same endpoints.
 
+The bundled script's `Trend` line only compares newest vs oldest history point. For the full 7-day regime sequence (useful to tell a persistent grind from a fresh flip), history items live under `items` and are keyed `created_at` / `regime` / `confidence` (not `timestamp`/`updated_at`):
+
+```bash
+curl -s "http://127.0.0.1:8010/api/regime/history?days=7" | python3 -c "import sys,json; [print(r['created_at'], r['regime'], r['confidence']) for r in json.load(sys.stdin)['items']]"
+```
+
+Known limitation (Ray's read, 2026-09-04): the API is narrative-based (news classifier + Fed hawk/dove score), not price-based — it says what the *story* is, not what's already discounted. Frame it that way in reports.
+
 ## Report structure
 
 Return Markdown with these sections:
