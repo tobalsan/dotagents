@@ -8,7 +8,7 @@ file, so its content -- and therefore its call_key -- changes every iteration an
 never hit the replay map anyway.
 
 Run with:
-    uv run --project /Users/thinh/dotagents/workflow-engine wfe run workflow.py \
+    wfe run workflow.py \
         --campaign WORKDIR/.ralph --workdir WORKDIR --arg name=<loop-name>
 """
 from __future__ import annotations

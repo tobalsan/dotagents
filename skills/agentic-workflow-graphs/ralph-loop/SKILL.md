@@ -49,9 +49,13 @@ user's confirmation before dispatching.
 
 ## Run it
 
+Requires `wfe` on PATH. If `wfe --help` fails, install the engine as a uv tool:
+`uv tool install <path to workflow-engine>` (the `workflow-engine` directory that ships
+alongside `skills/` in this repo).
+
 ```bash
-uv run --project /Users/thinh/dotagents/workflow-engine wfe run \
-  /Users/thinh/dotagents/skills/agentic-workflow-graphs/ralph-loop/workflow.py \
+wfe run \
+  <path to the ralph-loop skill>/workflow.py \
   --campaign WORKDIR/.ralph --workdir WORKDIR \
   --arg name=<loop-name> --arg max_iterations=50 --timeout 2700
 ```
@@ -63,11 +67,11 @@ low for a real coding pass. `--arg` values: `name` (required, sanitized to `[a-z
 ## Status / resume / stop
 
 ```bash
-uv run --project /Users/thinh/dotagents/workflow-engine wfe status WORKDIR/.ralph/runs/<run_id>
+wfe status WORKDIR/.ralph/runs/<run_id>
 ```
 
 Ask the user whether to also launch the live dashboard —
-`uv run --project /Users/thinh/dotagents/workflow-engine wfe watch --campaign WORKDIR/.ralph`
+`wfe watch --campaign WORKDIR/.ralph`
 (background it) — and report the URL it prints (default `http://127.0.0.1:8799/`).
 
 Rerunning the exact same `wfe run` command resumes: a paused loop picks up from

@@ -39,9 +39,13 @@ shared-state locks. Run it only if the user confirms; otherwise rely on the engi
 
 ## Run it
 
+Requires `wfe` on PATH. If `wfe --help` fails, install the engine as a uv tool:
+`uv tool install <path to workflow-engine>` (the `workflow-engine` directory that ships
+alongside `skills/` in this repo).
+
 ```bash
-uv run --project /Users/thinh/dotagents/workflow-engine wfe run \
-  /Users/thinh/dotagents/skills/agentic-workflow-graphs/deep-research/workflow.py \
+wfe run \
+  <path to the deep-research skill>/workflow.py \
   --campaign CAMPAIGN_DIR \
   --routing CAMPAIGN_DIR/routes.json \
   --arg topic="the research question" \
@@ -73,22 +77,22 @@ cheap models; escalate only if lane complexity specifically warrants it — neve
 (default 8), `saturation_streak` (default 2, quiet passes in a row before stopping).
 
 When dispatching a run, ask the user whether to also launch the live dashboard —
-`uv run --project /Users/thinh/dotagents/workflow-engine wfe watch --campaign CAMPAIGN_DIR`
+`wfe watch --campaign CAMPAIGN_DIR`
 (background it) — and report the URL it prints (default `http://127.0.0.1:8799/`). It is
 read-only: phases, per-call status, and campaign coverage, straight from the journal.
 
 ## Check progress / resume
 
 ```bash
-uv run --project /Users/thinh/dotagents/workflow-engine wfe status CAMPAIGN_DIR/runs/<run_id>
-uv run --project /Users/thinh/dotagents/workflow-engine wfe list --campaign CAMPAIGN_DIR
+wfe status CAMPAIGN_DIR/runs/<run_id>
+wfe list --campaign CAMPAIGN_DIR
 ```
 
 If a run was interrupted or a lane failed, resume it — completed lanes are never re-run, only
 what's missing or failed:
 
 ```bash
-uv run --project /Users/thinh/dotagents/workflow-engine wfe run workflow.py \
+wfe run workflow.py \
   --campaign CAMPAIGN_DIR --routing CAMPAIGN_DIR/routes.json \
   --arg topic="the research question" --resume <run_id>
 ```
@@ -100,8 +104,8 @@ After route confirmation, run it with same campaign and routing; it reads `brief
 notes, coverage map, and latest gap report, but never changes research ledger or pass state.
 
 ```bash
-uv run --project /Users/thinh/dotagents/workflow-engine wfe run \
-  /Users/thinh/dotagents/skills/agentic-workflow-graphs/deep-research/closing.py \
+wfe run \
+  <path to the deep-research skill>/closing.py \
   --campaign CAMPAIGN_DIR --routing CAMPAIGN_DIR/routes.json --timeout 2700
 ```
 

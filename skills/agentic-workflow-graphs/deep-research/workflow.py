@@ -8,7 +8,7 @@
     looped until saturation or --arg max_passes.
 
 Run with:
-    uv run --project /Users/thinh/dotagents/workflow-engine wfe run workflow.py \
+    wfe run workflow.py \
         --campaign CAMPAIGN_DIR --routing routes.json --arg topic="..."
 """
 from __future__ import annotations

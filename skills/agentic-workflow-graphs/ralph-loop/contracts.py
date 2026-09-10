@@ -1,7 +1,7 @@
 """Ralph-loop domain contracts: markers, task-file parsing, state, prompt, verification.
 
 Pure functions, no engine import. Ported from the Pi extension at
-/Users/thinh/code/pi-ralph-wiggum/{index.ts,protocol.ts} -- harness-agnostic here: no
+the pi-ralph-wiggum extension (index.ts, protocol.ts) -- harness-agnostic here: no
 sessions, no child extensions/tools/model, no `.log.jsonl` (the engine journal covers that).
 """
 from __future__ import annotations
