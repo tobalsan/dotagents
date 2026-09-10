@@ -116,10 +116,10 @@ Core rule: work from durable files only. Parent chat history is unavailable by d
 3. Update notes/checklist in durable files when useful.
 4. Follow commit instructions from the task file, if any.
 5. If the entire task is complete, include exactly: {COMPLETE_MARKER}
-6. Pause is a last resort: only if a hard blocker genuinely requires human intervention that a fresh iteration cannot resolve (missing credentials/access, an irreversible or destructive decision needing sign-off), include exactly: {PAUSE_MARKER}
+6. Pause is a last resort: only if a hard blocker genuinely requires human intervention that a fresh iteration cannot resolve (missing credentials/access, an unavailable external dependency you cannot start, an irreversible or destructive decision needing sign-off), include exactly: {PAUSE_MARKER}
 7. Otherwise, stop after meaningful progress and summarize what changed.
 
-Never emit both markers. Pause takes precedence if both appear. Do not ask for human input unless pausing. Preserve momentum. Transient failures, tool errors, or confusion are not pause-worthy: record them in the durable notes and stop; the next fresh iteration will retry with your notes."""
+Never emit both markers. Pause takes precedence if both appear. Do not ask for human input unless pausing. Preserve momentum. Transient failures, tool errors, or confusion are not pause-worthy: record them in the durable notes and stop; the next fresh iteration will retry with your notes. But if the notes show the same blocker already stopped the previous iteration and it persists despite your retry, it is not transient -- treat it as pause-worthy."""
 
 
 def run_verification(command: str, cwd: Path, timeout_s: float = 600) -> tuple[bool, str]:
