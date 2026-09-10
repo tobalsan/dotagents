@@ -32,6 +32,7 @@ _contracts_spec.loader.exec_module(contracts)
 from workflow_engine import AgentError, Ctx, agent, phase
 
 DEFAULT_MAX_ITERATIONS = 50
+DEFAULT_PAUSE_THRESHOLD = 3
 
 
 def _now() -> str:
@@ -50,6 +51,7 @@ def _summary(state: dict[str, Any]) -> dict[str, Any]:
 async def run(args: dict[str, str], ctx: Ctx) -> dict[str, Any]:
     name = contracts.safe_name(args["name"])
     max_iterations = int(args.get("max_iterations", str(DEFAULT_MAX_ITERATIONS)))
+    pause_threshold = int(args.get("pause_threshold", str(DEFAULT_PAUSE_THRESHOLD)))
 
     ralph_dir = ctx.campaign_dir
     workdir = ctx.workdir
@@ -83,8 +85,12 @@ async def run(args: dict[str, str], ctx: Ctx) -> dict[str, Any]:
         return _summary(state)
     elif state["status"] == "paused":
         # `wfe run` again on a paused loop is `/ralph resume`: flip to active and keep
-        # looping from the stored iteration.
+        # looping from the stored iteration. Persist immediately so dashboards don't
+        # show the stale paused status and error for the whole first iteration.
         state["status"] = "active"
+        state["lastError"] = None
+        state["blockedStreak"] = 0
+        contracts.save_state(state_path, state)
 
     while True:
         if state["maxIterations"] > 0 and state["iteration"] > state["maxIterations"]:
@@ -118,31 +124,46 @@ async def run(args: dict[str, str], ctx: Ctx) -> dict[str, Any]:
 
         directive = "pause" if error_message else contracts.child_directive(text)
         if directive == "pause":
-            state["status"] = "paused"
-            state["lastError"] = error_message or "Child requested pause. See reflection for diagnostics."
-            contracts.save_state(state_path, state)
-            break
-
-        if directive == "complete":
-            latest_task_content = task_path.read_text(encoding="utf-8") if task_path.is_file() else task_content
-            verification_command = contracts.parse_verification_command(latest_task_content)
-            state["lastVerificationCommand"] = verification_command
-            if verification_command is None:
-                state["lastVerificationPassed"] = False
-                state["lastVerificationOutput"] = "Completion marker emitted but no verification command found."
-                contracts.append_verification_note(reflection_path, False, None, "")
-            else:
-                passed, output = contracts.run_verification(verification_command, workdir)
-                output = output[-4000:]
-                state["lastVerificationPassed"] = passed
-                state["lastVerificationOutput"] = output
-                contracts.append_verification_note(reflection_path, passed, verification_command, output)
-                if passed:
-                    state["status"] = "completed"
-                    state["completedAt"] = _now()
-                    contracts.save_state(state_path, state)
-                    ctx.log(f"ralph loop {name} complete at iteration {state['iteration']}")
-                    break
+            blocker = error_message or "Child requested pause. See reflection for diagnostics."
+            streak = state.get("blockedStreak", 0) + 1
+            state["blockedStreak"] = streak
+            state["lastError"] = blocker
+            if streak >= pause_threshold:
+                state["status"] = "paused"
+                state["lastError"] = f"{blocker} (blocked {streak} consecutive iterations)"
+                contracts.save_state(state_path, state)
+                ctx.log(f"ralph loop {name} paused: {state['lastError']}")
+                break
+            ctx.log(f"ralph loop {name} blocked ({streak}/{pause_threshold}); continuing with fresh context")
+            contracts.append_reflection(
+                reflection_path,
+                state["iteration"],
+                f"[loop] Iteration blocked ({streak}/{pause_threshold}). Blocker: {blocker}\n\n"
+                "Next iteration: diagnose and attempt to resolve this blocker first, then continue the task.",
+            )
+        else:
+            state["blockedStreak"] = 0
+            state["lastError"] = None
+            if directive == "complete":
+                latest_task_content = task_path.read_text(encoding="utf-8") if task_path.is_file() else task_content
+                verification_command = contracts.parse_verification_command(latest_task_content)
+                state["lastVerificationCommand"] = verification_command
+                if verification_command is None:
+                    state["lastVerificationPassed"] = False
+                    state["lastVerificationOutput"] = "Completion marker emitted but no verification command found."
+                    contracts.append_verification_note(reflection_path, False, None, "")
+                else:
+                    passed, output = contracts.run_verification(verification_command, workdir)
+                    output = output[-4000:]
+                    state["lastVerificationPassed"] = passed
+                    state["lastVerificationOutput"] = output
+                    contracts.append_verification_note(reflection_path, passed, verification_command, output)
+                    if passed:
+                        state["status"] = "completed"
+                        state["completedAt"] = _now()
+                        contracts.save_state(state_path, state)
+                        ctx.log(f"ralph loop {name} complete at iteration {state['iteration']}")
+                        break
 
         state["iteration"] += 1
         contracts.save_state(state_path, state)

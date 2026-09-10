@@ -163,6 +163,19 @@ def _ralph_marker_on_second_call(counter: str, marker: str) -> int:
     return 0
 
 
+def _ralph_pause_then_marker(counter: str, marker: str) -> int:
+    """Pause marker on the first call, then the given marker on every call after."""
+    with open(counter, "a", encoding="utf-8") as fh:
+        fh.write("1\n")
+    with open(counter, encoding="utf-8") as fh:
+        call_num = sum(1 for _ in fh)
+    if call_num < 2:
+        sys.stdout.write(f"Need help.\n{_RALPH_PAUSE_MARKER}")
+    else:
+        sys.stdout.write(f"Done.\n{marker}")
+    return 0
+
+
 def main() -> int:
     mode = sys.argv[1] if len(sys.argv) > 1 else "echo"
     prompt = sys.stdin.read()
@@ -195,6 +208,8 @@ def main() -> int:
         return _ralph_marker_on_second_call(sys.argv[2], _RALPH_COMPLETE_MARKER)
     if mode == "ralph-continue-then-pause":
         return _ralph_marker_on_second_call(sys.argv[2], _RALPH_PAUSE_MARKER)
+    if mode == "ralph-pause-then-complete":
+        return _ralph_pause_then_marker(sys.argv[2], _RALPH_COMPLETE_MARKER)
     sys.stderr.write(f"unknown fake mode: {mode}\n")
     return 2
 

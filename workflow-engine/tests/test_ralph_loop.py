@@ -135,6 +135,49 @@ def test_continues_without_marker_then_completes(tmp_path: Path) -> None:
 
 
 def test_pause_marker_pauses_with_last_error(tmp_path: Path) -> None:
+    """pause_threshold=1 restores the old immediate-pause-on-first-block behavior."""
+    campaign = tmp_path / "campaign"
+    workdir = tmp_path / "work"
+    workdir.mkdir()
+    _write_task(campaign, "loop1", verification="true")
+    run = make_run(tmp_path, campaign_dir=campaign, workdir=workdir, routes=routes(mode="ralph-pause", names=("worker",)))
+
+    result = asyncio.run(run.execute(WORKFLOW, {"name": "loop1", "pause_threshold": "1"}))
+
+    assert result["status"] == "paused" and result["iterations"] == 1
+    state = ralph_contracts.load_state(campaign / "loop1.state.json")
+    assert "pause" in state["lastError"].lower()
+    assert state["blockedStreak"] == 1
+    assert "(blocked 1 consecutive iterations)" in state["lastError"]
+
+
+def test_single_blocked_iteration_continues_with_incremented_streak(tmp_path: Path) -> None:
+    """A lone blocked iteration must not pause the loop: it continues into a fresh
+    iteration with the streak recorded, and the reflection carries the blocker plus a
+    directive for the next iteration to resolve it."""
+    campaign = tmp_path / "campaign"
+    workdir = tmp_path / "work"
+    workdir.mkdir()
+    _write_task(campaign, "loop1", verification="true")
+    run = make_run(tmp_path, campaign_dir=campaign, workdir=workdir, routes=routes(mode="ralph-pause", names=("worker",)))
+
+    # max_iterations=1 with the default pause_threshold (3): the single block continues
+    # into iteration 2, then the loop pauses administratively for max-iterations, not for
+    # the block itself -- proving the block alone did not stop it.
+    result = asyncio.run(run.execute(WORKFLOW, {"name": "loop1", "max_iterations": "1"}))
+
+    assert result["status"] == "paused"
+    assert result["iterations"] == 2
+    state = ralph_contracts.load_state(campaign / "loop1.state.json")
+    assert state["blockedStreak"] == 1
+    assert "Max iterations reached" in state["lastError"]
+    reflection = (campaign / "loop1.reflection.md").read_text(encoding="utf-8")
+    assert "[loop] Iteration blocked (1/3)" in reflection
+    assert "Blocker: Child requested pause. See reflection for diagnostics." in reflection
+    assert "Next iteration: diagnose and attempt to resolve this blocker first, then continue the task." in reflection
+
+
+def test_three_consecutive_blocked_iterations_pauses(tmp_path: Path) -> None:
     campaign = tmp_path / "campaign"
     workdir = tmp_path / "work"
     workdir.mkdir()
@@ -143,9 +186,26 @@ def test_pause_marker_pauses_with_last_error(tmp_path: Path) -> None:
 
     result = asyncio.run(run.execute(WORKFLOW, {"name": "loop1"}))
 
-    assert result["status"] == "paused" and result["iterations"] == 1
+    assert result["status"] == "paused" and result["iterations"] == 3
     state = ralph_contracts.load_state(campaign / "loop1.state.json")
-    assert "pause" in state["lastError"].lower()
+    assert state["blockedStreak"] == 3
+    assert "(blocked 3 consecutive iterations)" in state["lastError"]
+
+
+def test_productive_iteration_resets_blocked_streak(tmp_path: Path) -> None:
+    campaign = tmp_path / "campaign"
+    workdir = tmp_path / "work"
+    workdir.mkdir()
+    _write_task(campaign, "loop1", verification="true")
+    counter = tmp_path / "child-calls.txt"
+    route = {"worker": Route(harness="fake", extra_flags=["ralph-pause-then-complete", str(counter)])}
+    run = make_run(tmp_path, campaign_dir=campaign, workdir=workdir, routes=route)
+
+    result = asyncio.run(run.execute(WORKFLOW, {"name": "loop1", "max_iterations": "5"}))
+
+    assert result == {"name": "loop1", "status": "completed", "iterations": 2, "verification_passed": True}
+    state = ralph_contracts.load_state(campaign / "loop1.state.json")
+    assert state["blockedStreak"] == 0
 
 
 def test_max_iterations_reached_pauses(tmp_path: Path) -> None:
@@ -175,7 +235,7 @@ def test_rerun_on_paused_state_resumes_at_stored_iteration(tmp_path: Path) -> No
     first_routes = {"worker": Route(harness="fake", extra_flags=["ralph-continue-then-pause", str(counter)])}
     first = make_run(tmp_path, campaign_dir=campaign, workdir=workdir, routes=first_routes, run_id="run-1")
 
-    first_result = asyncio.run(first.execute(WORKFLOW, {"name": "loop1", "max_iterations": "5"}))
+    first_result = asyncio.run(first.execute(WORKFLOW, {"name": "loop1", "max_iterations": "5", "pause_threshold": "1"}))
     assert first_result["status"] == "paused" and first_result["iterations"] == 2
 
     second = make_run(

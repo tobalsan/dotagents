@@ -62,7 +62,8 @@ wfe run \
 
 `--timeout` is the per-iteration ceiling in seconds; the engine default (900) is often too
 low for a real coding pass. `--arg` values: `name` (required, sanitized to `[a-zA-Z0-9_-]`),
-`max_iterations` (default 50, `0` means unlimited).
+`max_iterations` (default 50, `0` means unlimited), `pause_threshold` (default 3 — see
+Completion rule below).
 
 ## Status / resume / stop
 
@@ -84,8 +85,15 @@ whatever it last was (`active` or `paused`), so the next `wfe run` continues it.
 The loop completes only when both are true: the child emits `<promise>COMPLETE</promise>`
 **and** the task file's verification command exits 0. If the marker appears but verification
 fails, the loop continues into the next fresh iteration with the failure recorded in
-`.ralph/<name>.reflection.md`. `<promise>PAUSE</promise>` pauses immediately regardless of
-`COMPLETE` — pause always wins when both markers appear.
+`.ralph/<name>.reflection.md`. Within a single iteration's directive, pause still wins if both
+markers appear.
+
+A single blocked iteration (`<promise>PAUSE</promise>` or a harness error) no longer stops the
+loop: it's recorded in the reflection with a note for the next iteration to diagnose and
+retry, and the loop continues with a fresh context. The loop only pauses after
+`pause_threshold` consecutive blocked iterations (default 3, `--arg pause_threshold=N`;
+`pause_threshold=1` restores immediate pause on the first block). A productive iteration
+(continue or complete) resets the streak to zero.
 
 ## Harness write permissions
 
