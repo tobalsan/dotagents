@@ -322,6 +322,49 @@ def read_overlay(campaign_dir: Path) -> dict[str, Any] | None:
     }
 
 
+def read_ralph_overlay(campaign_dir: Path) -> dict[str, Any] | None:
+    """Ralph-loop campaign summary; active only when *.state.json sits directly in campaign_dir."""
+    campaign_dir = Path(campaign_dir)
+    try:
+        names = os.listdir(campaign_dir)
+    except OSError:
+        return None
+    state_files = sorted(n for n in names if n.endswith(".state.json") and (campaign_dir / n).is_file())
+    if not state_files:
+        return None
+
+    loops: list[dict[str, Any]] = []
+    for filename in state_files:
+        data = _read_json(campaign_dir / filename)
+        if not isinstance(data, dict):
+            continue  # unparsable JSON -- skip this loop
+        name = filename[: -len(".state.json")]
+        try:
+            reflection_bytes = (campaign_dir / f"{name}.reflection.md").stat().st_size
+        except OSError:
+            reflection_bytes = 0
+        output = data.get("lastVerificationOutput")
+        passed = data.get("lastVerificationPassed")
+        command = data.get("lastVerificationCommand")
+        error = data.get("lastError")
+        loops.append(
+            {
+                "name": name,
+                "status": data.get("status"),
+                "iteration": data.get("iteration"),
+                "max_iterations": data.get("maxIterations"),
+                "last_verification_passed": passed if isinstance(passed, bool) else None,
+                "last_verification_command": command if isinstance(command, str) else None,
+                "last_error": error if isinstance(error, str) else None,
+                "updated_at": data.get("updatedAt"),
+                "reflection_bytes": reflection_bytes,
+                "last_verification_output_tail": output[-800:] if isinstance(output, str) and output else None,
+            }
+        )
+    loops.sort(key=lambda entry: entry["name"])
+    return {"kind": "ralph", "loops": loops}
+
+
 # --- state -----------------------------------------------------------------
 
 
@@ -348,6 +391,7 @@ def build_state(campaign_dir: Path, run_id: str | None, attempt: int | str | Non
         "stale_after_s": DEFAULT_TIMEOUT_S + STALE_MARGIN_S,
         "stale": False,
         "overlay": read_overlay(campaign_dir),
+        "ralph": read_ralph_overlay(campaign_dir),
         "error": None,
     }
 
@@ -622,6 +666,12 @@ select {
 .chip.thin { color: var(--bad); border-color: var(--bad); }
 .facts { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 10px; color: var(--dim); font-size: 12px; }
 .facts b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+#ralph .panel + .panel { margin-top: 8px; }
+#ralph pre {
+  margin: 8px 0 0; padding: 8px 10px; background: var(--raised); border: 1px solid var(--border);
+  border-radius: 4px; font-size: 11px; white-space: pre-wrap; overflow-wrap: anywhere;
+  color: var(--dim); max-height: 200px; overflow-y: auto;
+}
 
 .cards { display: flex; flex-wrap: wrap; gap: 8px; }
 .card {
@@ -665,6 +715,7 @@ select {
 <div class="banner warn hidden" id="stale"></div>
 <div class="tiles" id="tiles"></div>
 <div id="overlay"></div>
+<div id="ralph"></div>
 <div id="phases"></div>
 
 <script>
@@ -745,6 +796,41 @@ function renderOverlay(o) {
     panel.appendChild(list);
   }
   root.appendChild(panel);
+}
+
+const RALPH_STATUS_CHIP = { completed: "covered", active: "partial", paused: "thin" };
+
+function renderRalph(r) {
+  const root = $("ralph");
+  root.textContent = "";
+  if (!r) return;
+  root.appendChild(el("h2", null, "ralph loop"));
+  for (const loop of r.loops) {
+    const panel = el("div", "panel");
+    const chips = el("div", "chips");
+    chips.appendChild(el("span", "chip " + (RALPH_STATUS_CHIP[loop.status] || ""), loop.name + " · " + loop.status));
+    panel.appendChild(chips);
+
+    const facts = el("div", "facts");
+    const fact = (label, value) => {
+      const f = el("span", null, label + " ");
+      f.appendChild(el("b", null, value === null || value === undefined ? "–" : value));
+      facts.appendChild(f);
+    };
+    fact("iteration", loop.iteration + " / " + (loop.max_iterations ? loop.max_iterations : "∞"));
+    fact(
+      "verification",
+      loop.last_verification_passed === true ? "passed" : loop.last_verification_passed === false ? "failed" : "–"
+    );
+    fact("command", loop.last_verification_command || "–");
+    fact("updated", loop.updated_at || "–");
+    panel.appendChild(facts);
+
+    if (loop.last_error) panel.appendChild(el("div", "sub", loop.last_error));
+    if (loop.last_verification_output_tail) panel.appendChild(el("pre", null, loop.last_verification_output_tail));
+
+    root.appendChild(panel);
+  }
 }
 
 function card(c) {
@@ -857,6 +943,7 @@ function render(data) {
   }
 
   renderOverlay(data.overlay);
+  renderRalph(data.ralph);
   renderPhases(data);
 }
 

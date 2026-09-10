@@ -373,7 +373,9 @@ wfe watch --campaign DIR [--run RUN_ID] [--port 8799]
   dashboard on `127.0.0.1`: journal fold scoped to the last resume segment unioned with
   `status.json` calls, phases as groups, in-flight calls animated, stale-journal banner from
   journal mtime — never invented liveness. Deep-research overlay activates only when the
-  campaign dir has `coverage-map.json`; it reads campaign JSON files directly.
+  campaign dir has `coverage-map.json`; a ralph-loop overlay activates only when the campaign
+  dir has `*.state.json` files directly in it (never under `runs/`); both read campaign JSON
+  files directly.
 - Exit codes: `0` run completed with no failed calls; `1` workflow raised, was interrupted, or ended
   with ≥1 failed call; `2` usage/config error.
 

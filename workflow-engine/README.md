@@ -144,7 +144,8 @@ skeptic → merge, looped to saturation). Testing: `tests/` fake harness (`WFE_F
 `wfe watch --campaign DIR [--run RUN_ID] [--port 8799]` serves a read-only dashboard on
 `127.0.0.1:PORT` (Host-gated to `127.0.0.1`/`localhost`, refuses other Host headers). Without
 `--run` it auto-picks the latest run under `<campaign>/runs/`. Reads only `journal.jsonl` +
-`status.json`; never invents liveness.
+`status.json`; never invents liveness. A ralph-loop overlay activates when the campaign dir
+holds `*.state.json` files directly (never under `runs/`).
 
 ## Testing
 

@@ -22,6 +22,7 @@ from workflow_engine.watch import (
     make_server,
     read_journal,
     read_overlay,
+    read_ralph_overlay,
     resolve_run_id,
 )
 
@@ -534,6 +535,95 @@ def test_overlay_latest_pass_is_numeric_not_lexicographic(tmp_path: Path) -> Non
     overlay = read_overlay(campaign)
 
     assert overlay["gap_report"]["pass"] == 10
+
+
+# --- ralph overlay ---------------------------------------------------------------
+
+
+def test_ralph_overlay_absent_without_state_files(tmp_path: Path) -> None:
+    campaign = tmp_path / "campaign"
+    campaign.mkdir()
+
+    assert read_ralph_overlay(campaign) is None
+
+
+def test_ralph_overlay_reads_loops(tmp_path: Path) -> None:
+    campaign = tmp_path / "campaign"
+    campaign.mkdir()
+
+    (campaign / "zulu.state.json").write_text(
+        json.dumps(
+            {
+                "name": "zulu",
+                "status": "active",
+                "iteration": 3,
+                "maxIterations": 0,
+                "startedAt": "2026-08-10T10:00:00Z",
+                "updatedAt": "2026-08-10T10:05:00Z",
+            }
+        ),
+        encoding="utf-8",
+    )
+    long_output = "x" * 900 + "TAIL"
+    (campaign / "alpha.state.json").write_text(
+        json.dumps(
+            {
+                "name": "alpha",
+                "status": "paused",
+                "iteration": 5,
+                "maxIterations": 10,
+                "startedAt": "2026-08-10T09:00:00Z",
+                "updatedAt": "2026-08-10T09:30:00Z",
+                "lastVerificationCommand": "npm test",
+                "lastVerificationPassed": False,
+                "lastVerificationOutput": long_output,
+                "lastError": "Max iterations reached without verified completion (10).",
+            }
+        ),
+        encoding="utf-8",
+    )
+    (campaign / "alpha.reflection.md").write_text("## Iteration 1\n\nsome notes\n", encoding="utf-8")
+
+    overlay = read_ralph_overlay(campaign)
+
+    assert overlay["kind"] == "ralph"
+    names = [loop["name"] for loop in overlay["loops"]]
+    assert names == ["alpha", "zulu"]  # sorted by name, not by file-write order
+
+    alpha, zulu = overlay["loops"]
+    assert alpha["status"] == "paused"
+    assert alpha["iteration"] == 5
+    assert alpha["max_iterations"] == 10
+    assert alpha["last_verification_passed"] is False
+    assert alpha["last_verification_command"] == "npm test"
+    assert alpha["last_error"] == "Max iterations reached without verified completion (10)."
+    assert alpha["updated_at"] == "2026-08-10T09:30:00Z"
+    assert alpha["reflection_bytes"] == (campaign / "alpha.reflection.md").stat().st_size
+    assert len(alpha["last_verification_output_tail"]) == 800
+    assert alpha["last_verification_output_tail"] == long_output[-800:]
+
+    assert zulu["status"] == "active"
+    assert zulu["max_iterations"] == 0
+    assert zulu["last_verification_passed"] is None
+    assert zulu["last_verification_command"] is None
+    assert zulu["last_error"] is None
+    assert zulu["reflection_bytes"] == 0
+    assert zulu["last_verification_output_tail"] is None
+
+
+def test_ralph_overlay_skips_unparsable_state(tmp_path: Path) -> None:
+    campaign = tmp_path / "campaign"
+    campaign.mkdir()
+    (campaign / "broken.state.json").write_text("{not json", encoding="utf-8")
+    (campaign / "ok.state.json").write_text(
+        json.dumps({"name": "ok", "status": "active", "iteration": 1, "maxIterations": 0}),
+        encoding="utf-8",
+    )
+
+    overlay = read_ralph_overlay(campaign)
+
+    assert overlay["kind"] == "ralph"
+    assert [loop["name"] for loop in overlay["loops"]] == ["ok"]
 
 
 # --- HTTP surface --------------------------------------------------------------
