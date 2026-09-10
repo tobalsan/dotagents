@@ -41,6 +41,7 @@ class AgentError(RuntimeError):
 class Ctx:
     run_dir: Path
     campaign_dir: Path
+    workdir: Path
     journal: Path
     args: dict[str, str]
 
@@ -120,9 +121,11 @@ class Run:
         concurrency: int = 6,
         default_timeout_s: float = 900.0,
         resume: bool = False,
+        workdir: Path | None = None,
     ) -> None:
         self.run_dir = Path(run_dir)
         self.campaign_dir = Path(campaign_dir)
+        self.workdir = Path(workdir).resolve() if workdir else self.campaign_dir
         self.routes = routes
         self.concurrency = concurrency
         self.default_timeout_s = default_timeout_s
@@ -165,6 +168,7 @@ class Run:
         status = {
             "run_id": self.run_id,
             "workflow": str(self.workflow) if self.workflow else None,
+            "workdir": str(self.workdir),
             "state": self.state,
             "phase": self.current_phase,
             "started_at": self._started_at,
@@ -313,7 +317,7 @@ class Run:
                 call_dir = self.run_dir / "calls" / key
                 try:
                     res = await harness.spawn(
-                        rt, attempt_prompt, timeout, log_prefix, self.campaign_dir, call_dir=call_dir
+                        rt, attempt_prompt, timeout, log_prefix, self.workdir, call_dir=call_dir
                     )
                 except TimeoutError:
                     error = AgentError(key, "timeout", f"no result within {timeout:g}s")
@@ -393,6 +397,7 @@ class Run:
         ctx = Ctx(
             run_dir=self.run_dir,
             campaign_dir=self.campaign_dir,
+            workdir=self.workdir,
             journal=self.journal,
             args=dict(args),
         )
@@ -405,6 +410,7 @@ class Run:
                 "concurrency": self.concurrency,
                 "timeout_s": self.default_timeout_s,
                 "routes": {n: {"harness": r.harness, "model": r.model} for n, r in self.routes.items()},
+                "workdir": str(self.workdir),
             }
         )
         self.write_status()

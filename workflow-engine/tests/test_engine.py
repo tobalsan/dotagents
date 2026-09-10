@@ -341,6 +341,35 @@ async def run(args, ctx):
     assert Path(result).resolve() == run.campaign_dir.resolve()
 
 
+def test_ctx_workdir_defaults_to_campaign_dir(tmp_path: Path) -> None:
+    body = """
+from workflow_engine import agent
+
+async def run(args, ctx):
+    return str(ctx.workdir)
+"""
+    run = make_run(tmp_path)
+    result = asyncio.run(run.execute(write_workflow(tmp_path, body), {}))
+    assert Path(result).resolve() == run.campaign_dir.resolve()
+
+
+def test_workdir_overrides_where_workers_spawn(tmp_path: Path) -> None:
+    """workdir is separate from campaign_dir; spawn uses workdir, not campaign_dir, as cwd."""
+    workdir = tmp_path / "work"
+    workdir.mkdir()
+    body = """
+from workflow_engine import agent
+
+async def run(args, ctx):
+    return await agent("where am i @@CWD@@", label="cwd")
+"""
+    run = make_run(tmp_path, workdir=workdir)
+    result = asyncio.run(run.execute(write_workflow(tmp_path, body), {}))
+    assert Path(result).resolve() == workdir.resolve()
+    assert run.workdir == workdir.resolve()
+    assert run.campaign_dir.resolve() != run.workdir
+
+
 def test_unknown_route_fails_the_call_not_the_engine(tmp_path: Path) -> None:
     body = """
 from workflow_engine import agent, parallel

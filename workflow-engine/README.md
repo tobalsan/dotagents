@@ -25,16 +25,17 @@ Worked example: `/Users/thinh/dotagents/skills/agentic-workflow-graphs/deep-rese
 ## CLI reference
 
 ```
-wfe run WORKFLOW.py --campaign DIR [--routing routes.json] [--arg k=v]...
+wfe run WORKFLOW.py --campaign DIR [--workdir DIR] [--routing routes.json] [--arg k=v]...
                     [--resume RUN_ID] [--concurrency N] [--timeout SECONDS]
 wfe status RUN_DIR [--json]
 wfe list [--campaign DIR]
 wfe watch --campaign DIR [--run RUN_ID] [--port 8799]
 ```
 
-- `wfe run` — executes `WORKFLOW.py`. `--campaign` required. `--routing` defaults to
-  `<campaign>/routes.json`. `--arg k=v` repeatable, values are raw strings (workflow casts).
-  `--resume RUN_ID` reuses `<campaign>/runs/RUN_ID/` instead of creating a new run dir.
+- `wfe run` — executes `WORKFLOW.py`. `--campaign` required. `--workdir` optional, resolved to
+  absolute; defaults to the campaign dir; must already exist (usage error otherwise). `--routing`
+  defaults to `<campaign>/routes.json`. `--arg k=v` repeatable, values are raw strings (workflow
+  casts). `--resume RUN_ID` reuses `<campaign>/runs/RUN_ID/` instead of creating a new run dir.
   `--concurrency` default 6. `--timeout` default 900. Exit codes: `0` completed with no
   failed calls, `1` workflow raised / was interrupted / has ≥1 failed call, `2` usage/config
   error.
@@ -90,7 +91,8 @@ CAMPAIGN_DIR/runs/<run_id>/
 ```
 
 Workflow-authored artifacts (ledgers, notes, coverage maps, ...) belong under
-`ctx.campaign_dir`, never under `run_dir`.
+`ctx.campaign_dir`, never under `run_dir`. `ctx.workdir` (`--workdir`, defaults to
+`ctx.campaign_dir`) is the cwd child agent processes are spawned in.
 
 ## Resume semantics
 

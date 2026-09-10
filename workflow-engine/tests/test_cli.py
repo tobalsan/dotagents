@@ -95,6 +95,12 @@ def test_run_usage_errors(tmp_path: Path) -> None:
     assert main(["run", str(bad), "--campaign", str(campaign)]) == 2
 
 
+def test_run_workdir_must_exist(tmp_path: Path) -> None:
+    campaign = campaign_with_routes(tmp_path)
+    wf = write_workflow(tmp_path, ARGS_WF)
+    assert main(["run", str(wf), "--campaign", str(campaign), "--workdir", str(tmp_path / "no-such-dir")]) == 2
+
+
 # --- status / list ---------------------------------------------------------
 
 

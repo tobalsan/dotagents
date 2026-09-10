@@ -59,6 +59,7 @@ def phase(title: str) -> Iterator[None]: ...
 class Ctx:
     run_dir: pathlib.Path
     campaign_dir: pathlib.Path
+    workdir: pathlib.Path          # cwd for spawned agent processes; defaults to campaign_dir
     journal: pathlib.Path          # run_dir / "journal.jsonl"
     args: dict[str, str]
     def log(self, msg: str) -> None: ...   # stderr line + journal {"event":"log","msg":...}
@@ -89,6 +90,7 @@ class Run:
         concurrency: int = 6,
         default_timeout_s: float = 900.0,
         resume: bool = False,
+        workdir: pathlib.Path | None = None,   # cwd for spawned agent processes; defaults to campaign_dir
     ) -> None: ...
     async def execute(self, workflow: pathlib.Path, args: dict[str, str]) -> Any: ...
     async def call(self, prompt, schema, route, label, timeout_s) -> Result: ...   # agent() body
@@ -172,7 +174,7 @@ One JSON object per line, append-only, engine-written only (`open(..., "a")`, `w
 
 | event | fields |
 | --- | --- |
-| `run_start` | `run_id`, `workflow`, `args`, `concurrency`, `timeout_s`, `routes` (name → `{harness,model}`) |
+| `run_start` | `run_id`, `workflow`, `args`, `concurrency`, `timeout_s`, `routes` (name → `{harness,model}`), `workdir` |
 | `phase` | `title` |
 | `log` | `msg` |
 | `call_start` | `call_key`, `label`, `route`, `harness`, `model`, `started_at` |
@@ -350,7 +352,7 @@ def main(argv: list[str] | None = None) -> int: ...   # [project.scripts] wfe = 
 ```
 
 ```
-wfe run WORKFLOW.py --campaign DIR [--routing routes.json] [--arg k=v]...
+wfe run WORKFLOW.py --campaign DIR [--workdir DIR] [--routing routes.json] [--arg k=v]...
                     [--resume RUN_ID] [--concurrency N] [--timeout SECONDS]
 wfe status RUN_DIR [--json]
 wfe list [--campaign DIR]
@@ -360,6 +362,7 @@ wfe watch --campaign DIR [--run RUN_ID] [--port 8799]
 - `--arg k=v` is repeatable; values are **raw strings** (workflows cast). A missing `=` is a usage
   error. Result is `args: dict[str, str]`.
 - `--routing` defaults to `<campaign>/routes.json`; missing file is a usage error.
+- `--workdir` optional, resolved to absolute; defaults to the campaign dir; missing dir is a usage error.
 - `--concurrency` default 6, `--timeout` default 900.
 - `run_id` = `f"{datetime.now(UTC):%Y%m%dT%H%M%SZ}-{workflow.stem}"`.
 - `wfe status` prints `state phase elapsed counts` plus one line per call

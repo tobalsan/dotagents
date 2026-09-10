@@ -28,6 +28,7 @@ def build_parser() -> argparse.ArgumentParser:
     run_p = sub.add_parser("run", help="run a workflow")
     run_p.add_argument("workflow")
     run_p.add_argument("--campaign", required=True)
+    run_p.add_argument("--workdir")
     run_p.add_argument("--routing")
     run_p.add_argument("--arg", action="append", default=[], type=_kv, metavar="k=v")
     run_p.add_argument("--resume")
@@ -62,6 +63,14 @@ def cmd_run(ns: argparse.Namespace) -> int:
         return 2
 
     campaign_dir = Path(ns.campaign).resolve()
+
+    workdir = None
+    if ns.workdir:
+        workdir = Path(ns.workdir).resolve()
+        if not workdir.is_dir():
+            print(f"error: workdir not found: {workdir}", file=sys.stderr)
+            return 2
+
     routing_path = Path(ns.routing).resolve() if ns.routing else campaign_dir / "routes.json"
     if not routing_path.is_file():
         print(f"error: routing file not found: {routing_path}", file=sys.stderr)
@@ -87,6 +96,7 @@ def cmd_run(ns: argparse.Namespace) -> int:
         concurrency=ns.concurrency,
         default_timeout_s=ns.timeout,
         resume=bool(ns.resume),
+        workdir=workdir,
     )
 
     try:
