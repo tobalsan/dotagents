@@ -12,6 +12,7 @@ import pytest
 TESTS_DIR = Path(__file__).resolve().parent
 FAKE_WORKER = TESTS_DIR / "fake_worker.py"
 DEEP_RESEARCH = Path("/Users/thinh/dotagents/skills/agentic-workflow-graphs/deep-research")
+RALPH_LOOP = Path("/Users/thinh/dotagents/skills/agentic-workflow-graphs/ralph-loop")
 
 if str(DEEP_RESEARCH) not in sys.path:
     sys.path.insert(0, str(DEEP_RESEARCH))
@@ -55,11 +56,13 @@ def rows(run_dir: Path, event: str) -> list[dict]:
     return [r for r in read_journal(run_dir) if r.get("event") == event]
 
 
-def routes(*, mode: str = "echo", extra: list[str] | None = None) -> dict:
+def routes(
+    *, mode: str = "echo", extra: list[str] | None = None, names: tuple[str, ...] = ("default", "strong", "throughput")
+) -> dict:
     from workflow_engine.harness import Route
 
     flags = [mode, *(extra or [])]
-    return {name: Route(harness="fake", extra_flags=list(flags)) for name in ("default", "strong", "throughput")}
+    return {name: Route(harness="fake", extra_flags=list(flags)) for name in names}
 
 
 def make_run(tmp_path: Path, **kwargs):

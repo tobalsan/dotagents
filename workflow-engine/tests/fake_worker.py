@@ -136,6 +136,33 @@ def _research(prompt: str, badskeptic: bool = False, badreview: bool = False, bl
     return 0
 
 
+_RALPH_COMPLETE_MARKER = "<promise>COMPLETE</promise>"
+_RALPH_PAUSE_MARKER = "<promise>PAUSE</promise>"
+
+
+def _ralph_complete(_prompt: str) -> int:
+    sys.stdout.write(f"Done.\n{_RALPH_COMPLETE_MARKER}")
+    return 0
+
+
+def _ralph_pause(_prompt: str) -> int:
+    sys.stdout.write(f"Need help.\n{_RALPH_PAUSE_MARKER}")
+    return 0
+
+
+def _ralph_marker_on_second_call(counter: str, marker: str) -> int:
+    """Plain continue text on the first call, then the given marker on every call after."""
+    with open(counter, "a", encoding="utf-8") as fh:
+        fh.write("1\n")
+    with open(counter, encoding="utf-8") as fh:
+        call_num = sum(1 for _ in fh)
+    if call_num < 2:
+        sys.stdout.write("Made progress, continuing.")
+    else:
+        sys.stdout.write(f"Done.\n{marker}")
+    return 0
+
+
 def main() -> int:
     mode = sys.argv[1] if len(sys.argv) > 1 else "echo"
     prompt = sys.stdin.read()
@@ -160,6 +187,14 @@ def main() -> int:
         return _research(prompt, missing_artifact=True)
     if mode == "close-execution-artifacts":
         return _research(prompt, execution_artifacts=True)
+    if mode == "ralph-complete":
+        return _ralph_complete(prompt)
+    if mode == "ralph-pause":
+        return _ralph_pause(prompt)
+    if mode == "ralph-continue-then-complete":
+        return _ralph_marker_on_second_call(sys.argv[2], _RALPH_COMPLETE_MARKER)
+    if mode == "ralph-continue-then-pause":
+        return _ralph_marker_on_second_call(sys.argv[2], _RALPH_PAUSE_MARKER)
     sys.stderr.write(f"unknown fake mode: {mode}\n")
     return 2
 
