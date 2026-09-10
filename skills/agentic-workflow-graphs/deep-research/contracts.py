@@ -48,7 +48,7 @@ def normalize(url: str) -> dict[str, str | None]:
     elif host in {"arxiv.org", "export.arxiv.org"}:
         m = re.match(r"/(?:abs|pdf)/([^/?]+?)(?:\.pdf)?$", path)
         if m:
-            ident = re.sub(r"v\d+$", "", m.group(1), flags=re.I)
+            ident = re.sub(r"v\d+$", "", m.group(1), flags=re.IGNORECASE)
             content_id = f"arxiv:{ident.lower()}"
             host = "arxiv.org"
             path = f"/abs/{ident.lower()}"
@@ -63,7 +63,7 @@ def normalize(url: str) -> dict[str, str | None]:
     elif host in {"reddit.com", "www.reddit.com", "old.reddit.com", "new.reddit.com", "np.reddit.com", "redd.it"}:
         short_id = path.strip("/").split("/")[0] if host == "redd.it" else None
         host = "reddit.com"
-        m = re.search(r"/comments/([a-z0-9]+)", path, re.I)
+        m = re.search(r"/comments/([a-z0-9]+)", path, re.IGNORECASE)
         if m or short_id:
             path = f"/comments/{(m.group(1) if m else short_id).lower()}"
         query = []

@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -24,6 +24,7 @@ if str(_HERE) not in sys.path:
     sys.path.insert(0, str(_HERE))
 
 import contracts
+
 from workflow_engine import AgentError, Ctx, agent, phase, pipeline
 
 RETRIEVAL_SKILLS = """\
@@ -244,7 +245,7 @@ def _merge(
 ) -> dict[str, Any]:
     """Plain-code merge: sole ledger writer. Writes ledger/notes/coverage-map/gap-report."""
     rejected_refs = {r["claim_ref"] for r in skeptic.get("rejections", [])}
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     pass_id = f"pass-{pass_num}"
     known_before = contracts.known_canonical_ids(ledger_path)
     seen_this_pass: dict[str, dict[str, Any]] = {}
@@ -376,7 +377,7 @@ async def run(args: dict[str, str], ctx: Ctx) -> Any:
 
         with phase(f"pass {pass_num}: research + extract"):
 
-            async def research_stage(lane: dict[str, Any]) -> dict[str, Any]:
+            async def research_stage(lane: dict[str, Any], pass_num: int = pass_num) -> dict[str, Any]:
                 text = await agent(
                     _build_research_prompt(lane, topic),
                     route="throughput",
@@ -384,7 +385,7 @@ async def run(args: dict[str, str], ctx: Ctx) -> Any:
                 )
                 return {"lane": lane, "research_text": text}
 
-            async def extract_stage(item: dict[str, Any]) -> dict[str, Any]:
+            async def extract_stage(item: dict[str, Any], pass_num: int = pass_num) -> dict[str, Any]:
                 lane = item["lane"]
                 extracted = await agent(
                     _build_extract_prompt(lane, item["research_text"]),
