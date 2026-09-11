@@ -87,8 +87,11 @@ async def run(args: dict[str, str], ctx: Ctx) -> dict[str, Any]:
         # `wfe run` again on a paused loop is `/ralph resume`: flip to active and keep
         # looping from the stored iteration. Persist immediately so dashboards don't
         # show the stale paused status and error for the whole first iteration.
+        # Adopt the current max_iterations arg so a loop paused at the cap can be
+        # resumed with a raised ceiling.
         state["status"] = "active"
         state["lastError"] = None
+        state["maxIterations"] = max_iterations
         state["blockedStreak"] = 0
         contracts.save_state(state_path, state)
 
