@@ -7,9 +7,11 @@ description: Break a plan, spec, or PRD into independently-grabbable issues on t
 
 Break a plan into independently-grabbable issues using vertical slices (tracer bullets).
 
-The issue tracker and triage label vocabulary should have been provided to you — run `/setup-matt-pocock-skills` if not.
+The issue tracker and triage label vocabulary should have been provided to you. If not, establish them with the user first.
 
 ## Process
+
+These apply to every issue you file, including a single one-off issue outside this skill's flow.
 
 ### 1. Gather context
 
@@ -79,3 +81,10 @@ Or "None - can start immediately" if no blockers.
 </issue-template>
 
 Do NOT close or modify any parent issue.
+
+## Key rules 
+
+1. **If the user did not name a project, create the issue with NO project — team only.** Do not list projects, do not look for the best fit, do not infer one from the topic. At all costs. Leave it empty and say so; he will place it.
+2. **Status is always `Backlog`** unless he explicitly says otherwise.
+3. **Don't assign a project "because it's obviously related".** If there is a relevant project, confirm it with the user.
+4. Attach labels/repo labels only when they're part of an established convention or the user asked for them.
