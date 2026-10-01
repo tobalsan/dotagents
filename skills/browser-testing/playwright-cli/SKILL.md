@@ -1,6 +1,6 @@
 ---
 name: playwright-cli
-description: Automate browser interactions, test web pages and work with Playwright tests.
+description: Automate browser interactions, test web pages and work with Playwright tests. Also drives the user's live Dia browser (logged-in sessions) via the Playwright Extension tab group.
 allowed-tools: Bash(playwright-cli:*) Bash(npx:*) Bash(npm:*)
 ---
 
@@ -22,6 +22,27 @@ playwright-cli screenshot
 # close the browser
 playwright-cli close
 ```
+
+## User's Dia browser (logged-in sessions)
+
+Use when task needs user's cookies/logins. Agent sees only tabs in Dia's "Playwright" tab group, not user's other tabs. Env vars `PLAYWRIGHT_MCP_EXTENSION_TOKEN` and `PLAYWRIGHT_MCP_EXECUTABLE_PATH=~/.local/bin/dia-open` are set in shell rc (shim forwards URL to running Dia; no approval popup).
+
+```bash
+# 1. attach: opens connect.html handshake tab = creates Playwright group
+playwright-cli attach --extension=chrome   # session name: chrome
+# 2. open first real tab BEFORE closing handshake tab (closing the only tab kills the group)
+playwright-cli -s=chrome tab-new https://example.com
+# 3. close handshake tab (its URL contains the token)
+playwright-cli -s=chrome tab-close 0
+# 4. navigate/interact as usual
+playwright-cli -s=chrome goto https://news.ycombinator.com
+playwright-cli -s=chrome snapshot
+```
+
+- Repeat steps 1-3 for each new attach (e.g. after "browser 'chrome' is not open").
+- Never print handshake tab URL (token leak); pipe `tab-list` through `sed -E 's/token=[^&)" ]+/token=REDACTED/g'` if handshake tab still open.
+- Don't touch user tabs unless user drags them into the Playwright group.
+- `attach --cdp` hangs on Dia; don't use.
 
 ## Commands
 
