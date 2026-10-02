@@ -61,18 +61,18 @@ Follow this escalation pattern:
 | Find URLs within a site     | `map`     | Need to locate a specific subpage                         |
 | Bulk extract a site section | `crawl`   | Need many pages (e.g., all /docs/)                        |
 | AI-powered data extraction  | `agent`   | Need structured data from complex sites                   |
-| Interact with a page        | `browser` | Content requires clicks, form fills, pagination, or login |
+| Interact with a page        | `interact` | Content requires clicks, form fills, pagination, or login |
 | Structured data from a provider API | `search alexandria` → `scrape --alexandria` | Need records (news, finance, listings, contacts) rather than page text. See [Alexandria](#alexandria) |
 | Code/repo/issue/docs search | `developer` | Coding questions; scope intent in query text |
 | Scientific papers           | `research search-papers` | Biomedical/arXiv literature; don't scrape PubMed/Scholar |
 
-See also: [`download`](#download) -- a convenience command that combines `map` + `scrape` to save an entire site to local files.
+See also: [`x download`](#download) -- a convenience command that combines `map` + `scrape` to save an entire site to local files.
 
-**Scrape vs browser:**
+**Scrape vs interact:**
 
 - Use `scrape` first. It handles static pages and JS-rendered SPAs.
-- Use `browser` only when scrape fails because content is behind interaction: pagination buttons, modals, dropdowns, multi-step navigation, or infinite scroll.
-- Never use browser for web searches - use `search` instead.
+- Use `interact` only when scrape fails because content is behind interaction: pagination buttons, modals, dropdowns, multi-step navigation, or infinite scroll.
+- Never use interact for web searches - use `search` instead.
 
 **Avoid redundant fetches:**
 
@@ -91,10 +91,9 @@ scrape https://docs.example.com/docs/api/auth...    →  got the content
 
 ```
 scrape https://example.com/products                 →  only shows first 10 items, no next-page links
-browser "open https://example.com/products"         →  open in browser
-browser "snapshot"                                  →  find the pagination button
-browser "click @e12"                                →  click "Next Page"
-browser "scrape" -o .firecrawl/products-p2.md       →  extract page 2 content
+interact "Click Next Page, then list all products" -o .firecrawl/products-p2.md
+                                                    →  acts on last scrape's live page
+interact stop                                       →  end session (billed by time)
 ```
 
 **Example: research task**
@@ -225,40 +224,23 @@ firecrawl agent "get feature list" --urls "<url>" --wait -o .firecrawl/features.
 
 Options: `--urls`, `--model <spark-1-mini|spark-1-pro>`, `--schema <json>`, `--schema-file`, `--max-credits <n>`, `--wait`, `--pretty`, `-o`
 
-### browser
+### interact
 
-Cloud Chromium sessions in Firecrawl's remote sandboxed environment. Run `firecrawl browser --help` and `firecrawl browser "agent-browser --help"` for all options.
+Live cloud browser session on a previously scraped page. Scrape first; `interact` reuses the last scrape ID automatically. Run `firecrawl interact --help` for all options.
 
 ```bash
-# Typical browser workflow
-firecrawl browser "open <url>"
-firecrawl browser "snapshot"                          # see the page structure with @ref IDs
-firecrawl browser "click @e5"                         # interact with elements
-firecrawl browser "fill @e3 'search query'"           # fill form fields
-firecrawl browser "scrape" -o .firecrawl/page.md      # extract content
-firecrawl browser close
+firecrawl scrape "<url>" -o .firecrawl/page.md
+firecrawl interact "Click the pricing tab"                     # AI prompt
+firecrawl interact "What is the price of the Pro plan?" -o .firecrawl/pro-price.md
+firecrawl interact -c "await page.title()"                     # Playwright (Node, default)
+firecrawl interact -c "print(await page.title())" --python     # Playwright (Python)
+firecrawl interact -s <scrape-id> "Fill the search box with 'x' and submit"
+firecrawl interact stop                                        # always stop when done
 ```
 
-Shorthand auto-launches a session if none exists - no setup required.
+Sessions are billed by duration (~7 credits for a 14s session observed). Always `interact stop`.
 
-**Core agent-browser commands:**
-
-| Command              | Description                            |
-| -------------------- | -------------------------------------- |
-| `open <url>`         | Navigate to a URL                      |
-| `snapshot`           | Get accessibility tree with `@ref` IDs |
-| `screenshot`         | Capture a PNG screenshot               |
-| `click <@ref>`       | Click an element by ref                |
-| `type <@ref> <text>` | Type into an element                   |
-| `fill <@ref> <text>` | Fill a form field (clears first)       |
-| `scrape`             | Extract page content as markdown       |
-| `scroll <direction>` | Scroll up/down/left/right              |
-| `wait <seconds>`     | Wait for a duration                    |
-| `eval <js>`          | Evaluate JavaScript on the page        |
-
-Session management: `launch-session --ttl 600`, `list`, `close`
-
-Options: `--ttl <seconds>`, `--ttl-inactivity <seconds>`, `--session <id>`, `-o`
+Options: `-p <prompt>`, `-c <code>`, `-s <scrape-id>`, `--node|--python|--bash`, `--timeout <s>` (1-300), `--json`, `-o`
 
 ### Alexandria
 
@@ -356,33 +338,30 @@ firecrawl scrape "<url-3>" -o .firecrawl/3.md &
 wait
 ```
 
-For browser, launch separate sessions for independent tasks and operate them in parallel via `--session <id>`.
+For interact, scrape each page separately and target sessions in parallel via `-s <scrape-id>`.
 
 ## Bulk Download
 
 ### download
 
-Convenience command that combines `map` + `scrape` to save a site as local files. Maps the site first to discover pages, then scrapes each one into nested directories under `.firecrawl/`. All scrape options work with download. Always pass `-y` to skip the confirmation prompt. Run `firecrawl download --help` for all options.
+Experimental (`firecrawl x download`, alias of `firecrawl experimental download`). Combines `map` + `scrape` to save a site as local files. Maps the site first to discover pages, then scrapes each one into nested directories under `.firecrawl/`. All scrape options work with download. Always pass `-y` to skip the confirmation prompt. Run `firecrawl x download --help` for all options.
 
 ```bash
-# Interactive wizard (picks format, screenshots, paths for you)
-firecrawl download https://docs.firecrawl.dev
-
 # With screenshots
-firecrawl download https://docs.firecrawl.dev --screenshot --limit 20 -y
+firecrawl x download https://docs.firecrawl.dev --screenshot --limit 20 -y
 
 # Multiple formats (each saved as its own file per page)
-firecrawl download https://docs.firecrawl.dev --format markdown,links --screenshot --limit 20 -y
+firecrawl x download https://docs.firecrawl.dev --format markdown,links --screenshot --limit 20 -y
 # Creates per page: index.md + links.txt + screenshot.png
 
 # Filter to specific sections
-firecrawl download https://docs.firecrawl.dev --include-paths "/features,/sdks"
+firecrawl x download https://docs.firecrawl.dev --include-paths "/features,/sdks" -y
 
 # Skip translations
-firecrawl download https://docs.firecrawl.dev --exclude-paths "/zh,/ja,/fr,/es,/pt-BR"
+firecrawl x download https://docs.firecrawl.dev --exclude-paths "/zh,/ja,/fr,/es,/pt-BR" -y
 
 # Full combo
-firecrawl download https://docs.firecrawl.dev \
+firecrawl x download https://docs.firecrawl.dev \
   --include-paths "/features,/sdks" \
   --exclude-paths "/zh,/ja" \
   --only-main-content \
