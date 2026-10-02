@@ -8,6 +8,8 @@ description: |
   - Scraping pages, docs, and articles
   - Site mapping and bulk content extraction
   - Browser automation for interactive pages
+  - Alexandria: paid structured-data providers (news, finance, company data, etc.) via discover → retrieve
+  - Developer index (repos/issues/PRs/docs) and research paper index
 
   Must be pre-installed and authenticated. See rules/install.md for setup, rules/security.md for output handling.
 allowed-tools:
@@ -60,6 +62,9 @@ Follow this escalation pattern:
 | Bulk extract a site section | `crawl`   | Need many pages (e.g., all /docs/)                        |
 | AI-powered data extraction  | `agent`   | Need structured data from complex sites                   |
 | Interact with a page        | `browser` | Content requires clicks, form fills, pagination, or login |
+| Structured data from a provider API | `search alexandria` → `scrape --alexandria` | Need records (news, finance, listings, contacts) rather than page text. See [Alexandria](#alexandria) |
+| Code/repo/issue/docs search | `developer` | Coding questions; scope intent in query text |
+| Scientific papers           | `research search-papers` | Biomedical/arXiv literature; don't scrape PubMed/Scholar |
 
 See also: [`download`](#download) -- a convenience command that combines `map` + `scrape` to save an entire site to local files.
 
@@ -254,6 +259,72 @@ Shorthand auto-launches a session if none exists - no setup required.
 Session management: `launch-session --ttl 600`, `list`, `close`
 
 Options: `--ttl <seconds>`, `--ttl-inactivity <seconds>`, `--session <id>`, `-o`
+
+### Alexandria
+
+Catalog of data providers callable through Firecrawl. Each capability (`provider/capability`) has a published credit price per call. Discovery is free; retrieval spends credits.
+
+**Rules (mandatory):**
+
+1. Always discover before retrieving.
+2. Only call capabilities that discovery returned. Never guess addresses (unknown tools error; no fallback to URL scraping).
+3. Report what each call cost (`Credits: N` on stderr, `receipt.creditsUsed` / `data.alexandria[].creditsCost` in JSON).
+4. Check price before calling; ask the user before expensive calls (e.g. tens of credits or `perRecord: true`) or large batches.
+
+```bash
+# 1. Discover (free). summary detail shows price per call
+firecrawl search alexandria "latest stock market headlines" --limit 5 --tool-detail summary
+# Browse instead: categories → provider → tools
+firecrawl list                      # category index
+firecrawl list finance              # providers/tools in a category
+firecrawl list benzinga             # tools of a provider
+# Match tools to known URLs
+firecrawl find-tools "https://www.nasdaq.com/market-activity/stocks/aapl"
+
+# 2. Inspect contract (free): options, response fields, creditsCost, perRecord
+firecrawl list nasdaq-com news/latest_headlines --json --pretty -o .firecrawl/tool-nasdaq-headlines.json
+
+# 3. Retrieve (spends credits). Options must match the contract
+firecrawl scrape --alexandria nasdaq-com/news/latest_headlines \
+  --options '{"limit":10,"with_publish_times":false}' -o .firecrawl/nasdaq-headlines.json
+# → stderr: "Credits: 1"
+```
+
+- Batch: repeat `--alexandria` with matching `--options` in the same order.
+- Retry safely: reuse `--request-id <id>` from the previous output; completed results replay instead of re-charging. Never swap in a new ID when outcome is uncertain.
+- Web search also returns Alexandria tools by default (`--sources web,alexandria`); use `--sources web` to opt out.
+- Some providers require terms: `firecrawl alexandria terms show <provider>`; only `accept` with explicit user approval.
+- Report bad results/gaps: `firecrawl alexandria feedback --help`.
+
+**Response shape:** `data.alexandria[]` → `{provider, capability, creditsCost, data: {...records}, records}`; top-level `receipt.creditsUsed`. Paginated tools return `has_more` / `next_offset`.
+
+**HTTP / SDK** (when CLI unavailable). Both need `Authorization: Bearer $FIRECRAWL_API_KEY`:
+
+```bash
+# Discover (free): ranked capabilities with provider, address, credit price, when-to-use
+curl -s https://api.firecrawl.dev/v2/search -H "Authorization: Bearer $FIRECRAWL_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"<what you are trying to do>","sources":["alexandria"]}'
+
+# Retrieve (spends credits): returns the record and its cost
+curl -s https://api.firecrawl.dev/v2/scrape -H "Authorization: Bearer $FIRECRAWL_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"alexandria":{"provider":"nasdaq-com","capability":"news/latest_headlines","options":{"limit":10}}}'
+```
+
+SDK: `firecrawl.scrape({ alexandria: { provider, capability, options } })`. Docs: https://docs.firecrawl.dev/features/alexandria
+
+### developer / research indexes
+
+Native commands, not Alexandria scrape calls:
+
+```bash
+firecrawl developer "axum middleware ordering in tokio-rs/axum issues" --limit 10
+firecrawl research search-papers "CRISPR base editing off-target effects" --limit 20
+firecrawl research read-paper arxiv:1706.03762 --question "What is the attention mechanism?"
+```
+
+Run `firecrawl research --help` for `inspect-paper`, `related-papers`, `search-github`.
 
 ### credit-usage
 
