@@ -30,17 +30,15 @@ Use when task needs user's cookies/logins. Agent sees only tabs in Dia's "Playwr
 ```bash
 # 1. attach: opens connect.html handshake tab = creates Playwright group
 playwright-cli attach --extension=chrome   # session name: chrome
-# 2. open first real tab BEFORE closing handshake tab (closing the only tab kills the group)
+# 2. open real tab. Keep handshake tab open: closing it ends session/group, connection drops later
 playwright-cli -s=chrome tab-new https://example.com
-# 3. close handshake tab (its URL contains the token)
-playwright-cli -s=chrome tab-close 0
-# 4. navigate/interact as usual
+# 3. navigate/interact as usual
 playwright-cli -s=chrome goto https://news.ycombinator.com
 playwright-cli -s=chrome snapshot
 ```
 
-- Repeat steps 1-3 for each new attach (e.g. after "browser 'chrome' is not open").
-- Never print handshake tab URL (token leak); pipe `tab-list` through `sed -E 's/token=[^&)" ]+/token=REDACTED/g'` if handshake tab still open.
+- Repeat steps 1-2 for each new attach (e.g. after "browser 'chrome' is not open").
+- Never print handshake tab URL (token leak); pipe `tab-list` through `sed -E 's/token=[^&)" ]+/token=REDACTED/g'`. Never close handshake tab.
 - Don't touch user tabs unless user drags them into the Playwright group.
 - `attach --cdp` hangs on Dia; don't use.
 - `screenshot` writes 0-byte file in extension mode (cli 0.1.22). Use instead:
