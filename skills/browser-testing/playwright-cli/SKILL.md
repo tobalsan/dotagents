@@ -43,6 +43,11 @@ playwright-cli -s=chrome snapshot
 - Never print handshake tab URL (token leak); pipe `tab-list` through `sed -E 's/token=[^&)" ]+/token=REDACTED/g'` if handshake tab still open.
 - Don't touch user tabs unless user drags them into the Playwright group.
 - `attach --cdp` hangs on Dia; don't use.
+- `screenshot` writes 0-byte file in extension mode (cli 0.1.22). Use instead:
+  `playwright-cli -s=chrome run-code "async page => { await page.screenshot({path: '/tmp/shot.png'}); return 'ok'; }"`
+- Session dies ("browser 'chrome' is not open") on pages where 1Password inline menu injects iframe (login/config forms): log shows `Cannot access a chrome-extension:// URL of different extension`. Fix: ask user to turn off 1Password for that site.
+- Debug: run with `DEBUG='pw:*'`; logs in `~/Library/Caches/ms-playwright/daemon/*/chrome.err`.
+- Run from `/tmp` (or scratch dir): cli drops `.playwright-cli/` snapshots in cwd.
 
 ## Commands
 
