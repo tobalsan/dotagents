@@ -137,3 +137,7 @@ Integrate and verify delegated work yourself.
 What matters is doing something good, make things real, and iterate.
 We make tradeoffs, and prioritize what matters most today.
 We're not looking for perfection, we don't focus on the minutiae, or try to cover every possible edge case.
+
+### Telegram ping
+
+Only when user explicitly asks ("ping me when done", "notify me", etc.): on finish or when input needed, run `~/code/utility/tg-ping.sh '<short status>'`. Never ping otherwise.
