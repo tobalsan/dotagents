@@ -1,8 +1,10 @@
 import { homedir } from "node:os";
 import { relative, resolve, sep } from "node:path";
 import type { AssistantMessage } from "@earendil-works/pi-ai";
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { truncateToWidth, visibleWidth, wrapTextWithAnsi } from "@earendil-works/pi-tui";
+import { copyToClipboard, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { type TuiMouseEvent, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
+
+const COPY_LABEL = "copy session path";
 
 function formatCount(count: number): string {
 	if (count < 1_000) return String(count);
@@ -26,10 +28,22 @@ export default function (pi: ExtensionAPI) {
 
 		ctx.ui.setFooter((tui, theme, footerData) => {
 			const unsubscribe = footerData.onBranchChange(() => tui.requestRender());
+			let labelX = -1;
 
 			return {
 				dispose: unsubscribe,
 				invalidate() {},
+				handleMouse(event: TuiMouseEvent) {
+					const sessionFile = ctx.sessionManager.getSessionFile();
+					if (!sessionFile || event.type !== "click" || event.button !== "left") return undefined;
+					if (event.y !== 0 || labelX < 0 || event.x < labelX || event.x >= labelX + COPY_LABEL.length)
+						return undefined;
+					copyToClipboard(sessionFile).then(
+						() => ctx.ui.notify("Session path copied", "info"),
+						(err) => ctx.ui.notify(`Copy failed: ${err}`, "error"),
+					);
+					return { handled: true };
+				},
 				render(width: number): string[] {
 					let cwd = formatCwd(ctx.cwd);
 					const branch = footerData.getGitBranch();
@@ -39,9 +53,20 @@ export default function (pi: ExtensionAPI) {
 
 					const dimLine = (text: string) =>
 						truncateToWidth(theme.fg("dim", text), width, theme.fg("dim", "..."));
-					const lines = [dimLine(cwd)];
 					const sessionFile = ctx.sessionManager.getSessionFile();
-					lines.push(...wrapTextWithAnsi(theme.fg("dim", sessionFile ?? "ephemeral session"), width));
+					const sepText = " • ";
+					const suffix = sessionFile ? COPY_LABEL : "ephemeral session";
+					const head = truncateToWidth(
+						theme.fg("dim", cwd),
+						Math.max(1, width - sepText.length - suffix.length),
+						theme.fg("dim", "..."),
+					);
+					const prefix = head + theme.fg("dim", sepText);
+					labelX = sessionFile ? visibleWidth(prefix) : -1;
+					const styled = sessionFile
+						? theme.fg("accent", `\x1b[4m${COPY_LABEL}\x1b[24m`)
+						: theme.fg("dim", suffix);
+					const lines = [truncateToWidth(prefix + styled, width)];
 
 					let input = 0;
 					let output = 0;
