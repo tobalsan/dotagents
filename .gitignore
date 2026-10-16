@@ -3,3 +3,4 @@ node_modules
 __pycache__
 /skills/dev-browser/tmp
 /skills/dev-browser/profiles/*
+/skills/autonomous-agents/publish-artifact-cloudflare-pages/.wrangler/cache
