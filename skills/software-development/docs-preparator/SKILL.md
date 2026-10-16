@@ -1,6 +1,8 @@
 ---
 name: docs-preparator
 description: Process documentation URLs into concise, LLM-optimized knowledge for implementation. Use when user provides documentation links and needs to implement something based on those docs. E.g. "I need to implement auth using Supabase. Here are the docs https://supabase.com/docs/guides/auth", "Can you help me set up Inngest workflows? https://www.inngest.com/docs", "I want to add Redis caching using redis-py. The docs are at https://redis-py.readthedocs.io/"
+metadata:
+  origin: "self"
 ---
 
 # Docs Preparator

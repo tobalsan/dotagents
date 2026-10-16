@@ -1,119 +1,200 @@
 ---
 name: browser-tools
-description: CDP-based Chrome automation for UI debugging and web interaction. Use it when you need to automate chrome browser to perform real browser tasks and debug UIs.
+description: Interactive browser automation via Chrome DevTools Protocol. Use when you need to interact with web pages, test frontends, or when user interaction with a visible browser is required.
+metadata:
+  origin: "public"
+  source: "https://github.com/badlogic/pi-skills/tree/main/browser-tools"
+  synced: "2026-10-16"
 ---
 
 # Browser Tools
 
-CDP-based Chrome automation for UI debugging and web interaction.
+Chrome DevTools Protocol tools for agent-assisted web automation. These tools connect to Chrome running on `:9222` with remote debugging enabled.
 
-## Quick Reference
+## Setup
 
-| Command | Purpose |
-|---------|---------|
-| `start` | Launch Chrome with remote debugging |
-| `nav` | Navigate to URL |
-| `eval` | Execute JavaScript in page |
-| `screenshot` | Capture viewport |
-| `pick` | Interactive element selector |
-| `console` | Capture console logs |
-| `content` | Extract readable text as markdown |
-| `search` | Google search with optional content |
-| `cookies` | Dump cookies as JSON |
-| `inspect` | List Chrome instances and tabs |
-| `kill` | Terminate Chrome instances |
-
-## Commands
-
-### start
-```bash
-./scripts/start.js                          # Fresh profile on :9222
-./scripts/start.js --copy-existing-profile  # Copy user profile (cookies/logins) if requested by user
-./scripts/start.js --port 9333              # Custom port
-./scripts/start.js --kill-existing          # Kill running Chrome first
-```
-**Important:** Do NOT use `--copy-existing-profile` unless the user explicitly requests it.
-
-### nav
-```bash
-./scripts/nav.js https://example.com       # Current tab
-./scripts/nav.js https://example.com --new # New tab
-```
-
-### eval
-```bash
-./scripts/eval.js 'document.title'
-./scripts/eval.js 'document.querySelectorAll("button").length'
-./scripts/eval.js '[...document.querySelectorAll("a")].map(a => ({text: a.textContent.trim(), href: a.href}))'
-```
-Returns objects/arrays formatted as key-value pairs. Use `--pretty` for indented output.
-
-### screenshot
-```bash
-./scripts/screenshot.js              # Viewport screenshot, prints path
-```
-
-### pick
-```bash
-./scripts/pick.js "Select the login button"
-```
-Interactive: click to select, Cmd/Ctrl+click for multi-select, Enter to finish, ESC to cancel.
-Returns: tag, id, class, text, html, parents.
-
-### console
-```bash
-./scripts/console.js                      # Capture 5 seconds
-./scripts/console.js --timeout 10         # Capture 10 seconds
-./scripts/console.js --follow             # Continuous (Ctrl+C to stop)
-./scripts/console.js --types error,warn   # Filter by type
-```
-Types: log, error, warn, info, debug, pageerror
-
-### content
-```bash
-./scripts/content.js https://example.com
-./scripts/content.js https://example.com --timeout 15
-```
-Extracts readable content as markdown using Readability.js + Turndown.
-
-### search
-```bash
-./scripts/search.js "react hooks tutorial"
-./scripts/search.js "node.js streams" -n 10        # 10 results
-./scripts/search.js "api docs" --content           # Include page content
-```
-
-### cookies
-```bash
-./scripts/cookies.js    # JSON array of cookies from active tab
-```
-
-### inspect
-```bash
-./scripts/inspect.js           # List all Chrome instances with DevTools ports
-./scripts/inspect.js --json    # Machine-readable output
-```
-
-### kill
-```bash
-./scripts/kill.js --all              # Kill all debuggable Chrome instances
-./scripts/kill.js --ports 9222,9333  # Kill specific ports
-./scripts/kill.js --pids 1234,5678   # Kill specific PIDs
-./scripts/kill.js --force            # Skip confirmation
-```
-
-## Common Options
-
-All commands except `start`, `inspect`, `kill` accept:
-- `--port <number>` - DevTools port (default: 9222)
-
-## Workflow Example
+Run once before first use:
 
 ```bash
-./scripts/start.js --profile
-./scripts/nav.js http://localhost:3000
-./scripts/console.js --follow &
-./scripts/screenshot.js
-./scripts/eval.js 'document.querySelector("#submit").click()'
-./scripts/content.js http://localhost:3000/result
+cd {baseDir}/browser-tools
+npm install
 ```
+
+## Start Chrome
+
+```bash
+{baseDir}/browser-start.js              # Fresh profile
+{baseDir}/browser-start.js --profile    # Copy user's profile (cookies, logins)
+```
+
+Launch Chrome with remote debugging on `:9222`. Use `--profile` to preserve user's authentication state.
+
+## Navigate
+
+```bash
+{baseDir}/browser-nav.js https://example.com
+{baseDir}/browser-nav.js https://example.com --new
+```
+
+Navigate to URLs. Use `--new` flag to open in a new tab instead of reusing current tab.
+
+## Evaluate JavaScript
+
+```bash
+{baseDir}/browser-eval.js 'document.title'
+{baseDir}/browser-eval.js 'document.querySelectorAll("a").length'
+```
+
+Execute JavaScript in the active tab. Code runs in async context. Use this to extract data, inspect page state, or perform DOM operations programmatically.
+
+## Screenshot
+
+```bash
+{baseDir}/browser-screenshot.js
+```
+
+Capture current viewport and return temporary file path. Use this to visually inspect page state or verify UI changes.
+
+## Pick Elements
+
+```bash
+{baseDir}/browser-pick.js "Click the submit button"
+```
+
+**IMPORTANT**: Use this tool when the user wants to select specific DOM elements on the page. This launches an interactive picker that lets the user click elements to select them. The user can select multiple elements (Cmd/Ctrl+Click) and press Enter when done. The tool returns CSS selectors for the selected elements.
+
+Common use cases:
+- User says "I want to click that button" → Use this tool to let them select it
+- User says "extract data from these items" → Use this tool to let them select the elements
+- When you need specific selectors but the page structure is complex or ambiguous
+
+## Cookies
+
+```bash
+{baseDir}/browser-cookies.js
+```
+
+Display all cookies for the current tab including domain, path, httpOnly, and secure flags. Use this to debug authentication issues or inspect session state.
+
+## Extract Page Content
+
+```bash
+{baseDir}/browser-content.js https://example.com
+```
+
+Navigate to a URL and extract readable content as markdown. Uses Mozilla Readability for article extraction and Turndown for HTML-to-markdown conversion. Works on pages with JavaScript content (waits for page to load).
+
+## When to Use
+
+- Testing frontend code in a real browser
+- Interacting with pages that require JavaScript
+- When user needs to visually see or interact with a page
+- Debugging authentication or session issues
+- Scraping dynamic content that requires JS execution
+
+---
+
+## Efficiency Guide
+
+### DOM Inspection Over Screenshots
+
+**Don't** take screenshots to see page state. **Do** parse the DOM directly:
+
+```javascript
+// Get page structure
+document.body.innerHTML.slice(0, 5000)
+
+// Find interactive elements
+Array.from(document.querySelectorAll('button, input, [role="button"]')).map(e => ({
+  id: e.id,
+  text: e.textContent.trim(),
+  class: e.className
+}))
+```
+
+### Complex Scripts in Single Calls
+
+Wrap everything in an IIFE to run multi-statement code:
+
+```javascript
+(function() {
+  // Multiple operations
+  const data = document.querySelector('#target').textContent;
+  const buttons = document.querySelectorAll('button');
+  
+  // Interactions
+  buttons[0].click();
+  
+  // Return results
+  return JSON.stringify({ data, buttonCount: buttons.length });
+})()
+```
+
+### Batch Interactions
+
+**Don't** make separate calls for each click. **Do** batch them:
+
+```javascript
+(function() {
+  const actions = ["btn1", "btn2", "btn3"];
+  actions.forEach(id => document.getElementById(id).click());
+  return "Done";
+})()
+```
+
+### Typing/Input Sequences
+
+```javascript
+(function() {
+  const text = "HELLO";
+  for (const char of text) {
+    document.getElementById("key-" + char).click();
+  }
+  document.getElementById("submit").click();
+  return "Submitted: " + text;
+})()
+```
+
+### Reading App/Game State
+
+Extract structured state in one call:
+
+```javascript
+(function() {
+  const state = {
+    score: document.querySelector('.score')?.textContent,
+    status: document.querySelector('.status')?.className,
+    items: Array.from(document.querySelectorAll('.item')).map(el => ({
+      text: el.textContent,
+      active: el.classList.contains('active')
+    }))
+  };
+  return JSON.stringify(state, null, 2);
+})()
+```
+
+### Waiting for Updates
+
+If DOM updates after actions, add a small delay with bash:
+
+```bash
+sleep 0.5 && {baseDir}/browser-eval.js '...'
+```
+
+### Investigate Before Interacting
+
+Always start by understanding the page structure:
+
+```javascript
+(function() {
+  return {
+    title: document.title,
+    forms: document.forms.length,
+    buttons: document.querySelectorAll('button').length,
+    inputs: document.querySelectorAll('input').length,
+    mainContent: document.body.innerHTML.slice(0, 3000)
+  };
+})()
+```
+
+Then target specific elements based on what you find.

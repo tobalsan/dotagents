@@ -2,6 +2,10 @@
 name: game-art
 description: Game art principles. Visual style selection, asset pipeline, animation workflow.
 allowed-tools: Read, Glob, Grep
+metadata:
+  origin: "public"
+  source: "https://github.com/davila7/claude-code-templates/blob/main/cli-tool/components/skills/creative-design/game-development/game-art/SKILL.md"
+  synced: "2026-10-16"
 ---
 
 # Game Art Principles

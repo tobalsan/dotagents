@@ -1,6 +1,11 @@
 ---
 name: show-me
 description: Help the user understand the current topic visually with concise diagrams, code-shape sketches, and focused HTML artifacts.
+disable-model-invocation: true
+metadata:
+  origin: "public"
+  source: "https://github.com/humanlayer/skills/blob/main/plugins/show-me/skills/show-me/SKILL.md"
+  synced: "2026-10-16"
 ---
 
 Help the user understand the current topic of conversation visually. Skip the preamble and keep prose brief. Pick the smallest view that makes the key point clear.

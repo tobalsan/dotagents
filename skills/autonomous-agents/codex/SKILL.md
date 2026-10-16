@@ -1,6 +1,10 @@
 ---
 name: codex
 description: Delegate coding work to the OpenAI Codex CLI from any agent or harness — one-shot `codex exec` runs, background long tasks, PR reviews, parallel worktree fixes. Use when asked to hand a feature, refactor, bug fix, or diff review to Codex, or when you need a second autonomous coding agent alongside your own.
+metadata:
+  origin: "public"
+  source: "https://github.com/NousResearch/hermes-agent/tree/main/skills/autonomous-ai-agents/codex"
+  synced: "2026-10-16"
 ---
 
 # Codex CLI
@@ -34,7 +38,7 @@ Codex is an interactive terminal app: **it needs a PTY**, or it hangs. Map these
 ## Prerequisites
 
 - Codex installed: `npm install -g @openai/codex`
-- Authenticated: `codex login` (ChatGPT subscription OAuth) or a provider API key. Credentials live in the invoking user's home directory — if your harness rewrites `HOME` or runs as another user, auth will look missing.
+- Authenticated: `codex login` (ChatGPT subscription OAuth) or a provider API key. Credentials live in the invoking user's home directory — if your harness rewrites `HOME` or runs as another user, auth will look missing. A valid OAuth session may live in `~/.codex/auth.json`; a missing `OPENAI_API_KEY` alone does not mean auth is missing.
 - **Must run inside a git repository** — Codex refuses to run outside one
 - A PTY (see harness mapping)
 
@@ -55,11 +59,11 @@ Start it detached, then poll:
 
 ```bash
 # With a harness background flag: run this with background + pty enabled
-cd ~/project && codex exec --full-auto 'Refactor the auth module'
+cd ~/project && codex exec --sandbox workspace-write 'Refactor the auth module'
 
 # Portable equivalent with tmux
 tmux new-session -d -s codex-refactor -x 140 -y 40
-tmux send-keys -t codex-refactor 'cd ~/project && codex exec --full-auto "Refactor the auth module"' Enter
+tmux send-keys -t codex-refactor 'cd ~/project && codex exec --sandbox workspace-write "Refactor the auth module"' Enter
 
 # Monitor
 tmux capture-pane -t codex-refactor -p -S -80
@@ -80,12 +84,15 @@ If your harness has a process tool, use `poll` / `log` / `submit` / `kill` inste
 | `exec "prompt"` | One-shot execution, exits when done |
 | `--model <name>` | Override model. See "Model Conventions" below. **Avoid pro models** (`o3-pro` etc.) — they fail with ChatGPT OAuth |
 | `-c model_reasoning_effort=<level>` | Reasoning effort: `low`, `medium`, `high`, `xhigh` |
-| `--full-auto` | Sandboxed but auto-approves file changes in the workspace (deprecated alias for `--sandbox workspace-write`) |
-| `--sandbox workspace-write` | Preferred form of the above |
-| `--yolo` | No sandbox, no approvals (fastest, most dangerous) |
+| `--sandbox workspace-write` (`-s`) | Sandboxed but auto-approves file changes in the workspace (the recommended auto-build mode) |
+| `--dangerously-bypass-approvals-and-sandbox` | No sandbox, no approvals (fastest, most dangerous; `--yolo` still works as a hidden alias) |
+| `--sandbox danger-full-access` | No Codex sandbox; useful when the host/service context breaks bubblewrap |
 | `review --base <ref>` | Built-in diff review against a base ref |
 
-## Model Conventions
+> **Deprecated:** `--full-auto` still works but the live CLI warns to use `--sandbox workspace-write` instead.
+
+**Sandbox failures in service/daemon contexts:** `workspace-write` may fail where the same command works in an interactive shell (bubblewrap/user-namespace errors such as `setting up uid map: Permission denied` or `loopback: Failed RTM_NEWADDR: Operation not permitted`). Then use `codex exec --sandbox danger-full-access "<task>"` and make process boundaries the safety layer: explicit workdir, clean git status before launch, narrow prompts, `git diff` review, targeted tests, confirmation before committing broad changes.
+
 
 Pick the model by the role the run is playing, not by preference. Substitute the current model IDs your account has access to (`codex --help` / provider docs); the roles are what matter:
 
@@ -152,7 +159,7 @@ gh pr comment 86 --body '<review>'
 ## Pitfalls
 
 1. **Pro models don't work with ChatGPT OAuth** — `o3-pro` and similar return `400 invalid_request_error: model not supported when using Codex with a ChatGPT account`. Use the role-appropriate model unless the user explicitly requests otherwise.
-2. **Sandbox mode can't commit in git worktrees** — under `--sandbox workspace-write` / `--full-auto`, Codex can only write inside the workdir and `/tmp`. A worktree keeps its metadata in the parent repo's `.git/worktrees/`, outside the writable roots, so edits succeed but committing fails with `Operation not permitted` on `index.lock`. Workaround: let Codex edit, then commit yourself from outside the sandbox.
+2. **Sandbox mode can't commit in git worktrees** — under `--sandbox workspace-write`, Codex can only write inside the workdir and `/tmp`. A worktree keeps its metadata in the parent repo's `.git/worktrees/`, outside the writable roots, so edits succeed but committing fails with `Operation not permitted` on `index.lock`. Workaround: let Codex edit, then commit yourself from outside the sandbox.
 3. **`--full-auto` is deprecated** — prefer `--sandbox workspace-write`. Both work.
 4. **`pnpm install` may break native modules** — if Codex runs `pnpm install` inside its sandbox, native modules like `better-sqlite3` can rebuild incorrectly. Re-run `CI=true pnpm install` from outside the sandbox afterward.
 5. **Verify failures are actually regressions before dispatching** — before sending Codex to "fix a test failure from the refactoring", check whether the test also fails on `main` (`git stash && <test-runner> <test-file>`). Pre-existing failures waste tokens and produce confusing results.

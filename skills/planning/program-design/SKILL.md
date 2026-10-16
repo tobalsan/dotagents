@@ -1,6 +1,6 @@
 ---
 name: program-design
-description: Design the shape of the code before any implementation—call-stack trees, file-tree diffs, and key types/method signatures—drafted for the user to argue with. Use after a plan/spec/PRD exists and before breaking work into issues or coding. Triggers on "/program-design", "program design", "design the code shape", "sketch the call stacks/signatures", "what should the types look like", or when the user wants a code-level design pass on an approved plan. NOT for requirements interviewing (drill-specs), writing the PRD (to-prd), creating tickets (to-issues), or implementing.
+description: Design the shape of the code before any implementation—call-stack trees, file-tree diffs, and key types/method signatures—drafted for the user to argue with. Use after a plan/spec/PRD exists and before breaking work into issues or coding. Triggers on "/program-design", "program design", "design the code shape", "sketch the call stacks/signatures", "what should the types look like", or when the user wants a code-level design pass on an approved plan. NOT for requirements interviewing (drill-specs), writing the PRD (to-spec), creating tickets (to-tickets), or implementing.
 ---
 
 # Program Design

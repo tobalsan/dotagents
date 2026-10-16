@@ -1,6 +1,10 @@
 ---
 name: claude-code
 description: Delegate coding work to the Claude Code CLI from any agent or harness — one-shot print-mode runs, multi-turn tmux sessions, PR reviews, parallel workers. Use when asked to hand a feature, refactor, bug fix, or code review to Claude Code, or when you need an autonomous coding subprocess that can read, edit, run commands, and manage git.
+metadata:
+  origin: "public"
+  source: "https://github.com/NousResearch/hermes-agent/tree/main/skills/autonomous-ai-agents/claude-code"
+  synced: "2026-10-16"
 ---
 
 # Claude Code — Orchestration Guide
@@ -98,31 +102,41 @@ Claude Code presents up to two confirmation dialogs on first launch. You MUST ha
 ```
 **Handling:** `tmux send-keys -t <session> Enter` — the default selection is correct.
 
-### Dialog 2: Bypass Permissions Warning (only with --dangerously-skip-permissions)
-```
-❯ 1. No, exit                    ← DEFAULT (WRONG choice!)
-  2. Yes, I accept
-```
-**Handling:** navigate DOWN first, then Enter:
+### Dialog 2: Individual Permission Prompts (normal flow)
+
+Each tool use that needs approval (file write, shell command, network) shows a prompt. Answer that one prompt — this is different from disabling prompts for the whole run:
 ```bash
-tmux send-keys -t <session> Down && sleep 0.3 && tmux send-keys -t <session> Enter
+# Read the prompt before answering it
+tmux capture-pane -t <session> -p -S -30
+# Allow this one action (Enter = default "Yes"); Esc declines it
+tmux send-keys -t <session> Enter
 ```
+Never send a blind `Enter` on a timer to approve prompts you have not read — that is the bypass flag with extra steps.
+
+A narrower opt-in than the full bypass is `--permission-mode acceptEdits`: file edits in the working directory are accepted, shell and other tool calls still prompt. Use it only in a dedicated worktree after reviewing the task.
 
 ### Robust Dialog Handling Pattern
 ```bash
-tmux send-keys -t claude-work 'claude --dangerously-skip-permissions "your task"' Enter
+# Default launch — keep permission prompts enabled
+tmux send-keys -t claude-work 'claude "your task"' Enter
 
 # Trust dialog (Enter for default "Yes")
 sleep 4 && tmux send-keys -t claude-work Enter
-
-# Permissions dialog (Down then Enter for "Yes, I accept")
-sleep 3 && tmux send-keys -t claude-work Down && sleep 0.3 && tmux send-keys -t claude-work Enter
 
 # Now wait for Claude to work
 sleep 15 && tmux capture-pane -t claude-work -p -S -60
 ```
 
-**Note:** After the first trust acceptance for a directory, the trust dialog won't appear again. Only the permissions dialog recurs each time you use `--dangerously-skip-permissions`.
+**Note:** After the first trust acceptance for a directory, the trust dialog won't appear again.
+
+### Opt-in: --dangerously-skip-permissions (isolated environments only)
+
+This disables permission prompts for the whole run — grants filesystem, shell, and network access with no prompts. Acceptable only in a throwaway worktree or isolated container. Its warning dialog:
+```
+❯ 1. No, exit                    ← DEFAULT (safe choice)
+  2. Yes, I accept
+```
+To accept: `tmux send-keys -t <session> Down && sleep 0.3 && tmux send-keys -t <session> Enter`
 
 ## CLI Subcommands
 
@@ -281,7 +295,7 @@ Automatically falls back to the specified model when the default is overloaded (
 ### Permission & Safety
 | Flag | Effect |
 |------|--------|
-| `--dangerously-skip-permissions` | Auto-approve ALL tool use (file writes, bash, network, etc.) |
+| `--dangerously-skip-permissions` | Opt-in only: disables ALL permission prompts (file writes, bash, network). Throwaway worktree / isolated container only — see "Opt-in" above |
 | `--allow-dangerously-skip-permissions` | Enable bypass as an *option* without enabling it by default |
 | `--permission-mode <mode>` | `default`, `acceptEdits`, `plan`, `auto`, `dontAsk`, `bypassPermissions` |
 | `--allowedTools <tools...>` | Whitelist specific tools (comma or space-separated) |
@@ -715,7 +729,7 @@ Use `/context` in interactive mode to see a colored grid of context usage:
 ## Pitfalls & Gotchas
 
 1. **Interactive mode needs a real PTY** — Claude Code is a full TUI app. tmux gives you `capture-pane` for monitoring and `send-keys` for input, which is what makes orchestration reliable.
-2. **`--dangerously-skip-permissions` dialog defaults to "No, exit"** — send Down then Enter to accept. Print mode (`-p`) skips it entirely.
+2. **The `--dangerously-skip-permissions` warning dialog defaults to "No, exit"** — that default is the safe answer; only send Down then Enter when you deliberately opted into the bypass in an isolated environment. Print mode (`-p`) skips the dialog entirely.
 3. **`--max-budget-usd` minimum is ~$0.05** — system prompt cache creation alone costs that much; lower values error immediately.
 4. **`--max-turns` is print-mode only** — ignored in interactive sessions.
 5. **Claude may use `python` instead of `python3`** — on systems without a `python` symlink the first bash attempt fails, then it self-corrects.

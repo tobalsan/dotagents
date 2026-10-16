@@ -1,6 +1,10 @@
 ---
 name: baseline-ui
-description: Enforces an opinionated UI baseline to prevent AI-generated interface slop.
+description: Quickly deslop UI code by fixing spacing, hierarchy, typography, and small layout issues. Use when the interface needs a fast cleanup or polish pass.
+metadata:
+  origin: "public"
+  source: "https://github.com/ibelick/ui-skills/tree/main/skills/baseline-ui"
+  synced: "2026-10-16"
 ---
 
 # Baseline UI

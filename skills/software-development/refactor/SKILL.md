@@ -2,6 +2,10 @@
 name: refactor
 description: 'Surgical code refactoring to improve maintainability without changing behavior. Covers extracting functions, renaming variables, breaking down god functions, improving type safety, eliminating code smells, and applying design patterns. Less drastic than repo-rebuilder; use for gradual improvements.'
 license: MIT
+metadata:
+  origin: "public"
+  source: "https://github.com/github/awesome-copilot/tree/main/skills/refactor"
+  synced: "2026-10-16"
 ---
 
 # Refactor

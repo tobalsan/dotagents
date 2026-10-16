@@ -1,6 +1,10 @@
 ---
 name: design-lab
 description: Conduct design interviews, generate five distinct UI variations in a temporary design lab, collect feedback, and produce implementation plans. Use when the user wants to explore UI design options, redesign existing components, or create new UI with multiple approaches to compare.
+metadata:
+  origin: "public"
+  source: "https://github.com/0xdesign/design-plugin/tree/main/design-and-refine/skills/design-lab"
+  synced: "2026-10-16"
 ---
 
 # Design Lab Skill

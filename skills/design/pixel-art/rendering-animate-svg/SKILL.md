@@ -1,6 +1,10 @@
 ---
 name: rendering-animate-svg
 description: Wrap animated SVG elements in a div to enable hardware acceleration. Apply when animating SVG icons or elements, especially in 8-bit retro components with pixel art animations.
+metadata:
+  origin: "public"
+  source: "https://github.com/TheOrcDev/8bitcn-ui/tree/main/.claude/skills/rendering-animate-svg"
+  synced: "2026-10-16"
 ---
 
 ## Animate SVG Wrapper Instead of SVG Element

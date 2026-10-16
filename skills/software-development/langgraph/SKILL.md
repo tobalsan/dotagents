@@ -1,6 +1,8 @@
 ---
 name: langgraph
 description: Create workflows with LangGraph
+metadata:
+  origin: "self"
 ---
 
 # Langgraph Skill

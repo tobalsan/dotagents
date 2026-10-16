@@ -1,6 +1,8 @@
 ---
 name: prototype
 description: "Rapid prototyping skill — turn fuzzy idea into fastest viable visible result. Handles two modes: (A) brownfield — adding/exploring a feature inside an existing project (default, most common); (B) greenfield — fresh throwaway from scratch. Use when user asks to 'prototype X', 'mock up X', '/prototype', 'quick spike', 'try X in this app', 'add X quickly', 'rough version', 'just want to see it'. Opposite of /create-frp: no scale probing, no validation gates, no quality bar. Output is discardable, low-commitment, iterable."
+metadata:
+  origin: "self"
 ---
 
 # Prototype

@@ -1,6 +1,8 @@
 ---
 name: create-project-overview
 description: Generate a concise docs/PROJECT_OVERVIEW.md briefing for a codebase, suitable for pasting into another AI chat that lacks repo access. Use when the user asks to "create a project overview", "generate PROJECT_OVERVIEW.md", "summarize this codebase for another AI", "write a high-level architecture doc", or otherwise wants a portable, architecture-focused briefing of the current repository.
+metadata:
+  origin: "self"
 ---
 
 # Create Project Overview

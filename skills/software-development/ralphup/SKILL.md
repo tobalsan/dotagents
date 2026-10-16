@@ -2,6 +2,8 @@
 name: ralphup
 description: |
   Launch a ralph loop for autonomous task execution. Use when user wants to start a ralph loop, run ralph, or execute a project scope autonomously. Triggers on "ralph", "ralphup", "start loop", or references to scope files in project-manager.
+metadata:
+  origin: "self"
 ---
 
 # Ralphup

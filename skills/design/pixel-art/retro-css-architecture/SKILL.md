@@ -1,6 +1,10 @@
 ---
 name: retro-css-architecture
 description: Organize 8-bit CSS with custom properties, pixel fonts, and responsive pixel art. Apply when creating or modifying retro-styled components and their CSS.
+metadata:
+  origin: "public"
+  source: "https://github.com/TheOrcDev/8bitcn-ui/tree/main/.claude/skills/retro-css-architecture"
+  synced: "2026-10-16"
 ---
 
 ## Retro CSS Architecture

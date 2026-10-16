@@ -1,6 +1,10 @@
 ---
 name: 8-bit-pixel-art-patterns
 description: Create pixelated borders, shadows, and effects for 8-bit retro components. Apply when building 8-bit styled UI components that need authentic pixel art aesthetics.
+metadata:
+  origin: "public"
+  source: "https://github.com/TheOrcDev/8bitcn-ui/tree/main/.claude/skills/8-bit-pixel-art-patterns"
+  synced: "2026-10-16"
 ---
 
 ## 8-bit Pixel Art Patterns

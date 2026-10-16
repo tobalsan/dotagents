@@ -1,6 +1,10 @@
 ---
 name: codex-imagegen
 description: Generate images by delegating to Codex imagegen. Use when user asks to generate/create a raster image, JPG/PNG, diagram, infographic, visual, mockup, or other bitmap asset via codex exec, with output saved to a user-specified directory or ~/Downloads by default.
+metadata:
+  origin: "public"
+  source: "https://github.com/openai/codex/blob/main/codex-rs/skills/src/assets/samples/imagegen/SKILL.md"
+  synced: "2026-10-16"
 ---
 
 # Codex Imagegen
@@ -29,3 +33,22 @@ After run, verify:
 ```bash
 file "$OUT_DIR/<name>.jpg" && ls -lh "$OUT_DIR/<name>.jpg"
 ```
+
+## Prompt shaping (from upstream imagegen skill)
+
+Structure the request inside the prompt as: scene/backdrop -> subject -> details -> constraints. Useful labeled lines (use only those that help):
+
+```text
+Use case: <photorealistic-natural | product-mockup | ui-mockup | infographic-diagram | logo-brand | illustration-story | stylized-concept | ...>
+Primary request: ...
+Style/medium: ...  Composition/framing: ...  Lighting/mood: ...
+Text (verbatim): "<exact text>"
+Constraints: <must keep/avoid>   Avoid: <negatives>
+```
+
+- Specific prompt: normalize only, add nothing creative. Generic prompt: add only details that materially help.
+- Quote exact text; spell tricky words letter by letter.
+- Edits: say `change only X; keep Y unchanged`, repeat invariants each iteration.
+- Transparent output: ask for a genuinely transparent background (alpha).
+- Do not overwrite existing files; use a versioned name (`hero-v2.png`).
+- Many assets: one `codex exec` per asset/variant, not one prompt.

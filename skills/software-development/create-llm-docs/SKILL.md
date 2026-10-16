@@ -1,6 +1,8 @@
 ---
 name: create-llm-docs
 description: Generate a single token-efficient `docs/llms.md` onboarding brief for a codebase, optimized for LLM/coding-agent consumption. Use when the user asks to create LLM docs, agent onboarding docs, an llms.md, a coding-agent brief, or wants to document a repo so another AI agent can quickly orient, reason about architecture, and make safe changes.
+metadata:
+  origin: "self"
 ---
 
 # Create LLM Docs

@@ -1,6 +1,10 @@
 ---
 name: animation-performance-retro
 description: Optimize 8-bit animations for smooth performance. Apply when creating animated pixel art, game UI effects, or any retro-styled animations.
+metadata:
+  origin: "public"
+  source: "https://github.com/TheOrcDev/8bitcn-ui/tree/main/.claude/skills/animation-performance-retro"
+  synced: "2026-10-16"
 ---
 
 ## Animation Performance for Retro UI

@@ -1,93 +1,250 @@
 ---
 name: 12-principles-of-animation
-description: Apply Disney's 12 animation principles to web interfaces. Use when implementing motion, reviewing animation quality, designing micro-interactions, or making UI feel alive. Triggers on tasks involving CSS animations, transitions, motion libraries, easing curves, springs, or UX feedback.
+description: Audit animation code against Disney's 12 principles adapted for web. Use when reviewing motion, implementing animations, or checking animation quality. Outputs file:line findings.
 license: MIT
 metadata:
   author: raphael-salaja
-  version: "1.1.0"
-  source: /content/12-principles-of-animation/index.mdx
+  version: "2.0.0"
+  origin: "public"
+  source: "https://github.com/raphaelsalaja/skill/tree/main/skills/12-principles-of-animation"
+  synced: "2026-10-16"
 ---
 
 # 12 Principles of Animation
 
-Disney animators codified these principles in the 1930s to make drawings feel real. We use them to make pixels feel human. The problems are surprisingly similar.
+Review animation code for compliance with Disney's 12 principles adapted for web interfaces.
 
-## When to Apply
+## How It Works
 
-Reference these guidelines when:
-- Adding motion to UI components
-- Reviewing animation quality and feel
-- Designing micro-interactions and feedback
-- Making interfaces feel more alive and responsive
-- Deciding what should (and shouldn't) animate
+1. Read the specified files (or prompt user for files/pattern)
+2. Check against all rules below
+3. Output findings in `file:line` format
 
-## Principles Overview
+## Rule Categories
 
-| # | Principle | Web Application |
-|---|-----------|-----------------|
-| 1 | Squash and Stretch | Convey weight and elasticity in morphing elements |
-| 2 | Anticipation | Prepare users for what comes next (wind-up before action) |
-| 3 | Staging | Direct attention through sequential animation |
-| 4 | Straight Ahead & Pose to Pose | Define keyframes, let browser interpolate |
-| 5 | Follow Through & Overlapping | Use springs for organic overshoot-and-settle |
-| 6 | Slow In & Slow Out | Apply easing curves for natural acceleration |
-| 7 | Arcs | Add curved paths for organic movement |
-| 8 | Secondary Action | Reinforce primary actions with subtle flourishes |
-| 9 | Timing | Keep interactions under 300ms, be consistent |
-| 10 | Exaggeration | Amplify motion for emphasis (sparingly) |
-| 11 | Solid Drawing | Use perspective, shadows, and depth |
-| 12 | Appeal | The sum of all techniques applied with care |
+| Priority | Category | Prefix |
+|----------|----------|--------|
+| 1 | Timing | `timing-` |
+| 2 | Easing | `easing-` |
+| 3 | Physics | `physics-` |
+| 4 | Staging | `staging-` |
 
-## Quick Reference
+## Rules
 
-### 1. Squash and Stretch
-Digital objects don't have physics, so we fake it. Subtle deformation conveys weight—but don't overdo it or professional software becomes a cartoon.
+### Timing Rules
 
-### 2. Anticipation
-Give cues before major actions. Pull-to-refresh hints, buttons that compress before sending. Reserve for moments that matter—too many wind-ups make apps feel sluggish.
+#### `timing-under-300ms`
+User-initiated animations must complete within 300ms.
 
-### 3. Staging
-Guide the eye through sequential animation. Dim backgrounds, focus on important elements. Direct attention like a film.
+**Fail:**
+```css
+.button { transition: transform 400ms; }
+```
 
-### 4. Straight Ahead & Pose to Pose
-Focus on key poses: start state, end state, maybe a midpoint. Context menus animate on exit only—entrance animation compounds into irritation.
+**Pass:**
+```css
+.button { transition: transform 200ms; }
+```
 
-### 5. Follow Through & Overlapping
-Nothing moves as a single rigid unit. Springs add organic overshoot-and-settle that easing curves can't replicate. But too much stagger makes interfaces feel slow.
+#### `timing-consistent`
+Similar elements must use identical timing values.
 
-### 6. Slow In & Slow Out
-- `ease-out`: Entrances (arrive fast, settle gently)
-- `ease-in`: Exits (build momentum before departure)
-- `ease-in-out`: Deliberate movements
+**Fail:**
+```css
+.button-primary { transition: 200ms; }
+.button-secondary { transition: 150ms; }
+```
 
-### 7. Arcs
-Curved paths feel inevitable, like water finding its level. Best for hero moments and playful interactions. Utilitarian interfaces work fine with straight lines.
+**Pass:**
+```css
+.button-primary { transition: 200ms; }
+.button-secondary { transition: 200ms; }
+```
 
-### 8. Secondary Action
-Flourishes supporting the main action—sparkles after success, sound effects on impact. Think games: they combine sound and visual effects for impact.
+#### `timing-no-entrance-context-menu`
+Context menus should not animate on entrance (exit only).
 
-### 9. Timing
-Keep interactions under 300ms. Be consistent—if one button animates at 200ms, all buttons should. Define timing scales early, reuse everywhere.
+**Fail:**
+```tsx
+<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} />
+```
 
-### 10. Exaggeration
-Push past physical accuracy to make points land harder. Use sparingly for onboarding, empty states, confirmations, or errors.
+**Pass:**
+```tsx
+<motion.div exit={{ opacity: 0 }} />
+```
 
-### 11. Solid Drawing
-Shadows suggest depth. Layering implies hierarchy. CSS `perspective` gives 3D transforms actual depth.
+### Easing Rules
 
-### 12. Appeal
-The difference between software you tolerate and software you love. Not one technique—the sum of all techniques applied with care and taste.
+#### `easing-entrance-ease-out`
+Entrances must use `ease-out` (arrive fast, settle gently).
 
-## Key Guidelines
+**Fail:**
+```css
+.modal-enter { animation-timing-function: ease-in; }
+```
 
-- **Balance**: Too much animation turns professional software into a cartoon
-- **Consistency**: Define timing scales early, reuse everywhere
-- **Purpose**: Great animation is invisible—users think "this feels good"
-- **Restraint**: Not everything needs to be animated
+**Pass:**
+```css
+.modal-enter { animation-timing-function: ease-out; }
+```
+
+#### `easing-exit-ease-in`
+Exits must use `ease-in` (build momentum before departure).
+
+**Fail:**
+```css
+.modal-exit { animation-timing-function: ease-out; }
+```
+
+**Pass:**
+```css
+.modal-exit { animation-timing-function: ease-in; }
+```
+
+#### `easing-no-linear-motion`
+Linear easing should only be used for progress indicators, not motion.
+
+**Fail:**
+```css
+.card { transition: transform 200ms linear; }
+```
+
+**Pass:**
+```css
+.progress-bar { transition: width 100ms linear; }
+```
+
+#### `easing-natural-decay`
+Use exponential ramps, not linear, for natural decay.
+
+**Fail:**
+```ts
+gain.gain.linearRampToValueAtTime(0, t + 0.05);
+```
+
+**Pass:**
+```ts
+gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+```
+
+### Physics Rules
+
+#### `physics-active-state`
+Interactive elements must have active/pressed state with scale transform.
+
+**Fail:**
+```css
+.button:hover { background: var(--gray-3); }
+/* Missing :active state */
+```
+
+**Pass:**
+```css
+.button:active { transform: scale(0.98); }
+```
+
+#### `physics-subtle-deformation`
+Squash/stretch deformation must be subtle (0.95-1.05 range).
+
+**Fail:**
+```tsx
+<motion.div whileTap={{ scale: 0.8 }} />
+```
+
+**Pass:**
+```tsx
+<motion.div whileTap={{ scale: 0.98 }} />
+```
+
+#### `physics-spring-for-overshoot`
+Use springs (not easing) when overshoot-and-settle is needed.
+
+**Fail:**
+```tsx
+<motion.div transition={{ duration: 0.3, ease: "easeOut" }} />
+// When element should bounce/settle
+```
+
+**Pass:**
+```tsx
+<motion.div transition={{ type: "spring", stiffness: 500, damping: 30 }} />
+```
+
+#### `physics-no-excessive-stagger`
+Stagger delays must not exceed 50ms per item.
+
+**Fail:**
+```tsx
+transition={{ staggerChildren: 0.15 }}
+```
+
+**Pass:**
+```tsx
+transition={{ staggerChildren: 0.03 }}
+```
+
+### Staging Rules
+
+#### `staging-one-focal-point`
+Only one element should animate prominently at a time.
+
+**Fail:**
+```tsx
+// Multiple elements with competing entrance animations
+<motion.div animate={{ scale: 1.1 }} />
+<motion.div animate={{ scale: 1.1 }} />
+```
+
+#### `staging-dim-background`
+Modal/dialog backgrounds should dim to direct focus.
+
+**Fail:**
+```css
+.overlay { background: transparent; }
+```
+
+**Pass:**
+```css
+.overlay { background: var(--black-a6); }
+```
+
+#### `staging-z-index-hierarchy`
+Animated elements must respect z-index layering.
+
+**Fail:**
+```css
+.tooltip { /* No z-index, may render behind other elements */ }
+```
+
+**Pass:**
+```css
+.tooltip { z-index: 50; }
+```
+
+## Output Format
+
+When reviewing files, output findings as:
+
+```
+file:line - [rule-id] description of issue
+
+Example:
+components/modal/index.tsx:45 - [timing-under-300ms] Exit animation 400ms exceeds 300ms limit
+components/button/styles.module.css:12 - [physics-active-state] Missing :active transform
+```
+
+## Summary Table
+
+After findings, output a summary:
+
+| Rule | Count | Severity |
+|------|-------|----------|
+| `timing-under-300ms` | 2 | HIGH |
+| `physics-active-state` | 3 | MEDIUM |
+| `easing-entrance-ease-out` | 1 | MEDIUM |
 
 ## References
 
 - [The Illusion of Life: Disney Animation](https://www.amazon.com/Illusion-Life-Disney-Animation/dp/0786860707)
 - [Apple WWDC23: Animate with Springs](https://developer.apple.com/videos/play/wwdc2023/10158)
-- [easing.dev](https://easing.dev) - Easing function playground
-- [Rauno's Invisible Details of Interaction Design](https://rauno.me/craft/interaction-design)

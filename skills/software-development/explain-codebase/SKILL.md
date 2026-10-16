@@ -1,6 +1,8 @@
 ---
 name: explain-codebase
 description: Explore an unfamiliar codebase and produce a concise high-level explanation of its purpose, main concepts, inner workings, and a flow diagram from input to output through the main actor components. Use when the user asks to "explain this codebase", "give me a high-level overview", "what does this repo do", "help me understand this project", or wants onboarding-style understanding of a repository. Supports optional focus arguments (e.g., a specific subsystem, directory, or aspect to emphasize).
+metadata:
+  origin: "self"
 ---
 
 # Explain Codebase
