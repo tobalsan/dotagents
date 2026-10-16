@@ -167,6 +167,7 @@ What you *can* do is let Reddit rank for you: a thread pulled from `top/.rss?t=y
 | `firecrawl search` returns nothing for `site:reddit.com/r/x` | Subreddit name is wrong or private. Confirm the sub exists before assuming Reddit has no coverage. |
 | Body is `[removed]` / `[deleted]` | Live Reddit is gutted. arctic-shift recovers the text maybe half the time (§3) — if it doesn't, the comments usually still survive, so keep the thread. |
 | Thread has far more comments than you got | The 48-cap. Go to `/comments/search`. |
+| `rfetch.py` exits "arctic-shift unavailable" (or curl shows `error code: 522`) | arctic-shift is down (Cloudflare timeout, seen 2026-10-09). `rfetch.py` depends on it entirely. Fall back to `rget.sh` + `rfeed.py` on the thread's `.rss` (§2) — fine for threads ≤48 comments; note the cap if the thread is bigger. |
 | Everything 403s including RSS | Reddit is rate-limiting the IP hard, or the sub is quarantined/private. Record the URL as an uncrawled source and move on — don't spend a lane on it. |
 
 ## Reporting a thread as a source

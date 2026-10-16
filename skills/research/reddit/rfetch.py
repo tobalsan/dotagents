@@ -9,8 +9,14 @@ B = "https://arctic-shift.photon-reddit.com/api"
 
 
 def get(url):
-    r = subprocess.run(["curl", "-s", url], capture_output=True, text=True)
-    return json.loads(r.stdout or "{}")
+    r = subprocess.run(["curl", "-s", "-m", "60", url], capture_output=True, text=True)
+    try:
+        return json.loads(r.stdout or "{}")
+    except json.JSONDecodeError:
+        # arctic-shift down (e.g. Cloudflare "error code: 522") returns non-JSON.
+        sys.exit(f"arctic-shift unavailable ({(r.stdout or '').strip()[:80]!r}) for {url}\n"
+                 "Fall back to Reddit RSS: ./rget.sh '<thread-url>/.rss?limit=100' out.xml && "
+                 "uv run --no-project python rfeed.py out.xml  (48-comment cap; see SKILL.md §2)")
 
 
 def flatten(nodes, depth=0, out=None):
