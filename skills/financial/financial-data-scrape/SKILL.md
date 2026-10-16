@@ -62,3 +62,14 @@ Create the Markdown file with the following sections:
 - Include complete scraped data — do not truncate.
 - Preserve table format using standard Markdown tables.
 - Preserve bold/italic formatting from the source.
+
+## Practical notes (Ray, validated 2026-10-05 on EPA:DBG)
+
+The chrome-mcp workflow above is the original recipe; in this workspace **use the `firecrawl` CLI instead** (authenticated, works for stockanalysis — curl is Cloudflare-blocked).
+
+- URL shape for Euronext names: `https://stockanalysis.com/quote/epa/{TICKER}/` + `financials/income-statement/`, `financials/balance-sheet/`, `financials/cash-flow-statement/`, `financials/ratios/`, `dividend/`, `forecast/`.
+- `firecrawl scrape <url> --format markdown -o file.md` — **run sequentially, never backgrounded in parallel** (`&`): parallel `-o` writes lost files and dumped some into the agent workspace root instead of the scratch dir. Work in a scratch dir (`/tmp/<ticker>`) and `ls` after each batch.
+- `firecrawl search "<query>" --limit 6 -o s_x.md` finds the primary docs fast (rating-agency notes, company PRs, bond term sheets). S&P/Fitch research pages scrape fine and are the best source for deal economics + leverage trajectory.
+- Pull tables out with `rg "^\| " file.md | rg -v "^\| ---"`.
+- Save raw scrapes under `financial_data/stock_data/raw/{TICKER}_{date}/` and the consolidated data file as `financial_data/stock_data/{TICKER}_{date}.md`.
+- EBITDA definitions differ across sources (stockanalysis TTM vs company "recurring" incl. IFRS16 vs S&P-adjusted) — pick one (company/S&P) and say which.
