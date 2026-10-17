@@ -123,7 +123,7 @@ Always use `uv` to run python commands, unless explicitly stated otherwise.
 
 ## Delegation
 
-First classify the request by calling `classify_task` (enforced: mutating tools are blocked until you do).
+First classify the request as direct or orchestrate: call `classify_task` if that tool is available; otherwise state the classification in one line. It is advisory and never blocks tools, so a missing `classify_task` is not a blocker.
 - Clearly scoped one-line or single-file edit: work directly; never delegate, even in a thought experiment.
 - Anything else: orchestrate before implementation. In the first response, briefly explain in ordinary prose which bounded tasks go to lightweight, medium, and strong models, as applicable.
 - Lightweight model: code scouting, search, and simple bounded tasks.
