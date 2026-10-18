@@ -5,7 +5,7 @@ Single source of truth for all coding-agent configuration. The canonical config 
 ## Layout (canonical)
 
 `~/dotagents/`
-- `commands/` shared prompt/command files
+- `prompts/` shared prompt/command files
 - `skills/` shared skills
 - `resources/` shared docs/templates
 - `rules/` shared rules (e.g. Claude rules)
@@ -18,7 +18,7 @@ Single source of truth for all coding-agent configuration. The canonical config 
 
 ## LLM instructions (add/update flow)
 
-1. Put new shared assets in `~/dotagents/commands`, `~/dotagents/skills`, `~/dotagents/resources`, or `~/dotagents/rules`.
+1. Put new shared assets in `~/dotagents/prompts`, `~/dotagents/skills`, `~/dotagents/resources`, or `~/dotagents/rules`.
 2. Put agent-specific config files in `~/dotagents/settings/<agent>/`.
 3. Create per-resource symlinks inside each agent’s local folders
 4. Use symlinks for instruction files and settings too (see mapping below).
@@ -27,37 +27,37 @@ Single source of truth for all coding-agent configuration. The canonical config 
 
 ### Claude Code
 - `~/dotagents/CLAUDE.md` → `~/.claude/CLAUDE.md`
-- `~/dotagents/commands/*` → `~/.claude/commands/*`
+- `~/dotagents/prompts/*` → `~/.claude/commands/*`
 - `~/dotagents/rules/*` → `~/.claude/rules/*`
 - `~/dotagents/skills/*` → `~/.claude/skills/*`
 - `~/dotagents/settings/claude/settings.json` → `~/.claude/settings.json`
 
 ### Gemini
 - `~/dotagents/GEMINI.md` → `~/.gemini/GEMINI.md`
-- `~/dotagents/commands/*` → `~/.gemini/commands/*`
+- `~/dotagents/prompts/*` → `~/.gemini/commands/*`
 - `~/dotagents/skills/*` → `~/.gemini/skills/*`
 - `~/dotagents/settings/gemini/settings.json` → `~/.gemini/settings.json`
 
 ### OpenAI Codex CLI
 - `~/dotagents/AGENTS.md` → `~/.codex/AGENTS.md`
-- `~/dotagents/commands/*` → `~/.codex/prompts/*`
+- `~/dotagents/prompts/*` → `~/.codex/prompts/*`
 - `~/dotagents/skills/*` → `~/.codex/skills/*`
 
 ### OpenAI Factory / Droid
 - `~/dotagents/AGENTS.md` → `~/.factory/AGENTS.md`
-- `~/dotagents/commands/*` → `~/.factory/commands/*`
+- `~/dotagents/prompts/*` → `~/.factory/commands/*`
 - `~/dotagents/skills/*` → `~/.factory/skills/*`
 - `~/dotagents/settings/factory/mcp.json` → `~/.factory/mcp.json`
 
 ### Pi
 - `~/dotagents/AGENTS.md` → `~/.pi/agent/AGENTS.md`
-- `~/dotagents/commands/*` → `~/.pi/agent/prompts/*`
+- `~/dotagents/prompts/*` → `~/.pi/agent/prompts/*`
 - `~/dotagents/skills/*` → `~/.pi/agent/skills/*`
 - `~/dotagents/settings/pi/models.json` → `~/.pi/agent/models.json`
 
 ### OpenCode
 - `~/dotagents/AGENTS.md` → `~/.config/opencode/AGENTS.md`
-- `~/dotagents/commands/*` → `~/.config/opencode/commands/*`
+- `~/dotagents/prompts/*` → `~/.config/opencode/commands/*`
 - `~/dotagents/skills/*` → `~/.config/opencode/skills/*`
 - `~/dotagents/settings/opencode/opencode.json` → `~/.config/opencode/opencode.json`
 
