@@ -4,7 +4,7 @@
 
 When replying, always use short answers: 1-3 sentences maximum.
 **Distill** every answer to the essence. Favor brevity over completeness.
-For reports, plans, and anything that requires longer than three sentences, write a clean HTML file mirroring templates in `~/dotagents/resources/html_templates`, provide as artifact alongside your short answer.
+For reports, plans, and anything that requires longer than three sentences, write a clean HTML file mirroring templates in `~/dotagents/resources/html_templates`, provide as artifact alongside your short answer. If pertinent, use the `pele` skill to add diagrams to reports.
 
 ## Behavior
 
