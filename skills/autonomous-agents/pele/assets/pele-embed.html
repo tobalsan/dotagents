@@ -1,0 +1,38 @@
+<!-- Pele diagram embed. Paste the style block into the head. Paste the two script tags at the end of the body.
+     Put each diagram in a pre element with class "mermaid". Escape the less-than sign and the ampersand. -->
+<style>
+  /* Matches the palette of ~/dotagents/resources/html_templates. Change the values to match your page. */
+  .mermaid {
+    margin: 24px 0;
+    padding: 0;
+    background: none;
+    border: 0;
+    white-space: normal;
+    --pele-font: system-ui, -apple-system, sans-serif;
+    --pele-font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+    --pele-bg: #FAF9F5;
+    --pele-fg: #141413;
+    --pele-muted: #87867F;
+    --pele-line: #3D3D3A;
+    --pele-surface: #F0EEE6;
+    --pele-surface-alt: #E3DACC;
+    --pele-border: #D1CFC5;
+    --pele-accent: #D97757;
+    --pele-critical: #B04A3F;
+    --pele-radius: 8px;
+    --pele-series-1: #D97757;
+    --pele-series-2: #788C5D;
+    --pele-series-3: #6A8CAF;
+    --pele-series-4: #B04A3F;
+    --pele-series-5: #C9A65B;
+    --pele-series-6: #8E7CA6;
+    --pele-series-7: #87867F;
+    --pele-series-8: #3D3D3A;
+  }
+  .mermaid:not(:has(svg)) { white-space: pre; font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/pele@1/dist/pele.global.js"></script>
+<script>
+  for (const el of document.querySelectorAll('.mermaid')) pele.mount(el, el.textContent);
+</script>
