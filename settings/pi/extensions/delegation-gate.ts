@@ -41,7 +41,7 @@ export default function delegationGate(pi: ExtensionAPI) {
 				content: `[Delegation guidance — advisory, not a permission gate]
 - Handle clearly scoped single-file edits directly.
 - For larger implementation tasks, follow applicable delegation instructions: lightweight scouting, medium implementation, strong review as useful; keep ownership bounded and verify integration yourself.
-- Delegate only when authorized by the user or applicable instructions. Lookup, discovery, and approved CLI work need not be framed as single-file edits or delegated merely to satisfy this extension.
+- AGENTS.md Delegation rules are standing authorization: orchestrate anything beyond a clearly scoped single-file edit. Lookup, discovery, and approved CLI work need not be framed as single-file edits or delegated merely to satisfy this extension.
 - Prefer edit/write for source changes; use normal CLI output files and shell tools when appropriate. No classification prerequisite or shell-syntax restrictions are imposed here.
 - Existing approval, read-only, destructive-action, and external-mutation rules still apply. Classification grants no authorization.`,
 				display: false,
