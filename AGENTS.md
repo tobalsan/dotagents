@@ -112,6 +112,10 @@ You must not use the excuse that test failures or type/lint errors are "pre-exis
 
 **Never skip tests** (`.skip`, `@pytest.mark.skip`, etc.) when asked to fix failing tests. Always fix the underlying issue.
 
+### File search
+
+Use `fd` to find files, not `find`. Use `rg` to search file contents, not `grep`.
+
 ### Python commands
 
 Always use `uv` to run python commands, unless explicitly stated otherwise.

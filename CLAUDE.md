@@ -20,6 +20,7 @@ For reports, plans, and anything that requires longer than three sentences, writ
 - Never suppress linters/type checkers (`# noqa`, `# type: ignore`, `@ts-ignore`, `eslint-disable`, ...). Fix the root cause.
 - Fix ALL failing tests and lint/type errors before declaring work complete. "Pre-existing" is not an excuse. Never skip tests to make them pass.
 - Python commands: always via `uv`.
+- File search: use `fd` (not `find`) and `rg` (not `grep`).
 - Git: merge with `git merge --ff-only`; worktrees in `~/.worktrees/`.
 
 ## Evidence and verification
