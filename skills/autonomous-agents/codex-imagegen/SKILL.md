@@ -13,7 +13,7 @@ Use user-specified output dir. If none given, default to `~/Downloads`.
 
 ```bash
 OUT_DIR="<user-dir-or-~/Downloads>"
-codex exec --model gpt-5.5 -c model_reasoning_effort=low --add-dir "$OUT_DIR" "Generate an image: <image request>. Use the image generation skill / imagegen path. Output final file exactly to $OUT_DIR/<name>.jpg. <constraints>."
+codex exec --model gpt-6.1-sol -c model_reasoning_effort=low --add-dir "$OUT_DIR" "Generate an image: <image request>. Use the image generation skill / imagegen path. Output final file exactly to $OUT_DIR/<name>.jpg. <constraints>."
 ```
 
 Rules:
@@ -21,7 +21,9 @@ Rules:
 - Include `Use the image generation skill / imagegen path`.
 - Include exact output path in chosen `OUT_DIR`.
 - Include `--add-dir "$OUT_DIR"` so Codex can write there.
-- Prefer `gpt-5.5` and `model_reasoning_effort=low`.
+- Prefer `gpt-6.1-sol` and `model_reasoning_effort=low`.
+- Reference images: put the prompt BEFORE `-i` (`codex exec ... "<prompt>" -i a.png -i b.png`).
+- `-i` takes many files. Codex reads a prompt after `-i` as a file and fails with `No prompt provided via stdin`.
 - If Codex saves PNG under `~/.codex/generated_images/...`, convert/copy to requested filename:
 
 ```bash
