@@ -9,7 +9,7 @@ Reconstruct the Intraday Desk view from the Markets Monitor API as an agent-read
 
 ## Inputs
 
-- API base URL. Prefer user-provided value. Else use `MARKET_API_BASE`. Else default `http://127.0.0.1:8010` (correct when running on the host that serves the API). Off-host, the Tailscale frontend `https://thinhs-mac-studio.catla-powan.ts.net:8002` proxies `/api` to the same backend.
+- API base URL. Prefer user-provided value. Else use `MARKET_API_BASE`. Else default `http://127.0.0.1:8010` (correct when running on the host that serves the API). Off-host, the tailnet frontend `https://markets.ams.algodyn.ai` proxies `/api` to the same backend.
 - Futures symbol. Default `ES`. Cached symbols: `ES NQ YM GC CL TNX DX`.
 
 ## Required API calls
