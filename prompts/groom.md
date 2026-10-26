@@ -5,3 +5,6 @@ argument-hint: <issue-id>
 
 Let's spec out linear issue $ARGUMENTS so it's ready to be handed off to a worker agent.
 
+Execute the following skills
+- /to-spec
+- /greenlight
