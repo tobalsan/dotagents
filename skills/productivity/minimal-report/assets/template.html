@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TITLE</title>
+<style>
+/* minimal-report theme: black and white, Apple style. Add Apple system colors only where they help reading. */
+:root{--ink:#1d1d1f;--mute:#6e6e73;--line:#d2d2d7;--chip:#f5f5f7;--bg:#fff;
+  --display:-apple-system,"SF Pro Display",BlinkMacSystemFont,"Helvetica Neue",sans-serif;
+  --text:-apple-system,"SF Pro Text",BlinkMacSystemFont,"Helvetica Neue",sans-serif;
+  --mono:"SF Mono",ui-monospace,Menlo,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--text);line-height:1.45;-webkit-font-smoothing:antialiased}
+.page{max-width:980px;margin:0 auto;padding:96px 32px 140px}
+.eyebrow{font-size:14px;color:var(--mute);margin:0 0 10px}
+h1{font-family:var(--display);font-size:56px;line-height:1.05;font-weight:700;letter-spacing:-.025em;margin:0}
+.intro{font-size:21px;color:var(--mute);margin:20px 0 0;max-width:720px}
+/* stats strip: 2 to 4 numbers */
+.stats{margin:56px 0 0;padding:28px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);display:flex;gap:56px;flex-wrap:wrap}
+.stats b{display:block;font-family:var(--display);font-size:40px;font-weight:700;letter-spacing:-.02em}
+.stats span{font-size:14px;color:var(--mute)}
+/* module */
+section{margin-top:96px}
+.num{font-size:14px;font-weight:600;color:var(--mute)}
+h2{font-family:var(--display);font-size:36px;font-weight:700;letter-spacing:-.02em;margin:6px 0 28px}
+.lede{font-size:17px;color:var(--mute);margin:-16px 0 28px;max-width:720px}
+/* pair rows: left = problem/before/option, right = fix/after/verdict */
+.head,.pair{display:grid;grid-template-columns:1fr 1fr;gap:40px}
+.head{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mute);padding-bottom:10px;border-bottom:1px solid var(--ink)}
+.pair{padding:20px 0;border-bottom:1px solid var(--line);font-size:17px}
+.l{color:var(--mute)} .r{font-weight:500}
+.x,.v{position:relative;padding-left:28px}
+.x::before{content:"✕";position:absolute;left:0;color:var(--ink);font-weight:600}
+.v::before{content:"✓";position:absolute;left:0;font-weight:700}
+/* single rows: bold lead + one line */
+.row{padding:18px 0;border-bottom:1px solid var(--line);font-size:17px;display:grid;grid-template-columns:220px 1fr;gap:24px}
+.row b{font-weight:600} .row span{color:var(--mute)}
+.rows{border-top:1px solid var(--ink)}
+/* numbered steps */
+ol.steps{list-style:none;counter-reset:s;padding:0;margin:0;border-top:1px solid var(--ink)}
+ol.steps li{counter-increment:s;padding:18px 0 18px 48px;border-bottom:1px solid var(--line);font-size:17px;position:relative}
+ol.steps li::before{content:counter(s);position:absolute;left:0;font-family:var(--display);font-weight:700;font-size:20px}
+/* table */
+table{width:100%;border-collapse:collapse;font-size:15px}
+th{text-align:left;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mute);padding:0 12px 10px 0;border-bottom:1px solid var(--ink)}
+td{padding:14px 12px 14px 0;border-bottom:1px solid var(--line);vertical-align:top}
+td.n{font-variant-numeric:tabular-nums;text-align:right}
+/* status tag: text only, no color */
+.tag{font-size:12px;font-weight:600;border:1px solid var(--ink);border-radius:999px;padding:2px 9px;white-space:nowrap}
+.tag.off{border-color:var(--line);color:var(--mute)}
+code{font-family:var(--mono);font-size:14px;background:var(--chip);border-radius:6px;padding:2px 6px;display:inline-block;margin-top:6px;font-weight:400;color:var(--ink)}
+.pair code{display:block;width:fit-content}
+.foot{margin-top:96px;font-size:13px;color:var(--mute);border-top:1px solid var(--line);padding-top:18px}
+@media(max-width:720px){h1{font-size:40px}.head{display:none}.pair,.row{grid-template-columns:1fr;gap:8px}}
+@media print{.page{padding:24px}section{break-inside:avoid}}
+</style>
+</head>
+<body><div class="page">
+
+<p class="eyebrow">CONTEXT · TYPE OF REPORT</p>
+<h1>TITLE IN 2 TO 6 WORDS</h1>
+<p class="intro">One sentence: what this page gives the reader.</p>
+
+<!-- OPTIONAL: 2 to 4 numbers that drive the message -->
+<div class="stats">
+  <div><b>17%</b><span>short label</span></div>
+  <div><b>90%</b><span>short label</span></div>
+</div>
+
+<!-- BLOCK A: pair rows (mistake / do this, problem / fix, before / after, option / verdict) -->
+<section>
+  <div class="num">Module 1</div>
+  <h2>Module title</h2>
+  <div class="head"><div>Mistake</div><div>Do this</div></div>
+  <div class="pair"><div class="l x">What goes wrong, one line.</div><div class="r v">What to do, one line.<code>Example prompt or command</code></div></div>
+  <div class="pair"><div class="l x">What goes wrong.</div><div class="r v">What to do.</div></div>
+</section>
+
+<!-- BLOCK B: single rows (finding, decision, fact) -->
+<section>
+  <div class="num">Module 2</div>
+  <h2>Module title</h2>
+  <div class="rows">
+    <div class="row"><b>Short lead</b><span>One line of detail.</span></div>
+    <div class="row"><b>Short lead</b><span>One line of detail.</span></div>
+  </div>
+</section>
+
+<!-- BLOCK C: numbered steps -->
+<section>
+  <div class="num">Module 3</div>
+  <h2>Next steps</h2>
+  <ol class="steps">
+    <li>One action. <code>command</code></li>
+    <li>One action.</li>
+  </ol>
+</section>
+
+<!-- BLOCK D: table (reference data only) -->
+<section>
+  <div class="num">Module 4</div>
+  <h2>Module title</h2>
+  <table>
+    <tr><th>Item</th><th>Status</th><th style="text-align:right">Value</th></tr>
+    <tr><td>Item name</td><td><span class="tag">Done</span></td><td class="n">42</td></tr>
+    <tr><td>Item name</td><td><span class="tag off">Open</span></td><td class="n">7</td></tr>
+  </table>
+</section>
+
+<p class="foot">Source: where the data comes from, period, sample size.</p>
+</div></body></html>
