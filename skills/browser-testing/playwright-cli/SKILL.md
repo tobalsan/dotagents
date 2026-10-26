@@ -25,7 +25,7 @@ playwright-cli close
 
 ## User's Dia browser (logged-in sessions)
 
-Use when task needs user's cookies/logins. Agent sees only tabs in Dia's "Playwright" tab group, not user's other tabs. Env vars `PLAYWRIGHT_MCP_EXTENSION_TOKEN` and `PLAYWRIGHT_MCP_EXECUTABLE_PATH=~/.local/bin/dia-open` are set in shell rc (shim forwards URL to running Dia; no approval popup).
+Use when task needs user's cookies/logins. Agent sees only tabs in Dia's "Playwright" tab group, not user's other tabs. Env vars `PLAYWRIGHT_MCP_EXTENSION_TOKEN` and `PLAYWRIGHT_MCP_EXECUTABLE_PATH=~/.local/bin/dia-open` live in shell rc. The shim sends the URL to the running Dia, with no approval popup.
 
 ```bash
 # 1. attach: opens connect.html handshake tab = creates Playwright group
@@ -37,14 +37,18 @@ playwright-cli -s=chrome goto https://news.ycombinator.com
 playwright-cli -s=chrome snapshot
 ```
 
+- Agent shells are non-interactive and do not load the env vars. The error "Playwright Extension not found in .../Google/Chrome" shows that they are missing. Load them first (no print): `eval "$(rg '^export PLAYWRIGHT_MCP_' ~/dotsecrets/.zshenv.private)"; export PLAYWRIGHT_MCP_EXECUTABLE_PATH="${PLAYWRIGHT_MCP_EXECUTABLE_PATH:-$HOME/.local/bin/dia-open}"`.
 - Repeat steps 1-2 for each new attach (e.g. after "browser 'chrome' is not open").
-- Never print handshake tab URL (token leak); pipe `tab-list` through `sed -E 's/token=[^&)" ]+/token=REDACTED/g'`. Never close handshake tab.
-- Don't touch user tabs unless user drags them into the Playwright group.
-- `attach --cdp` hangs on Dia; don't use.
+- Never print handshake tab URL (token leak). The "current" tab can switch to the handshake tab without notice. So `eval "location.href"`, `page.url()`, and the `Page URL` line in any command output can leak it. Pipe every command output through `sed -E 's/token=[^&)" ]+/token=REDACTED/g'`. Never close handshake tab.
+- Do not touch user tabs unless user drags them into the Playwright group.
+- `attach --cdp` hangs on Dia. Do not use it.
 - `screenshot` writes 0-byte file in extension mode (cli 0.1.22). Use instead:
   `playwright-cli -s=chrome run-code "async page => { await page.screenshot({path: '/tmp/shot.png'}); return 'ok'; }"`
 - Session dies ("browser 'chrome' is not open") on pages where 1Password inline menu injects iframe (login/config forms): log shows `Cannot access a chrome-extension:// URL of different extension`. Fix: ask user to turn off 1Password for that site.
-- Debug: run with `DEBUG='pw:*'`; logs in `~/Library/Caches/ms-playwright/daemon/*/chrome.err`.
+- Dia keeps the agent tab in the background (`document.hidden` is true). Playwright `click`/`fill` then fail with "not stable" or "outside of the viewport". Use DOM actions in `eval`: `el.click()`, the native `HTMLInputElement` value setter plus an `input` event, and `focus` + an `ArrowDown` keydown to open a react-select.
+- `setInputFiles` times out in extension mode. To upload a file, build a `File` from base64 in `eval`, set `input.files` with a `DataTransfer`, and dispatch `change`.
+- Do not call `page.bringToFront()`. Some modals (for example, Discord "New Application") remove the tab from the group. If that occurs, ask the user to do the click.
+- Debug: run with `DEBUG='pw:*'`. Logs go to `~/Library/Caches/ms-playwright/daemon/*/chrome.err`.
 - Run from `/tmp` (or scratch dir): cli drops `.playwright-cli/` snapshots in cwd.
 
 ## Commands
@@ -203,7 +207,7 @@ playwright-cli highlight --hide
 
 ## Raw output
 
-The global `--raw` option strips page status, generated code, and snapshot sections from the output, returning only the result value. Use it to pipe command output into other tools. Commands that don't produce output return nothing.
+The global `--raw` option strips page status, generated code, and snapshot sections from the output, returning only the result value. Use it to pipe command output into other tools. Commands that do not produce output return nothing.
 
 ```bash
 playwright-cli --raw eval "JSON.stringify(performance.timing)" | jq '.loadEventEnd - .navigationStart'
