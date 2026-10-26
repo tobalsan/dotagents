@@ -7,19 +7,19 @@
 <title>Acme — Sidebar drag-to-reorder</title>
 <style>
   :root {
-    --ivory: #FAF9F5;
-    --slate: #141413;
-    --clay: #D97757;
-    --oat: #E3DACC;
-    --olive: #788C5D;
-    --gray-50: #F0EEE6;
-    --gray-200: #D1CFC5;
-    --gray-500: #87867F;
-    --gray-800: #3D3D3A;
+    --ivory: #FFFFFF;
+    --slate: #1D1D1F;
+    --clay: #1D1D1F;
+    --oat: #F5F5F7;
+    --olive: #1D1D1F;
+    --gray-50: #F5F5F7;
+    --gray-200: #D2D2D7;
+    --gray-500: #6E6E73;
+    --gray-800: #3D3D3F;
     --white: #ffffff;
-    --serif: ui-serif, Georgia, "Times New Roman", serif;
-    --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
-    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --serif: -apple-system, "SF Pro Display", BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    --sans: -apple-system, "SF Pro Text", BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    --mono: "SF Mono", ui-monospace, Menlo, monospace;
   }
   * { box-sizing: border-box; }
   html, body {
@@ -33,7 +33,7 @@
   .wrap {
     max-width: 1040px;
     margin: 0 auto;
-    padding: 48px 32px 64px;
+    padding: 96px 32px 96px;
   }
   header { margin-bottom: 28px; }
   .eyebrow {
@@ -45,9 +45,10 @@
   }
   h1 {
     font-family: var(--serif);
-    font-weight: 500;
-    font-size: 30px;
-    letter-spacing: -0.01em;
+    font-weight: 700;
+    font-size: 56px;
+    line-height: 1.05;
+    letter-spacing: -0.025em;
     margin: 6px 0 4px;
   }
   .sub {
@@ -58,7 +59,7 @@
     font-family: var(--mono);
     font-size: 12px;
     background: var(--gray-50);
-    border: 1.5px solid var(--gray-200);
+    border: 1px solid var(--gray-200);
     padding: 1px 5px;
     border-radius: 4px;
   }
@@ -75,8 +76,8 @@
   .sidebar {
     width: 260px;
     background: var(--white);
-    border: 1.5px solid var(--gray-200);
-    border-radius: 12px;
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
     padding: 14px 10px;
   }
   .sidebar-title {
@@ -166,13 +167,13 @@
   /* ---------- annotation panel ---------- */
   .notes {
     background: var(--white);
-    border: 1.5px solid var(--gray-200);
-    border-radius: 12px;
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
     padding: 22px 24px;
   }
   .notes h2 {
     font-family: var(--serif);
-    font-weight: 500;
+    font-weight: 700;
     font-size: 18px;
     margin: 0 0 6px;
   }
@@ -189,7 +190,7 @@
   .notes li {
     position: relative;
     padding: 10px 0 10px 22px;
-    border-top: 1.5px solid var(--gray-50);
+    border-top: 1px solid var(--gray-50);
     font-size: 13px;
     color: var(--gray-800);
   }
@@ -210,13 +211,13 @@
   .questions {
     margin-top: 28px;
     background: var(--oat);
-    border: 1.5px solid var(--gray-200);
-    border-radius: 12px;
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
     padding: 20px 24px;
   }
   .questions h2 {
     font-family: var(--serif);
-    font-weight: 500;
+    font-weight: 700;
     font-size: 17px;
     margin: 0 0 12px;
   }

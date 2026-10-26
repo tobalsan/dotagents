@@ -7,31 +7,31 @@
 <title>Acme — Design System Reference</title>
 <style>
   :root {
-    --ivory: #FAF9F5;
-    --slate: #141413;
-    --clay: #D97757;
-    --oat: #E3DACC;
-    --olive: #788C5D;
-    --gray-100: #F0EEE6;
-    --gray-300: #D1CFC5;
-    --gray-500: #87867F;
-    --gray-700: #3D3D3A;
+    --ivory: #FFFFFF;
+    --slate: #1D1D1F;
+    --clay: #000000;
+    --oat: #E8E8ED;
+    --olive: #515154;
+    --gray-100: #F5F5F7;
+    --gray-300: #D2D2D7;
+    --gray-500: #6E6E73;
+    --gray-700: #3D3D3F;
     --white: #FFFFFF;
 
-    --serif: ui-serif, Georgia, serif;
-    --sans: system-ui, -apple-system, sans-serif;
-    --mono: ui-monospace, 'SF Mono', Menlo, monospace;
+    --serif: -apple-system, "SF Pro Display", BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    --sans: -apple-system, "SF Pro Text", BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, monospace;
 
-    --radius-panel: 12px;
+    --radius-panel: 8px;
     --radius-row: 8px;
-    --border: 1.5px solid var(--gray-300);
+    --border: 1px solid var(--gray-300);
   }
 
   * { box-sizing: border-box; }
 
   body {
     margin: 0;
-    padding: 56px 24px 96px;
+    padding: 96px 32px 140px;
     background: var(--ivory);
     color: var(--slate);
     font-family: var(--sans);
@@ -47,9 +47,10 @@
 
   header h1 {
     font-family: var(--serif);
-    font-weight: 500;
-    font-size: 40px;
-    letter-spacing: -0.01em;
+    font-weight: 700;
+    font-size: 56px;
+    line-height: 1.05;
+    letter-spacing: -0.025em;
     margin: 0 0 6px;
   }
 
@@ -70,14 +71,14 @@
 
   h2 {
     font-family: var(--serif);
-    font-weight: 500;
-    font-size: 26px;
+    font-weight: 700;
+    font-size: 32px;
     margin: 0 0 8px;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
   }
   hr.rule {
     border: none;
-    border-top: 1px solid var(--gray-300);
+    border-top: 1px solid var(--slate);
     margin: 0 0 28px;
   }
 
@@ -157,9 +158,9 @@
     margin-bottom: 2px;
   }
 
-  .t-display  { font-family: var(--serif); font-size: 48px; line-height: 1.1;  font-weight: 500; letter-spacing: -0.02em; }
-  .t-h1       { font-family: var(--serif); font-size: 32px; line-height: 1.2;  font-weight: 500; letter-spacing: -0.01em; }
-  .t-h2       { font-family: var(--serif); font-size: 24px; line-height: 1.3;  font-weight: 500; }
+  .t-display  { font-family: var(--serif); font-size: 48px; line-height: 1.1;  font-weight: 700; letter-spacing: -0.02em; }
+  .t-h1       { font-family: var(--serif); font-size: 32px; line-height: 1.2;  font-weight: 700; letter-spacing: -0.02em; }
+  .t-h2       { font-family: var(--serif); font-size: 24px; line-height: 1.3;  font-weight: 700; }
   .t-body     { font-family: var(--sans);  font-size: 16px; line-height: 1.55; font-weight: 430; }
   .t-small    { font-family: var(--sans);  font-size: 14px; line-height: 1.5;  font-weight: 430; }
   .t-caption  { font-family: var(--sans);  font-size: 12px; line-height: 1.4;  font-weight: 500; color: var(--gray-500); }
@@ -274,13 +275,13 @@
     transition: background 0.12s ease, border-color 0.12s ease;
   }
   .btn-primary   { background: var(--clay); color: var(--white); }
-  .btn-primary:hover { background: #C7684C; }
+  .btn-primary:hover { background: #333336; }
   .btn-secondary { background: var(--white); color: var(--slate); border-color: var(--gray-300); }
   .btn-secondary:hover { background: var(--gray-100); }
   .btn-ghost     { background: transparent; color: var(--gray-700); }
   .btn-ghost:hover { background: var(--gray-100); }
-  .btn-danger    { background: #B04A4A; color: var(--white); }
-  .btn-danger:hover { background: #9A3F3F; }
+  .btn-danger    { background: var(--white); color: var(--slate); border-color: var(--slate); border-style: dashed; }
+  .btn-danger:hover { background: var(--gray-100); }
 
   /* Input */
   .input {
@@ -299,7 +300,7 @@
   .input::placeholder { color: var(--gray-500); }
   .input:focus {
     border-color: var(--clay);
-    box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.15);
+    box-shadow: none;
   }
 
   /* Checkbox */
@@ -347,10 +348,11 @@
     font-weight: 500;
     border-radius: 999px;
   }
-  .badge-neutral { background: var(--gray-100); color: var(--gray-700); }
-  .badge-accent  { background: rgba(217, 119, 87, 0.14); color: var(--clay); }
-  .badge-success { background: rgba(120, 140, 93, 0.16); color: var(--olive); }
-  .badge-warning { background: rgba(199, 142, 63, 0.16); color: #A06A2A; }
+  .badge { border: 1px solid var(--slate); background: var(--white); color: var(--slate); }
+  .badge-neutral { border-color: var(--gray-300); color: var(--gray-500); }
+  .badge-accent  { border-style: solid; }
+  .badge-success { background: var(--slate); color: var(--white); }
+  .badge-warning { border-style: dashed; }
 </style>
 </head>
 <body>
@@ -372,23 +374,23 @@
       <div class="swatch-group-label">Primary</div>
       <div class="swatch-grid">
         <div class="swatch">
-          <div class="chip no-border" style="background:#D97757"></div>
-          <span class="hex">#D97757</span>
+          <div class="chip no-border" style="background:#000000"></div>
+          <span class="hex">#000000</span>
           <span class="token">--clay</span>
         </div>
         <div class="swatch">
-          <div class="chip no-border" style="background:#141413"></div>
-          <span class="hex">#141413</span>
+          <div class="chip no-border" style="background:#1D1D1F"></div>
+          <span class="hex">#1D1D1F</span>
           <span class="token">--slate</span>
         </div>
         <div class="swatch">
-          <div class="chip" style="background:#FAF9F5"></div>
-          <span class="hex">#FAF9F5</span>
+          <div class="chip" style="background:#FFFFFF"></div>
+          <span class="hex">#FFFFFF</span>
           <span class="token">--ivory</span>
         </div>
         <div class="swatch">
-          <div class="chip no-border" style="background:#E3DACC"></div>
-          <span class="hex">#E3DACC</span>
+          <div class="chip no-border" style="background:#E8E8ED"></div>
+          <span class="hex">#E8E8ED</span>
           <span class="token">--oat</span>
         </div>
       </div>
@@ -403,23 +405,23 @@
           <span class="token">--white</span>
         </div>
         <div class="swatch">
-          <div class="chip" style="background:#F0EEE6"></div>
-          <span class="hex">#F0EEE6</span>
+          <div class="chip" style="background:#F5F5F7"></div>
+          <span class="hex">#F5F5F7</span>
           <span class="token">--gray-100</span>
         </div>
         <div class="swatch">
-          <div class="chip no-border" style="background:#D1CFC5"></div>
-          <span class="hex">#D1CFC5</span>
+          <div class="chip no-border" style="background:#D2D2D7"></div>
+          <span class="hex">#D2D2D7</span>
           <span class="token">--gray-300</span>
         </div>
         <div class="swatch">
-          <div class="chip no-border" style="background:#87867F"></div>
-          <span class="hex">#87867F</span>
+          <div class="chip no-border" style="background:#6E6E73"></div>
+          <span class="hex">#6E6E73</span>
           <span class="token">--gray-500</span>
         </div>
         <div class="swatch">
-          <div class="chip no-border" style="background:#3D3D3A"></div>
-          <span class="hex">#3D3D3A</span>
+          <div class="chip no-border" style="background:#3D3D3F"></div>
+          <span class="hex">#3D3D3F</span>
           <span class="token">--gray-700</span>
         </div>
       </div>
@@ -429,23 +431,23 @@
       <div class="swatch-group-label">Semantic</div>
       <div class="swatch-grid">
         <div class="swatch">
-          <div class="chip no-border" style="background:#788C5D"></div>
-          <span class="hex">#788C5D</span>
+          <div class="chip no-border" style="background:#515154"></div>
+          <span class="hex">#515154</span>
           <span class="token">--success</span>
         </div>
         <div class="swatch">
-          <div class="chip no-border" style="background:#C78E3F"></div>
-          <span class="hex">#C78E3F</span>
+          <div class="chip no-border" style="background:#86868B"></div>
+          <span class="hex">#86868B</span>
           <span class="token">--warning</span>
         </div>
         <div class="swatch">
-          <div class="chip no-border" style="background:#B04A4A"></div>
-          <span class="hex">#B04A4A</span>
+          <div class="chip no-border" style="background:#1D1D1F"></div>
+          <span class="hex">#1D1D1F</span>
           <span class="token">--danger</span>
         </div>
         <div class="swatch">
-          <div class="chip no-border" style="background:#5C7CA3"></div>
-          <span class="hex">#5C7CA3</span>
+          <div class="chip no-border" style="background:#AEAEB2"></div>
+          <span class="hex">#AEAEB2</span>
           <span class="token">--info</span>
         </div>
       </div>
@@ -565,13 +567,13 @@
     </div>
 
     <div class="token-row">
-      <div class="shadow-card" style="box-shadow:0 1px 2px rgba(20,20,19,0.06)">
+      <div class="shadow-card" style="box-shadow:none;border:1px solid #D2D2D7">
         <div class="lbl">--shadow-sm<span>0 1px 2px / 6%</span></div>
       </div>
-      <div class="shadow-card" style="box-shadow:0 4px 10px rgba(20,20,19,0.08)">
+      <div class="shadow-card" style="box-shadow:none;border:1px solid #AEAEB2">
         <div class="lbl">--shadow-md<span>0 4px 10px / 8%</span></div>
       </div>
-      <div class="shadow-card" style="box-shadow:0 12px 28px rgba(20,20,19,0.12)">
+      <div class="shadow-card" style="box-shadow:none;border:1px solid #6E6E73">
         <div class="lbl">--shadow-lg<span>0 12px 28px / 12%</span></div>
       </div>
     </div>

@@ -7,19 +7,19 @@
 <title>Deploy pipeline — annotated flowchart</title>
 <style>
   :root {
-    --ivory:   #FAF9F5;
-    --slate:   #141413;
-    --clay:    #D97757;
-    --oat:     #E3DACC;
-    --olive:   #788C5D;
-    --rust:    #B04A3F;
-    --gray-150:#F0EEE6;
-    --gray-300:#D1CFC5;
-    --gray-500:#87867F;
-    --gray-700:#3D3D3A;
-    --serif: ui-serif, Georgia, "Times New Roman", serif;
-    --sans:  system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    --mono:  ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --ivory:   #ffffff;
+    --slate:   #1d1d1f;
+    --clay:    #1d1d1f;
+    --oat:     #d2d2d7;
+    --olive:   #1d1d1f;
+    --rust:    #1d1d1f;
+    --gray-150:#f5f5f7;
+    --gray-300:#d2d2d7;
+    --gray-500:#6e6e73;
+    --gray-700:#1d1d1f;
+    --serif: -apple-system, "SF Pro Display", BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    --sans:  -apple-system, "SF Pro Text", BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    --mono:  "SF Mono", ui-monospace, Menlo, monospace;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -42,15 +42,16 @@
   }
   h1 {
     font-family: var(--serif);
-    font-weight: 500;
-    font-size: 34px;
-    letter-spacing: -0.01em;
+    font-weight: 700;
+    font-size: 52px;
+    line-height: 1.05;
+    letter-spacing: -0.025em;
     margin-bottom: 12px;
   }
   .lead {
-    font-size: 14.5px;
-    line-height: 1.6;
-    color: var(--gray-700);
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--gray-500);
     max-width: 640px;
   }
   .lead code { font-family: var(--mono); font-size: 13px; }
@@ -66,8 +67,8 @@
 
   /* ── chart ────────────────────────────── */
   .canvas {
-    border: 1.5px solid var(--gray-300);
-    border-radius: 14px;
+    border: 1px solid var(--gray-300);
+    border-radius: 8px;
     background: #fff;
     padding: 28px;
     overflow-x: auto;
@@ -86,24 +87,24 @@
   .node rect       { fill: #fff; stroke: var(--gray-300); stroke-width: 1.5; rx: 8; }
   .node.term rect  { fill: var(--gray-150); rx: 22; }
   .node.gate path  { fill: #fff; stroke: var(--gray-300); stroke-width: 1.5; }
-  .node.ok rect    { fill: rgba(120,140,93,0.12); stroke: var(--olive); }
-  .node.bad rect   { fill: rgba(176,74,63,0.10); stroke: var(--rust); }
+  .node.ok rect    { fill: var(--gray-150); stroke: var(--slate); }
+  .node.bad rect   { fill: #fff; stroke: var(--slate); stroke-dasharray: 4 3; }
 
   .node { cursor: pointer; transition: transform 120ms ease; }
   .node:hover { transform: translateY(-1px); }
   .node.active rect,
-  .node.active path { stroke: var(--clay); stroke-width: 2; }
+  .node.active path { stroke: var(--slate); stroke-width: 2.5; stroke-dasharray: none; }
 
   .edge       { stroke: var(--gray-500); stroke-width: 1.5; fill: none; marker-end: url(#arrow); }
-  .edge.no    { stroke: var(--rust); stroke-dasharray: 4 4; marker-end: url(#arrow-rust); }
-  .edge.yes   { stroke: var(--olive); marker-end: url(#arrow-olive); }
+  .edge.no    { stroke: var(--slate); stroke-dasharray: 4 4; marker-end: url(#arrow-rust); }
+  .edge.yes   { stroke: var(--slate); stroke-width: 2; marker-end: url(#arrow-olive); }
 
   /* ── side panel ───────────────────────── */
   aside {
     position: sticky;
     top: 24px;
-    border: 1.5px solid var(--gray-300);
-    border-radius: 14px;
+    border: 1px solid var(--gray-300);
+    border-radius: 8px;
     background: #fff;
     padding: 20px 20px 22px;
   }
@@ -114,8 +115,9 @@
   }
   aside h3 {
     font-family: var(--serif);
-    font-weight: 500;
-    font-size: 19px;
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: -0.02em;
     margin-bottom: 6px;
   }
   aside .meta {
@@ -154,8 +156,8 @@
   .legend span { display: inline-flex; align-items: center; gap: 8px; }
   .chip { width: 22px; height: 14px; border: 1.5px solid var(--gray-300); border-radius: 4px; background: #fff; }
   .chip.gate { transform: rotate(45deg); width: 12px; height: 12px; border-radius: 2px; }
-  .chip.ok   { background: rgba(120,140,93,0.12); border-color: var(--olive); }
-  .chip.bad  { background: rgba(176,74,63,0.10); border-color: var(--rust); }
+  .chip.ok   { background: var(--gray-150); border-color: var(--slate); }
+  .chip.bad  { background: #fff; border-color: var(--slate); border-style: dashed; }
 </style>
 </head>
 <body>
@@ -177,13 +179,13 @@
         <svg class="flow" viewBox="0 0 620 920">
           <defs>
             <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-              <path d="M0,0 L10,5 L0,10 z" fill="#87867F"/>
+              <path d="M0,0 L10,5 L0,10 z" fill="#6e6e73"/>
             </marker>
             <marker id="arrow-rust" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-              <path d="M0,0 L10,5 L0,10 z" fill="#B04A3F"/>
+              <path d="M0,0 L10,5 L0,10 z" fill="#1d1d1f"/>
             </marker>
             <marker id="arrow-olive" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-              <path d="M0,0 L10,5 L0,10 z" fill="#788C5D"/>
+              <path d="M0,0 L10,5 L0,10 z" fill="#1d1d1f"/>
             </marker>
           </defs>
 
@@ -194,13 +196,13 @@
           <path class="edge yes" d="M310,326 L310,368"/>
           <text class="lbl" x="320" y="350">pass</text>
           <path class="edge no" d="M268,294 C190,294 150,294 150,212 L150,212"/>
-          <text class="lbl" x="138" y="260" fill="#B04A3F">fail → status</text>
+          <text class="lbl" x="138" y="260" fill="#1d1d1f">fail → status</text>
           <path class="edge" d="M310,416 L310,452"/>
           <path class="edge" d="M310,500 L310,538"/>
           <path class="edge yes" d="M310,602 L310,644"/>
           <text class="lbl" x="320" y="626">healthy</text>
           <path class="edge no" d="M352,570 C470,570 470,690 392,720"/>
-          <text class="lbl" x="448" y="636" fill="#B04A3F">canary fails</text>
+          <text class="lbl" x="448" y="636" fill="#1d1d1f">canary fails</text>
           <path class="edge" d="M310,692 L310,730"/>
           <path class="edge" d="M310,778 L310,816"/>
 
@@ -270,7 +272,7 @@
 
           <g class="node ok term" data-k="done">
             <rect x="230" y="816" width="160" height="44"/>
-            <text x="310" y="843" text-anchor="middle">✅ Deploy complete</text>
+            <text x="310" y="843" text-anchor="middle">✓ Deploy complete</text>
           </g>
         </svg>
       </div>

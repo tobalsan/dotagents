@@ -7,19 +7,19 @@
 <title>Acme — Task completed micro-interaction</title>
 <style>
   :root {
-    --ivory: #FAF9F5;
-    --slate: #141413;
-    --clay: #D97757;
-    --oat: #E3DACC;
-    --olive: #788C5D;
-    --gray-50: #F0EEE6;
-    --gray-200: #D1CFC5;
-    --gray-500: #87867F;
-    --gray-800: #3D3D3A;
+    --ivory: #FFFFFF;
+    --slate: #1D1D1F;
+    --clay: #6E6E73;
+    --oat: #D2D2D7;
+    --olive: #1D1D1F;
+    --gray-50: #F5F5F7;
+    --gray-200: #D2D2D7;
+    --gray-500: #6E6E73;
+    --gray-800: #3D3D3F;
     --white: #ffffff;
-    --serif: ui-serif, Georgia, "Times New Roman", serif;
-    --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
-    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --serif: -apple-system, "SF Pro Display", BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    --sans: -apple-system, "SF Pro Text", BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    --mono: "SF Mono", ui-monospace, Menlo, monospace;
     /* swapped at runtime by the easing panel */
     --ease: cubic-bezier(0.34, 1.56, 0.64, 1);
   }
@@ -35,7 +35,7 @@
   .wrap {
     max-width: 1080px;
     margin: 0 auto;
-    padding: 48px 32px 64px;
+    padding: 96px 32px 96px;
   }
   header { margin-bottom: 28px; }
   .eyebrow {
@@ -47,9 +47,10 @@
   }
   h1 {
     font-family: var(--serif);
-    font-weight: 500;
-    font-size: 30px;
-    letter-spacing: -0.01em;
+    font-weight: 700;
+    font-size: 56px;
+    line-height: 1.05;
+    letter-spacing: -0.025em;
     margin: 6px 0 4px;
   }
   .sub {
@@ -66,8 +67,8 @@
   }
   .stage {
     background: var(--white);
-    border: 1.5px solid var(--gray-200);
-    border-radius: 12px;
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
     height: 360px;
     display: flex;
     align-items: center;
@@ -91,7 +92,7 @@
     align-items: center;
     gap: 14px;
     padding: 14px 18px;
-    border: 1.5px solid var(--gray-200);
+    border: 1px solid var(--gray-200);
     border-radius: 8px;
     background: var(--white);
     width: 360px;
@@ -111,7 +112,7 @@
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    border: 1.5px solid var(--gray-500);
+    border: 1px solid var(--gray-500);
     background: var(--white);
     position: relative;
     transition: background 180ms var(--ease),
@@ -147,7 +148,7 @@
     position: absolute;
     left: 0;
     top: 52%;
-    height: 1.5px;
+    height: 1px;
     width: 0;
     background: var(--gray-500);
     transition: width 240ms var(--ease) 120ms;
@@ -159,7 +160,7 @@
     font-size: 11px;
     color: var(--gray-500);
     background: var(--gray-50);
-    border: 1.5px solid var(--gray-200);
+    border: 1px solid var(--gray-200);
     padding: 3px 8px;
     border-radius: 8px;
     transition: opacity 200ms var(--ease) 120ms;
@@ -176,11 +177,11 @@
     opacity: 0;
     pointer-events: none;
   }
-  .confetti.c1 { background: var(--clay);  }
-  .confetti.c2 { background: var(--olive); }
-  .confetti.c3 { background: var(--oat);   }
-  .confetti.c4 { background: var(--clay);  }
-  .confetti.c5 { background: var(--olive); }
+  .confetti.c1 { background: var(--slate); }
+  .confetti.c2 { background: var(--gray-500); }
+  .confetti.c3 { background: var(--gray-200); }
+  .confetti.c4 { background: var(--slate); }
+  .confetti.c5 { background: var(--gray-500); }
   .confetti.c6 { background: var(--gray-800); }
 
   /* ---------- done state ---------- */
@@ -221,13 +222,13 @@
   /* ---------- easing panel ---------- */
   .panel {
     background: var(--white);
-    border: 1.5px solid var(--gray-200);
-    border-radius: 12px;
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
     padding: 18px;
   }
   .panel h2 {
     font-family: var(--serif);
-    font-weight: 500;
+    font-weight: 700;
     font-size: 16px;
     margin: 0 0 4px;
   }
@@ -241,7 +242,7 @@
     width: 100%;
     text-align: left;
     background: var(--gray-50);
-    border: 1.5px solid var(--gray-200);
+    border: 1px solid var(--gray-200);
     border-radius: 8px;
     padding: 10px 12px;
     margin-bottom: 8px;
@@ -252,8 +253,8 @@
   }
   .ease-btn:hover { border-color: var(--gray-500); }
   .ease-btn.active {
-    border-color: var(--clay);
-    background: #FBF1EC;
+    border-color: var(--slate);
+    background: #F5F5F7;
   }
   .ease-btn code {
     display: block;
@@ -267,13 +268,13 @@
   .timeline {
     margin-top: 28px;
     background: var(--white);
-    border: 1.5px solid var(--gray-200);
-    border-radius: 12px;
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
     padding: 22px 22px 30px;
   }
   .timeline h2 {
     font-family: var(--serif);
-    font-weight: 500;
+    font-weight: 700;
     font-size: 16px;
     margin: 0 0 18px;
   }
@@ -290,8 +291,8 @@
     height: 12px;
     border-radius: 50%;
     background: var(--clay);
-    border: 1.5px solid var(--white);
-    box-shadow: 0 0 0 1.5px var(--clay);
+    border: 1px solid var(--white);
+    box-shadow: 0 0 0 1px var(--clay);
     transform: translateX(-50%);
   }
   .key span {
@@ -318,7 +319,7 @@
   .k2 { left: 13%;  }
   .k3 { left: 20%;  }
   .k4 { left: 33%;  }
-  .k5 { left: 100%; background: var(--olive); box-shadow: 0 0 0 1.5px var(--olive); }
+  .k5 { left: 100%; background: var(--olive); box-shadow: 0 0 0 1px var(--olive); }
 
   /* ---------- snippet ---------- */
   .snippet {
@@ -326,14 +327,14 @@
   }
   .snippet h2 {
     font-family: var(--serif);
-    font-weight: 500;
+    font-weight: 700;
     font-size: 16px;
     margin: 0 0 10px;
   }
   pre {
-    background: var(--gray-800);
-    color: var(--gray-50);
-    border-radius: 12px;
+    background: var(--gray-50);
+    color: var(--slate);
+    border-radius: 8px;
     padding: 18px 20px;
     font-family: var(--mono);
     font-size: 12px;
@@ -342,8 +343,8 @@
     margin: 0;
   }
   pre .c { color: var(--gray-500); }
-  pre .k { color: var(--clay); }
-  pre .v { color: #B8C99D; }
+  pre .k { color: var(--slate); font-weight: 700; }
+  pre .v { color: #6E6E73; }
 </style>
 </head>
 <body>
@@ -410,14 +411,14 @@
 
   <section class="snippet">
     <h2>Copy-paste CSS</h2>
-<pre><span class="c">/* circle: clay flash, settle to olive with spring overshoot */</span>
+<pre><span class="c">/* circle: gray flash, settle to ink with spring overshoot */</span>
 <span class="k">.task.done .check</span> {
   animation: settle 380ms <span class="v">cubic-bezier(.34,1.56,.64,1)</span> forwards;
 }
 <span class="k">@keyframes settle</span> {
-  0%   { transform: scale(.8);  background: <span class="v">#D97757</span>; }
+  0%   { transform: scale(.8);  background: <span class="v">#6E6E73</span>; }
   55%  { transform: scale(1.18); }
-  100% { transform: scale(1);   background: <span class="v">#788C5D</span>; }
+  100% { transform: scale(1);   background: <span class="v">#1D1D1F</span>; }
 }
 
 <span class="c">/* checkmark draws via stroke-dashoffset, 80ms delay */</span>

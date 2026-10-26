@@ -7,20 +7,20 @@
   <title>Empty state — four visual directions</title>
   <style>
     :root {
-      --ivory:    #FAF9F5;
-      --slate:    #141413;
-      --clay:     #D97757;
-      --oat:      #E3DACC;
-      --olive:    #788C5D;
-      --gray-150: #F0EEE6;
-      --gray-300: #D1CFC5;
-      --gray-500: #87867F;
-      --gray-700: #3D3D3A;
-      --white:    #FFFFFF;
+      --ivory:    #fff;
+      --slate:    #1d1d1f;
+      --clay:     #1d1d1f;
+      --oat:      #f5f5f7;
+      --olive:    #6e6e73;
+      --gray-150: #f5f5f7;
+      --gray-300: #d2d2d7;
+      --gray-500: #6e6e73;
+      --gray-700: #1d1d1f;
+      --white:    #fff;
 
-      --serif: ui-serif, Georgia, 'Times New Roman', serif;
-      --sans:  system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-      --mono:  ui-monospace, 'SF Mono', Menlo, Monaco, monospace;
+      --serif: -apple-system, "SF Pro Display", BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+      --sans:  -apple-system, "SF Pro Text", BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+      --mono:  "SF Mono", ui-monospace, Menlo, monospace;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -41,7 +41,7 @@
       top: 0;
       z-index: 10;
       background: var(--ivory);
-      border-bottom: 1.5px solid var(--gray-300);
+      border-bottom: 1px solid var(--gray-300);
       padding: 14px 32px;
       display: flex;
       align-items: center;
@@ -70,7 +70,7 @@
 
     .seg {
       display: inline-flex;
-      border: 1.5px solid var(--gray-300);
+      border: 1px solid var(--gray-300);
       border-radius: 8px;
       overflow: hidden;
       background: var(--white);
@@ -85,7 +85,7 @@
     }
 
     .seg label + label {
-      border-left: 1.5px solid var(--gray-300);
+      border-left: 1px solid var(--gray-300);
     }
 
     .seg input { display: none; }
@@ -104,7 +104,7 @@
     .page {
       max-width: 1240px;
       margin: 0 auto;
-      padding: 48px 32px 0;
+      padding: 72px 32px 0;
     }
 
     header.page-head {
@@ -122,18 +122,18 @@
 
     h1 {
       font-family: var(--serif);
-      font-weight: 500;
-      font-size: 38px;
-      line-height: 1.15;
+      font-weight: 700;
+      font-size: 52px;
+      line-height: 1.05;
       color: var(--slate);
-      margin-bottom: 18px;
-      letter-spacing: -0.01em;
+      margin-bottom: 24px;
+      letter-spacing: -0.025em;
     }
 
     .prompt-box {
       background: var(--gray-150);
-      border: 1.5px solid var(--gray-300);
-      border-radius: 12px;
+      border: 1px solid var(--gray-300);
+      border-radius: 8px;
       padding: 16px 20px;
       font-size: 14.5px;
     }
@@ -162,8 +162,8 @@
 
     .artboard {
       background: var(--white);
-      border: 1.5px solid var(--gray-300);
-      border-radius: 12px;
+      border: 1px solid var(--gray-300);
+      border-radius: 8px;
       padding: 20px;
       position: relative;
     }
@@ -175,17 +175,18 @@
       font-family: var(--mono);
       font-size: 11px;
       letter-spacing: 0.02em;
-      background: var(--oat);
+      background: var(--white);
       color: var(--slate);
-      padding: 4px 10px;
-      border-radius: 8px;
+      border: 1px solid var(--slate);
+      padding: 3px 10px;
+      border-radius: 999px;
       z-index: 2;
     }
 
     .stage {
       height: 280px;
       border-radius: 8px;
-      border: 1.5px solid var(--gray-300);
+      border: 1px solid var(--gray-300);
       background: var(--ivory);
       display: flex;
       align-items: center;
@@ -198,6 +199,8 @@
     .stage.dark {
       background: var(--slate);
       border-color: var(--slate);
+      --clay: #f5f5f7;
+      --inv: #1d1d1f;
     }
 
     .rationale {
@@ -212,8 +215,8 @@
        Theme tokens flip when .stage.dark is present.
        ========================================================= */
 
-    .stage        { --fg: var(--slate); --muted: var(--gray-500); --line: var(--gray-300); --panel: var(--white); }
-    .stage.dark   { --fg: #F0EEE6;      --muted: #9C9A93;         --line: #3D3D3A;         --panel: #1F1E1B;     }
+    .stage        { --inv: #fff; --fg: var(--slate); --muted: var(--gray-500); --line: var(--gray-300); --panel: var(--white); }
+    .stage.dark   { --fg: #f5f5f7;      --muted: #a1a1a6;         --line: #424245;         --panel: #2a2a2d;     }
 
     /* ---- A · Minimal ---- */
 
@@ -223,7 +226,8 @@
     }
     .es-a h3 {
       font-family: var(--serif);
-      font-weight: 500;
+      font-weight: 700;
+      letter-spacing: -0.02em;
       font-size: 19px;
       color: var(--fg);
       margin-bottom: 6px;
@@ -237,7 +241,7 @@
       display: inline-block;
       font-size: 13px;
       color: var(--fg);
-      border: 1.5px solid var(--line);
+      border: 1px solid var(--line);
       border-radius: 8px;
       padding: 8px 16px;
       background: transparent;
@@ -255,7 +259,8 @@
     }
     .es-b h3 {
       font-family: var(--serif);
-      font-weight: 500;
+      font-weight: 700;
+      letter-spacing: -0.02em;
       font-size: 19px;
       color: var(--fg);
       margin-bottom: 6px;
@@ -294,7 +299,7 @@
       inset: 0;
       border-radius: 10px;
       background: var(--panel);
-      border: 1.5px solid var(--line);
+      border: 1px solid var(--line);
     }
     .es-c .float .card:nth-child(1) { transform: rotate(-8deg) translate(-6px, 4px); opacity: 0.5; }
     .es-c .float .card:nth-child(2) { transform: rotate( 6deg) translate( 6px, 2px); opacity: 0.75; }
@@ -305,14 +310,14 @@
       height: 8px;
       margin: -8px auto 22px;
       border-radius: 50%;
-      background: rgba(0,0,0,0.12);
-      filter: blur(2px);
+      background: #d2d2d7;
       animation: shadow 3.2s ease-in-out infinite;
     }
-    .stage.dark .es-c .shadow { background: rgba(0,0,0,0.5); }
+    .stage.dark .es-c .shadow { background: #424245; }
     .es-c h3 {
       font-family: var(--serif);
-      font-weight: 500;
+      font-weight: 700;
+      letter-spacing: -0.02em;
       font-size: 19px;
       color: var(--fg);
       margin-bottom: 6px;
@@ -339,7 +344,8 @@
     }
     .es-d h3 {
       font-family: var(--serif);
-      font-weight: 500;
+      font-weight: 700;
+      letter-spacing: -0.02em;
       font-size: 18px;
       color: var(--fg);
       margin-bottom: 14px;
@@ -357,7 +363,7 @@
       align-items: flex-start;
       gap: 12px;
       background: var(--panel);
-      border: 1.5px solid var(--line);
+      border: 1px solid var(--line);
       border-radius: 8px;
       padding: 10px 14px;
       font-size: 13px;
@@ -440,7 +446,7 @@
                     stroke="var(--slate)" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
               <circle cx="98" cy="60" r="12" fill="var(--clay)"/>
               <path d="M98 55 v10 M93 60 h10"
-                    stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    stroke="var(--inv)" stroke-width="2" stroke-linecap="round"/>
             </svg>
             <h3>Start your first list</h3>
             <p>Group related work and watch progress roll up automatically.</p>

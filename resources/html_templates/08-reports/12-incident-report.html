@@ -7,25 +7,25 @@
 <title>INC-2025-0412 — Elevated 502s on task sync</title>
 <style>
   :root {
-    --ivory: #FAF9F5;
-    --slate: #141413;
-    --clay: #D97757;
-    --oat: #E3DACC;
-    --olive: #788C5D;
-    --rust: #B04A3F;
-    --gray-100: #F0EEE6;
-    --gray-300: #D1CFC5;
-    --gray-500: #87867F;
-    --gray-700: #3D3D3A;
-    --white: #FFFFFF;
+    --ivory: #fff;
+    --slate: #1d1d1f;
+    --clay: #1d1d1f;
+    --oat: #d2d2d7;
+    --olive: #6e6e73;
+    --rust: #1d1d1f;
+    --gray-100: #f5f5f7;
+    --gray-300: #d2d2d7;
+    --gray-500: #6e6e73;
+    --gray-700: #1d1d1f;
+    --white: #fff;
 
-    --serif: ui-serif, Georgia, serif;
-    --sans: system-ui, -apple-system, sans-serif;
-    --mono: ui-monospace, 'SF Mono', Menlo, monospace;
+    --serif: -apple-system, "SF Pro Display", BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    --sans: -apple-system, "SF Pro Text", BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    --mono: "SF Mono", ui-monospace, Menlo, monospace;
 
-    --radius-panel: 12px;
-    --radius-row: 8px;
-    --border: 1.5px solid var(--gray-300);
+    --radius-panel: 8px;
+    --radius-row: 6px;
+    --border: 1px solid var(--gray-300);
   }
 
   * { box-sizing: border-box; }
@@ -61,9 +61,9 @@
   }
   h1 {
     font-family: var(--serif);
-    font-weight: 500;
-    font-size: 36px;
-    letter-spacing: -0.01em;
+    font-weight: 700;
+    font-size: 52px;
+    letter-spacing: -0.025em;
     margin: 0 0 18px;
     line-height: 1.2;
   }
@@ -89,17 +89,19 @@
     opacity: 0.75;
   }
   .pill.sev {
-    background: var(--clay);
+    background: var(--slate);
     color: var(--white);
+    border: 1px solid var(--slate);
     letter-spacing: 0.03em;
   }
   .pill.resolved {
-    background: var(--olive);
-    color: var(--white);
+    background: var(--white);
+    color: var(--slate);
+    border: 1px solid var(--slate);
   }
   .pill.neutral {
-    background: var(--gray-100);
-    color: var(--gray-700);
+    background: var(--white);
+    color: var(--gray-500);
     border: var(--border);
   }
   .pill.neutral .v {
@@ -108,8 +110,8 @@
 
   /* ---------- TL;DR ---------- */
   .tldr {
-    background: var(--slate);
-    color: var(--ivory);
+    background: var(--gray-100);
+    color: var(--slate);
     border-radius: var(--radius-panel);
     padding: 22px 26px;
     margin-bottom: 48px;
@@ -119,7 +121,7 @@
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: var(--oat);
+    color: var(--gray-500);
     margin-bottom: 10px;
   }
   .tldr p {
@@ -130,7 +132,7 @@
   .tldr code {
     font-family: var(--mono);
     font-size: 13.5px;
-    background: rgba(250, 249, 245, 0.12);
+    background: var(--white);
     padding: 1px 5px;
     border-radius: 4px;
   }
@@ -142,14 +144,14 @@
   }
   h2 {
     font-family: var(--serif);
-    font-weight: 500;
-    font-size: 24px;
-    letter-spacing: -0.01em;
+    font-weight: 700;
+    font-size: 28px;
+    letter-spacing: -0.02em;
     margin: 0 0 6px;
   }
   hr.rule {
     border: none;
-    border-top: 1px solid var(--gray-300);
+    border-top: 1px solid var(--slate);
     margin: 0 0 22px;
   }
   p { margin: 0 0 14px; }
@@ -193,8 +195,8 @@
     border: 2px solid var(--ivory);
     box-sizing: content-box;
   }
-  .tl-dot.impact { background: var(--clay); }
-  .tl-dot.mitigated { background: var(--olive); }
+  .tl-dot.impact { background: var(--slate); }
+  .tl-dot.mitigated { background: var(--white); border-color: var(--slate); }
   .tl-time {
     display: inline-block;
     font-family: var(--mono);
@@ -217,8 +219,8 @@
 
   /* ---------- Code diff ---------- */
   .code-panel {
-    background: var(--slate);
-    color: var(--gray-100);
+    background: var(--gray-100);
+    color: var(--slate);
     border-radius: var(--radius-panel);
     padding: 18px 20px;
     font-family: var(--mono);
@@ -234,9 +236,9 @@
     display: block;
   }
   .diff-line { white-space: pre; }
-  .diff-line.ctx { color: var(--gray-300); }
-  .diff-line.del { color: #E0897A; }
-  .diff-line.add { color: #A3B88A; }
+  .diff-line.ctx { color: var(--gray-500); }
+  .diff-line.del { color: var(--gray-500); text-decoration: line-through; }
+  .diff-line.add { color: var(--slate); font-weight: 700; }
 
   /* ---------- Impact table ---------- */
   table.impact {
@@ -245,8 +247,9 @@
     border-collapse: separate;
     border-spacing: 0;
     background: var(--white);
-    border: var(--border);
-    border-radius: var(--radius-panel);
+    border: none;
+    border-top: 1px solid var(--slate);
+    border-radius: 0;
     overflow: hidden;
   }
   table.impact th,
@@ -254,7 +257,7 @@
     text-align: left;
     padding: 12px 18px;
     font-size: 14px;
-    border-bottom: 1px solid var(--gray-100);
+    border-bottom: 1px solid var(--gray-300);
   }
   table.impact tr:last-child th,
   table.impact tr:last-child td {
@@ -273,8 +276,9 @@
   /* ---------- Action items ---------- */
   .actions {
     background: var(--white);
-    border: var(--border);
-    border-radius: var(--radius-panel);
+    border: none;
+    border-top: 1px solid var(--slate);
+    border-radius: 0;
     overflow: hidden;
   }
   .ai-row {
@@ -283,20 +287,20 @@
     align-items: center;
     gap: 14px;
     padding: 14px 18px;
-    border-bottom: 1px solid var(--gray-100);
+    border-bottom: 1px solid var(--gray-300);
   }
   .ai-row:last-child { border-bottom: none; }
   .ai-check {
     width: 18px;
     height: 18px;
-    border: 1.5px solid var(--gray-300);
+    border: 1.5px solid var(--gray-500);
     border-radius: 5px;
     background: var(--white);
     position: relative;
   }
   .ai-row.done .ai-check {
-    background: var(--olive);
-    border-color: var(--olive);
+    background: var(--slate);
+    border-color: var(--slate);
   }
   .ai-row.done .ai-check::after {
     content: "";
@@ -318,8 +322,8 @@
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    background: var(--oat);
-    color: var(--gray-700);
+    background: var(--gray-100);
+    color: var(--slate);
     font-size: 11px;
     font-weight: 600;
     display: flex;
@@ -369,7 +373,7 @@
     }
     .toc a:hover {
       color: var(--slate);
-      border-left-color: var(--clay);
+      border-left-color: var(--slate);
     }
   }
 

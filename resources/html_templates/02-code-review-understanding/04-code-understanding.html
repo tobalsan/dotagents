@@ -7,19 +7,19 @@
 <title>How authentication flows through acme/web</title>
 <style>
   :root {
-    --ivory: #FAF9F5;
-    --slate: #141413;
-    --clay: #D97757;
-    --oat: #E3DACC;
-    --olive: #788C5D;
-    --rust: #B04A3F;
-    --gray-150: #F0EEE6;
-    --gray-300: #D1CFC5;
-    --gray-500: #87867F;
-    --gray-700: #3D3D3A;
-    --serif: ui-serif, Georgia, 'Times New Roman', serif;
-    --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-    --mono: ui-monospace, 'SF Mono', Menlo, Monaco, monospace;
+    --ivory: #fff;
+    --slate: #1d1d1f;
+    --clay: #1d1d1f;
+    --oat: #f5f5f7;
+    --olive: #6e6e73;
+    --rust: #6e6e73;
+    --gray-150: #f5f5f7;
+    --gray-300: #d2d2d7;
+    --gray-500: #6e6e73;
+    --gray-700: #1d1d1f;
+    --serif: -apple-system, "SF Pro Display", BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    --sans: -apple-system, "SF Pro Text", BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    --mono: "SF Mono", ui-monospace, Menlo, monospace;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -30,7 +30,7 @@
     font-family: var(--sans);
     font-size: 15px;
     line-height: 1.65;
-    padding: 48px 24px 80px;
+    padding: 80px 24px 100px;
   }
 
   .page {
@@ -60,11 +60,12 @@
 
   h1 {
     font-family: var(--serif);
-    font-weight: 500;
-    font-size: 32px;
-    line-height: 1.25;
+    font-weight: 700;
+    font-size: 48px;
+    line-height: 1.08;
+    letter-spacing: -0.025em;
     color: var(--slate);
-    margin-bottom: 16px;
+    margin-bottom: 20px;
   }
 
   .summary {
@@ -75,16 +76,17 @@
 
   h2 {
     font-family: var(--serif);
-    font-weight: 500;
-    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-size: 28px;
     color: var(--slate);
-    margin: 36px 0 16px;
+    margin: 48px 0 18px;
   }
 
   /* ---------- Diagram ---------- */
   .diagram-panel {
-    border: 1.5px solid var(--gray-300);
-    border-radius: 12px;
+    border: 1px solid var(--gray-300);
+    border-radius: 8px;
     background: #fff;
     padding: 20px;
     overflow-x: auto;
@@ -98,7 +100,7 @@
   }
   .flow .sub { font-size: 10px; fill: var(--gray-500); }
   .flow .box { fill: #fff; stroke: var(--gray-300); stroke-width: 1.5; }
-  .flow .box.hot { fill: rgba(217,119,87,0.10); stroke: var(--clay); }
+  .flow .box.hot { fill: #f5f5f7; stroke: #1d1d1f; stroke-width: 2.5; }
   .flow .arrow { stroke: var(--gray-500); stroke-width: 1.5; fill: none; }
 
   /* ---------- Walkthrough ---------- */
@@ -107,7 +109,7 @@
     grid-template-columns: 44px 1fr;
     gap: 18px;
     padding: 20px 0;
-    border-bottom: 1.5px solid var(--gray-150);
+    border-bottom: 1px solid var(--gray-300);
   }
   .step:last-of-type { border-bottom: none; }
 
@@ -115,8 +117,8 @@
     width: 34px;
     height: 34px;
     border-radius: 50%;
-    background: var(--oat);
-    border: 1.5px solid var(--gray-300);
+    background: #fff;
+    border: 1px solid var(--gray-300);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -126,9 +128,9 @@
     font-size: 14px;
   }
   .step.hot .badge {
-    background: rgba(217,119,87,0.14);
-    border-color: var(--clay);
-    color: var(--clay);
+    background: var(--slate);
+    border-color: var(--slate);
+    color: #fff;
   }
 
   .step-loc {
@@ -163,8 +165,8 @@
   details.snippet[open] summary::before { transform: rotate(90deg); }
 
   pre.code {
-    background: var(--slate);
-    color: #E8E6DC;
+    background: var(--gray-150);
+    color: var(--slate);
     font-family: var(--mono);
     font-size: 12.5px;
     line-height: 1.7;
@@ -173,9 +175,9 @@
     overflow-x: auto;
     margin-top: 10px;
   }
-  pre.code .dim { color: var(--gray-500); }
-  pre.code .kw  { color: #C9B98A; }
-  pre.code .str { color: #A8BC8C; }
+  pre.code .dim { color: var(--gray-500); font-style: italic; }
+  pre.code .kw  { color: var(--slate); font-weight: 700; }
+  pre.code .str { color: var(--gray-500); }
 
   /* ---------- Sidebar ---------- */
   aside {
@@ -185,10 +187,11 @@
   }
 
   .panel {
-    border: 1.5px solid var(--gray-300);
-    border-radius: 12px;
+    border: 0;
+    border-top: 1px solid var(--slate);
+    border-radius: 0;
     background: #fff;
-    padding: 18px 20px;
+    padding: 14px 0 0;
     margin-bottom: 20px;
   }
 
@@ -220,9 +223,9 @@
   }
 
   .gotchas {
-    border: 1.5px solid var(--clay);
-    border-radius: 12px;
-    background: rgba(217,119,87,0.06);
+    border: 1px solid var(--slate);
+    border-radius: 8px;
+    background: #fff;
     padding: 18px 20px;
   }
   .gotchas h3 {
@@ -231,7 +234,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--clay);
+    color: var(--slate);
     margin-bottom: 10px;
   }
   .gotchas ul { list-style: none; padding: 0; }
@@ -269,7 +272,7 @@
       <svg class="flow" viewBox="0 0 720 280" width="720" height="280" role="img" aria-label="Authentication flow diagram">
         <defs>
           <marker id="arrowHead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#87867F"></path>
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#6e6e73"></path>
           </marker>
         </defs>
 

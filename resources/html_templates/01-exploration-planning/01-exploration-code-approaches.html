@@ -7,20 +7,20 @@
   <title>Debounced search — three approaches</title>
   <style>
     :root {
-      --ivory:    #FAF9F5;
-      --slate:    #141413;
-      --clay:     #D97757;
-      --oat:      #E3DACC;
-      --olive:    #788C5D;
-      --gray-150: #F0EEE6;
-      --gray-300: #D1CFC5;
-      --gray-500: #87867F;
-      --gray-700: #3D3D3A;
-      --white:    #FFFFFF;
+      --ivory:    #fff;
+      --slate:    #1d1d1f;
+      --clay:     #1d1d1f;
+      --oat:      #f5f5f7;
+      --olive:    #6e6e73;
+      --gray-150: #f5f5f7;
+      --gray-300: #d2d2d7;
+      --gray-500: #6e6e73;
+      --gray-700: #1d1d1f;
+      --white:    #fff;
 
-      --serif: ui-serif, Georgia, 'Times New Roman', serif;
-      --sans:  system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-      --mono:  ui-monospace, 'SF Mono', Menlo, Monaco, monospace;
+      --serif: -apple-system, "SF Pro Display", BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+      --sans:  -apple-system, "SF Pro Text", BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+      --mono:  "SF Mono", ui-monospace, Menlo, monospace;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -30,7 +30,7 @@
       background: var(--ivory);
       color: var(--gray-700);
       line-height: 1.55;
-      padding: 56px 32px 96px;
+      padding: 80px 32px 120px;
       -webkit-font-smoothing: antialiased;
     }
 
@@ -56,18 +56,18 @@
 
     h1 {
       font-family: var(--serif);
-      font-weight: 500;
-      font-size: 38px;
-      line-height: 1.15;
+      font-weight: 700;
+      font-size: 52px;
+      line-height: 1.05;
       color: var(--slate);
-      margin-bottom: 18px;
-      letter-spacing: -0.01em;
+      margin-bottom: 24px;
+      letter-spacing: -0.025em;
     }
 
     .prompt-box {
       background: var(--gray-150);
-      border: 1.5px solid var(--gray-300);
-      border-radius: 12px;
+      border: 1px solid var(--gray-300);
+      border-radius: 8px;
       padding: 16px 20px;
       font-size: 14.5px;
       color: var(--gray-700);
@@ -98,9 +98,10 @@
 
     .approach {
       background: var(--white);
-      border: 1.5px solid var(--gray-300);
-      border-radius: 12px;
-      padding: 24px;
+      border: 0;
+      border-top: 1px solid var(--slate);
+      border-radius: 0;
+      padding: 20px 0 0;
       display: flex;
       flex-direction: column;
       gap: 20px;
@@ -108,8 +109,9 @@
 
     .approach-head h2 {
       font-family: var(--serif);
-      font-weight: 500;
-      font-size: 21px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      font-size: 22px;
       color: var(--slate);
       margin-bottom: 6px;
     }
@@ -134,8 +136,8 @@
     /* ---------- code panel ---------- */
 
     .code {
-      background: var(--slate);
-      border-radius: 12px;
+      background: var(--chip, #f5f5f7);
+      border-radius: 8px;
       padding: 18px 20px;
       overflow-x: auto;
     }
@@ -144,19 +146,19 @@
       font-family: var(--mono);
       font-size: 12.5px;
       line-height: 1.65;
-      color: #E8E6DE;
+      color: #1d1d1f;
       white-space: pre;
     }
 
-    .code .kw  { color: var(--clay); }     /* keywords */
-    .code .str { color: var(--olive); }    /* strings  */
-    .code .cm  { color: var(--gray-500); } /* comments */
-    .code .fn  { color: #C9B98A; }         /* identifiers, subtle warm */
+    .code .kw  { color: var(--slate); font-weight: 700; }     /* keywords */
+    .code .str { color: var(--gray-500); }    /* strings  */
+    .code .cm  { color: var(--gray-500); font-style: italic; } /* comments */
+    .code .fn  { color: var(--slate); }         /* identifiers, subtle warm */
 
     /* ---------- tradeoffs table ---------- */
 
     .tradeoffs {
-      border: 1.5px solid var(--gray-300);
+      border: 1px solid var(--gray-300);
       border-radius: 8px;
       overflow: hidden;
       font-size: 13px;
@@ -168,7 +170,7 @@
     }
 
     .tradeoffs .row + .row {
-      border-top: 1.5px solid var(--gray-300);
+      border-top: 1px solid var(--gray-300);
     }
 
     .tradeoffs .cell {
@@ -176,7 +178,7 @@
     }
 
     .tradeoffs .cell:first-child {
-      border-right: 1.5px solid var(--gray-300);
+      border-right: 1px solid var(--gray-300);
     }
 
     .tradeoffs .head {
@@ -190,16 +192,12 @@
 
     .tradeoffs .pro::before,
     .tradeoffs .con::before {
-      content: '';
       display: inline-block;
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      margin-right: 8px;
-      vertical-align: 2px;
+      width: 14px;
+      font-weight: 700;
     }
-    .tradeoffs .pro::before { background: var(--olive); }
-    .tradeoffs .con::before { background: var(--clay); }
+    .tradeoffs .pro::before { content: '+'; }
+    .tradeoffs .con::before { content: '\2212'; color: var(--gray-500); }
 
     /* ---------- chip footer ---------- */
 
@@ -213,7 +211,7 @@
       font-family: var(--mono);
       font-size: 11.5px;
       background: var(--gray-150);
-      border: 1.5px solid var(--gray-300);
+      border: 1px solid var(--gray-300);
       color: var(--gray-700);
       padding: 5px 10px;
       border-radius: 8px;
@@ -225,17 +223,18 @@
     /* ---------- recommendation ---------- */
 
     .reco {
-      border-left: 4px solid var(--clay);
+      border-top: 1px solid var(--slate);
       background: var(--white);
-      border-radius: 0 12px 12px 0;
-      padding: 24px 28px;
+      border-radius: 0;
+      padding: 24px 0;
       max-width: 860px;
     }
 
     .reco h2 {
       font-family: var(--serif);
-      font-weight: 500;
-      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      font-size: 28px;
       color: var(--slate);
       margin-bottom: 10px;
     }
