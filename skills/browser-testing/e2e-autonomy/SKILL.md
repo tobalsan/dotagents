@@ -29,8 +29,15 @@ description: Run E2E tests in Thinh's real logged-in Chrome (e2e-browser + playw
 - Never `op read` into the transcript, never paste/echo/log secrets, never put them in Discord, Linear or files.
 - Item missing from the `Agents` vault → ask-human `--kind password`; Thinh adds it and replies `added`.
 
+## Missing access: get it, never skip
+The point of this routine is to finish checks that need Thinh's access. Lack of access is a blocker to resolve, not a reason to skip.
+- Signed out of a site (Google, Notion, any SaaS) in the e2e Chrome → log in: list the vault (`op item list --vault Agents --format json | jq -r '.[].title'`), declare the matching item with `--secret`, type it with `type-secret`. SSO sites ("Continue with Google") → log in to Google first with the vault item.
+- No matching item, 2FA, captcha, or the login fails → `ask-human --kind password|2fa|check` naming the site and the account, then wait.
+- Only Thinh can tell you to skip a check. On TIMEOUT (76), park; do not skip.
+- ask-human is for questions that need an answer. Never use it to announce a skip or post "no reply needed".
+
 ## Ask Thinh
-Ask when: secret missing in `Agents`, 2FA/OTP code, captcha/human check, decision only Thinh can make. Don't ask for things you can find, retry or decide yourself.
+Ask when: login or secret missing (see above), 2FA/OTP code, captcha/human check, decision only Thinh can make. Don't ask for things you can find, retry or decide yourself.
 ```
 ask-human ask "<question>" --from <agent> [--ref ALG-123|url] --kind password|2fa|check|other
 ```
