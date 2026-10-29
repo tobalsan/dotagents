@@ -22,6 +22,7 @@ description: Run E2E tests in Thinh's real logged-in Chrome (e2e-browser + playw
 - No writes on third-party sites unless the task says so.
 
 ## Secrets
+- Reference items by id, not title: `op://Agents/<item-id>/<field>`. List ids: `op item list --vault Agents --format json | jq -r '.[] | "\(.id)\t\(.title)"'`. Titles with characters like `—` fail with "invalid character in secret reference"; that is not a sign-in problem. Check sign-in with `op whoami` before asking Thinh.
 - Declare every secret you may need at start: `e2e-browser start --secret "op://Agents/<item>/<field>" …` (repeatable). Then type it with `e2e-browser type-secret "$S" <ref> "op://Agents/<item>/<field>"`. An undeclared secret is refused: stop and restart with `--secret`.
 - Verified (playwright-cli 0.1.22): declared values are redacted by playwright-cli itself as `<secret>E2E_SECRET_n</secret>` in snapshot, eval and run-code output and saved snapshot files, including the JSON- and YAML-escaped forms of values with `"` or `\` (tested with a harness around the installed redactor; other paths, e.g. nested/double-escaped output, unverified). The value is only on disk in a 0600 config for the moment of `open`, then shredded (`rm -P`). If 1Password read fails, the browser is not started.
 - Do not use `tracing-start`: traces store typed secrets unmasked.
@@ -31,7 +32,7 @@ description: Run E2E tests in Thinh's real logged-in Chrome (e2e-browser + playw
 
 ## Missing access: get it, never skip
 The point of this routine is to finish checks that need Thinh's access. Lack of access is a blocker to resolve, not a reason to skip, unless the task explicitly says to skip that check.
-- The Google account in the e2e Chrome is cloud@tobal.fr, the dedicated agents account (vault item `Google Workspace — cloud@tobal.fr`). Use it for Google SSO.
+- The Google account in the e2e Chrome is cloud@tobal.fr, the dedicated agents account (vault item id `3sayrtetl6andnpgji6thaqtuy`). Use it for Google SSO.
 - Signed out of a site (Google, Notion, any SaaS) in the e2e Chrome → log in: list the vault (`op item list --vault Agents --format json | jq -r '.[].title'`), declare the matching item with `--secret`, type it with `type-secret`. SSO sites ("Continue with Google") → log in to Google first with the vault item.
 - No matching item, 2FA, captcha, or the login fails → `ask-human --kind password|2fa|check` naming the site and the account, then wait.
 - Skip only when the task or Thinh explicitly says so. On TIMEOUT (76), park; do not skip.
