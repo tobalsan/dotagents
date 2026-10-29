@@ -7,20 +7,25 @@ description: Run E2E tests in Thinh's real logged-in Chrome (e2e-browser + playw
 
 ## Browser
 - Need Thinh's logins (Google, SaaS, real sessions)? → `e2e-browser`. Public pages / local dev with no login → plain `playwright-cli`.
-- Always pair start/stop:
+- Always pair start/stop. One `playwright-cli -s="$S" …` command per line, one action at a time:
   ```
-  S=$(e2e-browser start --name <agent> https://app.example.com)   # prints session name
-  playwright-cli -s=$S snapshot | click e12 | type "text" | press Enter | goto <url>
-  e2e-browser stop $S                                              # always, even on failure
+  S=$(e2e-browser start --name <agent> --secret "op://Agents/<item>/password" https://app.example.com)
+  playwright-cli -s="$S" snapshot
+  playwright-cli -s="$S" click e12
+  playwright-cli -s="$S" type "text"
+  playwright-cli -s="$S" press Enter
+  playwright-cli -s="$S" goto <url>
+  e2e-browser stop "$S"                                            # always, even on failure
   ```
 - `e2e-browser list`, `e2e-browser gc` (clean dead copies), `e2e-browser refresh-template` (after Thinh logs in somewhere new).
 - Human pace: slowMo 200 ms is set. Use `click`/`type`/`press` like a person, wait a few seconds between pages, one action at a time. Never use `eval`/`run-code` to fill forms or click. `eval` is for reading only.
 - No writes on third-party sites unless the task says so.
 
 ## Secrets
-- Only via `e2e-browser type-secret $S <ref> "op://Agents/<item>/<field>"`. It never prints the secret.
+- Declare every secret you may need at start: `e2e-browser start --secret "op://Agents/<item>/<field>" …` (repeatable). Then type it with `e2e-browser type-secret "$S" <ref> "op://Agents/<item>/<field>"`. An undeclared secret is refused: stop and restart with `--secret`.
+- Verified (playwright-cli 0.1.22): declared values are redacted by playwright-cli itself as `<secret>E2E_SECRET_n</secret>` in all command output (snapshot, eval, run-code, errors), auto-saved `.playwright-cli/*.yml` snapshots and console logs. The value is only on disk in a 0600 config for the moment of `open`, then shredded (`rm -P`). If 1Password read fails, the browser is not started.
+- Not covered: screenshots/PDFs/videos show what the page renders; the page itself (or Chrome password manager) may keep the value. Submit right after typing.
 - Never `op read` into the transcript, never paste/echo/log secrets, never put them in Discord, Linear or files.
-- After `type-secret`, the page snapshot can contain the value in clear: use `e2e-browser snapshot $S` (masked) instead of `playwright-cli snapshot`, submit the form right away, and never read `.playwright-cli/*.yml` files.
 - Item missing from the `Agents` vault → ask-human `--kind password`; Thinh adds it and replies `added`.
 
 ## Ask Thinh
