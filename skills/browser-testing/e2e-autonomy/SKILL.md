@@ -23,7 +23,8 @@ description: Run E2E tests in Thinh's real logged-in Chrome (e2e-browser + playw
 
 ## Secrets
 - Declare every secret you may need at start: `e2e-browser start --secret "op://Agents/<item>/<field>" …` (repeatable). Then type it with `e2e-browser type-secret "$S" <ref> "op://Agents/<item>/<field>"`. An undeclared secret is refused: stop and restart with `--secret`.
-- Verified (playwright-cli 0.1.22): declared values are redacted by playwright-cli itself as `<secret>E2E_SECRET_n</secret>` in all command output (snapshot, eval, run-code, errors), auto-saved `.playwright-cli/*.yml` snapshots and console logs. The value is only on disk in a 0600 config for the moment of `open`, then shredded (`rm -P`). If 1Password read fails, the browser is not started.
+- Verified (playwright-cli 0.1.22): declared values are redacted by playwright-cli itself as `<secret>E2E_SECRET_n</secret>` in snapshot, eval and run-code output and saved snapshot files, including the JSON- and YAML-escaped forms of values with `"` or `\` (tested with a harness around the installed redactor; other paths, e.g. nested/double-escaped output, unverified). The value is only on disk in a 0600 config for the moment of `open`, then shredded (`rm -P`). If 1Password read fails, the browser is not started.
+- Do not use `tracing-start`: traces store typed secrets unmasked.
 - Not covered: screenshots/PDFs/videos show what the page renders; the page itself (or Chrome password manager) may keep the value. Submit right after typing.
 - Never `op read` into the transcript, never paste/echo/log secrets, never put them in Discord, Linear or files.
 - Item missing from the `Agents` vault → ask-human `--kind password`; Thinh adds it and replies `added`.
