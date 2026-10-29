@@ -30,10 +30,11 @@ description: Run E2E tests in Thinh's real logged-in Chrome (e2e-browser + playw
 - Item missing from the `Agents` vault → ask-human `--kind password`; Thinh adds it and replies `added`.
 
 ## Missing access: get it, never skip
-The point of this routine is to finish checks that need Thinh's access. Lack of access is a blocker to resolve, not a reason to skip.
+The point of this routine is to finish checks that need Thinh's access. Lack of access is a blocker to resolve, not a reason to skip, unless the task explicitly says to skip that check.
+- The Google account in the e2e Chrome is cloud@tobal.fr, the dedicated agents account (vault item `Google Workspace — cloud@tobal.fr`). Use it for Google SSO.
 - Signed out of a site (Google, Notion, any SaaS) in the e2e Chrome → log in: list the vault (`op item list --vault Agents --format json | jq -r '.[].title'`), declare the matching item with `--secret`, type it with `type-secret`. SSO sites ("Continue with Google") → log in to Google first with the vault item.
 - No matching item, 2FA, captcha, or the login fails → `ask-human --kind password|2fa|check` naming the site and the account, then wait.
-- Only Thinh can tell you to skip a check. On TIMEOUT (76), park; do not skip.
+- Skip only when the task or Thinh explicitly says so. On TIMEOUT (76), park; do not skip.
 - ask-human is for questions that need an answer. Never use it to announce a skip or post "no reply needed".
 
 ## Ask Thinh
