@@ -18,6 +18,7 @@ description: Run E2E tests in Thinh's real logged-in Chrome (e2e-browser + playw
   e2e-browser stop "$S"                                            # always, even on failure
   ```
 - `e2e-browser list`, `e2e-browser gc` (clean dead copies), `e2e-browser refresh-template` (after Thinh logs in somewhere new).
+- The template (and each session copy) carries `NativeMessagingHosts/` from the real profile, so the 1Password extension unlocks through 1Password.app.
 - Human pace: slowMo 200 ms is set. Use `click`/`type`/`press` like a person, wait a few seconds between pages, one action at a time. Never use `eval`/`run-code` to fill forms or click. `eval` is for reading only.
 - No writes on third-party sites unless the task says so.
 
