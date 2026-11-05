@@ -37,6 +37,10 @@ cd /path/to/repo && pi --mode json -p \
 
 Parse output line by line. `--mode json` emits JSONL events, not one guaranteed result object. Inspect event types before depending on fields. Use `--mode rpc` only when building bidirectional process integration.
 
+## Run long workers in the background
+
+Start a long worker with `nohup pi ... --mode json -p "..." > LOG 2>&1 &` and poll LOG from later calls. Pi renames its process title to `pi`, so `ps`/`pgrep -f <model or prompt text>` does not find a running worker. Check LOG for a final `{"type":"agent_settled"}` line instead. macOS has no `setsid` binary.
+
 ## Restrict tools
 
 Make review-only work truly read-only:

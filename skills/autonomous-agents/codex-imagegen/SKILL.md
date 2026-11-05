@@ -22,6 +22,7 @@ Rules:
 - Include exact output path in chosen `OUT_DIR`.
 - Include `--add-dir "$OUT_DIR"` so Codex can write there.
 - Prefer `gpt-6.1-sol` and `model_reasoning_effort=low`.
+- Outside a git repo, add `--skip-git-repo-check`, else Codex exits at once. In a background job, add `< /dev/null`, else Codex waits on stdin.
 - Reference images: put the prompt BEFORE `-i` (`codex exec ... "<prompt>" -i a.png -i b.png`).
 - `-i` takes many files. Codex reads a prompt after `-i` as a file and fails with `No prompt provided via stdin`.
 - If Codex saves PNG under `~/.codex/generated_images/...`, convert/copy to requested filename:

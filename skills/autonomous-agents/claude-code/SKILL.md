@@ -740,6 +740,8 @@ Use `/context` in interactive mode to see a colored grid of context usage:
 10. **Slash commands only work in interactive mode** — in `-p` mode, describe the task in natural language.
 11. **`--bare` skips OAuth** — requires `ANTHROPIC_API_KEY` or an `apiKeyHelper` in settings.
 12. **Context degradation is real** — output quality measurably degrades above 70% context usage. Monitor and `/compact` proactively.
+13. **No-side-effect test runs: use the bash sandbox, not `--allowedTools` patterns.** Narrow `Bash(python3 <path>:*)` rules miss real commands (`S=...; python3 $S/...`, `uv run ...`), so the agent loses the tools under test. Instead pass `--settings` with `{"sandbox":{"enabled":true,"autoAllowBashIfSandboxed":true,"allowUnsandboxedCommands":false},"permissions":{"deny":["Read(//path/with/secrets/**)"]}}` plus `--allowedTools "Read,Write,Edit,Glob,Grep,WebSearch,WebFetch,Bash" --strict-mcp-config`. Bash then has no network and cannot read denied paths. WebFetch can only GET.
+14. **On Thinh's MBP a user hook blocks bare `python3` in Claude Code.** Tell the agent to run `uv run --no-project python <script>`, or its first script calls fail.
 
 ## Rules for Orchestrating Agents
 
