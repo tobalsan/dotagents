@@ -42,6 +42,7 @@ playwright-cli -s=chrome snapshot
 - Never print handshake tab URL (token leak). The "current" tab can switch to the handshake tab without notice. So `eval "location.href"`, `page.url()`, and the `Page URL` line in any command output can leak it. Pipe every command output through `sed -E 's/token=[^&)" ]+/token=REDACTED/g'`. Never close handshake tab.
 - Do not touch user tabs unless user drags them into the Playwright group.
 - `attach --cdp` hangs on Dia. Do not use it.
+- The extension cannot open privileged schemes (`chrome-untrusted://`, `chrome://`, Dia artifact URLs): `Page.navigate` fails with "privileged scheme is not allowed" and leaves a blank tab. Close that tab. The agent cannot read such pages through Playwright.
 - `screenshot` writes 0-byte file in extension mode (cli 0.1.22). Use instead:
   `playwright-cli -s=chrome run-code "async page => { await page.screenshot({path: '/tmp/shot.png'}); return 'ok'; }"`
 - Session dies ("browser 'chrome' is not open") on pages where 1Password inline menu injects iframe (login/config forms): log shows `Cannot access a chrome-extension:// URL of different extension`. Fix: ask user to turn off 1Password for that site.
