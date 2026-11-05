@@ -26,7 +26,7 @@ Use this template for writing the PR body:
 
 <optional: description>
 
-**Blast Radius:** <one-word description>
+**Blast Radius:** <contained | module | cross-cutting> (<area, one word>)
 
 <optional: potential ramifications of merge>
 ```
@@ -167,3 +167,10 @@ Execution-based evidence is A-tier. Test results, console output. Show the exact
 Describe whether it's a one-way or two-way door. You can walk back through two-way doors, but not one-way doors. A PR that is cheap to roll back is lower risk. Changes that involve destructive actions or hard-to-reverse decisions are one-way doors.
 
 The blast radius is the potential impact or scope of the changes introduced by this PR. Consider all possibilities. Examples are layout shift, breakages for consumers, mobile responsiveness, etc.
+
+Give the scale first, then the area:
+- **contained**: one feature, extension or surface; nothing else calls the changed code.
+- **module**: a shared module with several callers inside one package or app.
+- **cross-cutting**: a path every agent, surface or consumer goes through (request path, runtime loop, tool dispatch, auth, storage format), or several areas at once.
+
+Pick the larger scale when in doubt. Name the consumers outside the issue in the optional ramifications text.
