@@ -28,8 +28,10 @@ description: Run E2E tests in Thinh's real logged-in Chrome (e2e-browser + playw
 - Verified (playwright-cli 0.1.22): declared values are redacted by playwright-cli itself as `<secret>E2E_SECRET_n</secret>` in snapshot, eval and run-code output and saved snapshot files, including the JSON- and YAML-escaped forms of values with `"` or `\` (tested with a harness around the installed redactor; other paths, e.g. nested/double-escaped output, unverified). The value is only on disk in a 0600 config for the moment of `open`, then shredded (`rm -P`). If 1Password read fails, the browser is not started.
 - Do not use `tracing-start`: traces store typed secrets unmasked.
 - Not covered: screenshots/PDFs/videos show what the page renders; the page itself (or Chrome password manager) may keep the value. Submit right after typing.
-- Never `op read` into the transcript, never paste/echo/log secrets, never put them in Discord, Linear or files.
+- Never `op read` into the transcript, never paste/echo/log secrets, never put them in Mattermost, Linear or files.
+- `op` resolves to the wrapper `~/.local/bin/op`, which runs as the `Agents` service account (token in `~/.config/op-sa/token`). If an `op` call hangs with no output, it is not that wrapper: something called `/opt/homebrew/bin/op` without the token (e.g. a login `bash -l`, where Homebrew comes first in PATH), and 1Password desktop is showing an "authorize <app>" modal on the Mac. Call `op` by name in a non-login shell; never ask Thinh to authorize the modal (that grants his personal vaults).
 - Item missing from the `Agents` vault → ask-human `--kind password`; Thinh adds it and replies `added`.
+- Passkeys: `op` and `type-secret` only read text fields, so they can't answer a WebAuthn prompt. The e2e Chrome profile has the 1Password **Beta** extension (id `khgocmkkpikpnmmkgmdnfckapcdkgfaf`, not the stable `aeblfd…` id), which can answer it only when unlocked. It unlocks through 1Password.app only if the session's user-data-dir contains `NativeMessagingHosts/` (Chrome looks for native hosts inside a custom user-data-dir); without it the popup asks for a password. Even unlocked, Google's passkey prompt does not reach 1Password in the e2e Chrome. For Google accounts use "Try another way" → password + authenticator code: declare `op://Agents/<item>/<password field>` and `op://Agents/<item>/one-time password?attribute=otp` and type them with `type-secret`.
 
 ## Missing access: get it, never skip
 The point of this routine is to finish checks that need Thinh's access. Lack of access is a blocker to resolve, not a reason to skip, unless the task explicitly says to skip that check.
@@ -44,7 +46,7 @@ Ask when: login or secret missing (see above), 2FA/OTP code, captcha/human check
 ```
 ask-human ask "<question>" --from <agent> [--ref ALG-123|url] --kind password|2fa|check|other
 ```
-- First output line = thread id. Keep it.
+- First output line = request id (the Mattermost post id). Keep it.
 - Exit codes: `0` answer printed · `75` PENDING → run `ask-human wait <id>` again · `76` TIMEOUT (4 h since asked) → park.
 - Each call blocks ≤ 240 s (`--wait` to change) with a heartbeat line every 60 s. Per runner:
   - Claude Code: Bash timeout 2 min by default → pass `timeout: 300000` or use `--wait 100`.
@@ -56,7 +58,10 @@ ask-human ask "<question>" --from <agent> [--ref ALG-123|url] --kind password|2f
 ```
 ask-human park <id> --note-file note.md --runner <codex|claude|pi|yoplai-pi|...> --session <session or run id>
 ```
-note.md must have lines `Doing:` `Done:` `Next:` `Blocker:` (Where/Resume are added automatically). If there is a Linear issue, comment with the printed thread URL. Then stop.
+note.md must have lines `Doing:` `Done:` `Next:` `Blocker:` (Where/Resume are added automatically). Then stop.
+- No linked issue: the full park note is the handoff.
+- Linked issue (Linear, etc.): the issue is the channel from now on. Put the open question and full handoff on the issue, and keep note.md brief, pointing to the issue URL.
+- Never open a question in both places: if you stop and wait on an issue, ask there only, not via ask-human.
 
 ## Resume
 `ask-human resume <id>` prints a resume prompt (handoff + Thinh's replies) and, for Yoplai runs, the `yoplai subagents resume …` command to run.
