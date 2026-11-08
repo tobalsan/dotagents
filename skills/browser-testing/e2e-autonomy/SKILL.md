@@ -1,68 +1,84 @@
 ---
 name: e2e-autonomy
-description: Run E2E tests in Thinh's real logged-in Chrome (e2e-browser + playwright-cli), type passwords from 1Password without exposing them, and ask Thinh for input (missing password, 2FA code, captcha, human check, a decision) via ask-human, then wait, park and resume. Use for E2E tests, browser login, needing a password or 2FA, or being blocked on Thinh.
+description: Run E2E tests in Thinh's real logged-in browser with buu, type passwords from 1Password without exposing them, hand a step to Thinh in the tab (login, 2FA, captcha) with handoff(), and ask Thinh for what only he can give (a missing vault item, a decision) via ask-human, then wait, park and resume. Use for E2E tests, browser login, needing a password or 2FA, or being blocked on Thinh.
 ---
 
 # E2E autonomy
 
 ## Browser
-- Need Thinh's logins (Google, SaaS, real sessions)? → `e2e-browser`. Public pages / local dev with no login → plain `playwright-cli`.
-- Always pair start/stop. One `playwright-cli -s="$S" …` command per line, one action at a time:
+- Use buu for all browser work. Read the `buu` skill first for the commands and rules.
+- On the Mac Studio, buu drives the main Chrome of the `agents` user. Only agents use it. Thinh sees it through screen sharing.
+- On Thinh's MacBook, buu drives his own browser. Do not claim his tabs unless he asks.
+- One session for each task. Always end it, also after a failure:
+  ```sh
+  export BUU_SESSION=<agent>-<task>
+  buu js "await page.goto('https://app.example.com'); return page.url()"
+  buu js "print(await page.locator('body').ariaSnapshot())"   # read the page
+  buu js "await page.getByRole('button', {name: 'Sign in'}).click()"
+  buu js "await shot()"                                      # prints a PNG path
+  buu end
   ```
-  S=$(e2e-browser start --name <agent> --secret "op://Agents/<item>/password" https://app.example.com)
-  playwright-cli -s="$S" snapshot
-  playwright-cli -s="$S" click e12
-  playwright-cli -s="$S" type "text"
-  playwright-cli -s="$S" press Enter
-  playwright-cli -s="$S" goto <url>
-  e2e-browser stop "$S"                                            # always, even on failure
-  ```
-- `e2e-browser list`, `e2e-browser gc` (clean dead copies), `e2e-browser refresh-template` (after Thinh logs in somewhere new).
-- The template (and each session copy) carries `NativeMessagingHosts/` from the real profile, so the 1Password extension unlocks through 1Password.app.
-- Human pace: slowMo 200 ms is set. Use `click`/`type`/`press` like a person, wait a few seconds between pages, one action at a time. Never use `eval`/`run-code` to fill forms or click. `eval` is for reading only.
+- Act at human pace. Do one action for each call, and wait a few seconds between pages.
+- If `buu status` says that no browser is connected, Chrome is closed. Ask Thinh to open it.
 - No writes on third-party sites unless the task says so.
 
 ## Secrets
-- Reference items by id, not title: `op://Agents/<item-id>/<field>`. List ids: `op item list --vault Agents --format json | jq -r '.[] | "\(.id)\t\(.title)"'`. Titles with characters like `—` fail with "invalid character in secret reference"; that is not a sign-in problem. Check sign-in with `op whoami` before asking Thinh.
-- Declare every secret you may need at start: `e2e-browser start --secret "op://Agents/<item>/<field>" …` (repeatable). Then type it with `e2e-browser type-secret "$S" <ref> "op://Agents/<item>/<field>"`. An undeclared secret is refused: stop and restart with `--secret`.
-- Verified (playwright-cli 0.1.22): declared values are redacted by playwright-cli itself as `<secret>E2E_SECRET_n</secret>` in snapshot, eval and run-code output and saved snapshot files, including the JSON- and YAML-escaped forms of values with `"` or `\` (tested with a harness around the installed redactor; other paths, e.g. nested/double-escaped output, unverified). The value is only on disk in a 0600 config for the moment of `open`, then shredded (`rm -P`). If 1Password read fails, the browser is not started.
-- Do not use `tracing-start`: traces store typed secrets unmasked.
-- Not covered: screenshots/PDFs/videos show what the page renders; the page itself (or Chrome password manager) may keep the value. Submit right after typing.
-- Never `op read` into the transcript, never paste/echo/log secrets, never put them in Mattermost, Linear or files.
-- `op` resolves to the wrapper `~/.local/bin/op`, which runs as the `Agents` service account (token in `~/.config/op-sa/token`). If an `op` call hangs with no output, it is not that wrapper: something called `/opt/homebrew/bin/op` without the token (e.g. a login `bash -l`, where Homebrew comes first in PATH), and 1Password desktop is showing an "authorize <app>" modal on the Mac. Call `op` by name in a non-login shell; never ask Thinh to authorize the modal (that grants his personal vaults).
-- Item missing from the `Agents` vault → ask-human `--kind password`; Thinh adds it and replies `added`.
-- Passkeys: `op` and `type-secret` only read text fields, so they can't answer a WebAuthn prompt. The e2e Chrome profile has the 1Password **Beta** extension (id `khgocmkkpikpnmmkgmdnfckapcdkgfaf`, not the stable `aeblfd…` id), which can answer it only when unlocked. It unlocks through 1Password.app only if the session's user-data-dir contains `NativeMessagingHosts/` (Chrome looks for native hosts inside a custom user-data-dir); without it the popup asks for a password. Even unlocked, Google's passkey prompt does not reach 1Password in the e2e Chrome. For Google accounts use "Try another way" → password + authenticator code: declare `op://Agents/<item>/<password field>` and `op://Agents/<item>/one-time password?attribute=otp` and type them with `type-secret`.
+- Type a secret with the helper in this skill. Never put a secret in `buu js` code:
+  ```sh
+  <skill-dir>/scripts/type-secret.sh "op://Agents/<item-id>/password" "page.getByLabel('Password')"
+  ```
+  The value goes through a pipe only. It is not in argv, stdout, stderr, or a file.
+- Submit right after you type. Do not read the field back, and do not snapshot the page between the type and the submit.
+- buu does not redact output. A screenshot or snapshot shows what the page renders.
+- Refer to items by id, not by title: `op://Agents/<item-id>/<field>`. List ids: `op item list --vault Agents --format json | jq -r '.[] | "\(.id)\t\(.title)"'`. A title with a character like `—` fails with "invalid character in secret reference". That is not a sign-in problem.
+- Check sign-in with `op whoami` before you ask Thinh.
+- Never `op read` into the transcript. Never paste, echo, or log a secret. Never put a secret in Mattermost, Linear, or a file.
+- `op` is the wrapper `~/.local/bin/op`. It runs as the `Agents` service account (token in `~/.config/op-sa/token`).
+- If an `op` call hangs with no output, the call used `/opt/homebrew/bin/op` without the token, for example from a login `bash -l`. 1Password then shows an "authorize <app>" modal. Call `op` by name in a non-login shell. Never ask Thinh to approve the modal, because it gives access to his personal vaults.
+- Do not call `op` from inside `buu js`. On the Mac Studio, macOS then shows an "authorize node" prompt after each Node update, and the call hangs until Thinh accepts it. Use `type-secret.sh`.
+- Google accounts: passkeys do not work. Click "Try another way", then use the password and the authenticator code: `type-secret.sh "op://Agents/<item>/one-time password?attribute=otp" "<locator>"`.
 
 ## Missing access: get it, never skip
-The point of this routine is to finish checks that need Thinh's access. Lack of access is a blocker to resolve, not a reason to skip, unless the task explicitly says to skip that check.
-- The Google account in the e2e Chrome is cloud@tobal.fr, the dedicated agents account (vault item id `3sayrtetl6andnpgji6thaqtuy`). Use it for Google SSO.
-- Signed out of a site (Google, Notion, any SaaS) in the e2e Chrome → log in: list the vault (`op item list --vault Agents --format json | jq -r '.[].title'`), declare the matching item with `--secret`, type it with `type-secret`. SSO sites ("Continue with Google") → log in to Google first with the vault item.
-- No matching item, 2FA, captcha, or the login fails → `ask-human --kind password|2fa|check` naming the site and the account, then wait.
-- Skip only when the task or Thinh explicitly says so. On TIMEOUT (76), park; do not skip.
-- ask-human is for questions that need an answer. Never use it to announce a skip or post "no reply needed".
+The point of this routine is to finish checks that need Thinh's access. Lack of access is a blocker to solve, not a reason to skip, unless the task says to skip that check.
+- The Google account in the agents Chrome is cloud@tobal.fr (vault item id `3sayrtetl6andnpgji6thaqtuy`). Use it for Google SSO.
+- Signed out of a site → log in. Find the item in the `Agents` vault and type it with `type-secret.sh`. For "Continue with Google", log in to Google first.
+- No item in the vault → `ask-human --kind password` with the site and the account. Thinh adds the item and replies `added`.
+- 2FA code, captcha, human check, or a failed login → hand the step to Thinh (next section).
+- Skip only when the task or Thinh says so. On a timeout, park. Do not skip.
+
+## Hand a step to Thinh
+Thinh does the step himself in the tab, through screen sharing. He does not send codes in chat.
+1. Ping him: `ask-human ask "Mac Studio Chrome, <site>: <what to do>, then click Continue on the card" --from <agent> --kind 2fa|check`. Keep the request id from the first output line.
+2. In the same tab, call `buu js "await handoff('<what to do>, then click Continue'); return page.url()"`. It waits up to 10 minutes. Do not pass `--timeout`.
+3. When `handoff` returns, check the URL or a page element. Do not assume the step worked.
+4. Run `ask-human close <id>`.
+5. If `handoff` throws `handoff timed out`, run `ask-human wait <id>`. If Thinh replies `done`, check the page and continue. Otherwise park (see below).
+
+Never click the card or its Continue button. Only Thinh does that.
 
 ## Ask Thinh
-Ask when: login or secret missing (see above), 2FA/OTP code, captcha/human check, decision only Thinh can make. Don't ask for things you can find, retry or decide yourself.
+Use `ask-human` for what only Thinh can give: a missing vault item, or a decision. Do not ask for things you can find, retry, or decide yourself.
 ```
 ask-human ask "<question>" --from <agent> [--ref ALG-123|url] --kind password|2fa|check|other
 ```
-- First output line = request id (the Mattermost post id). Keep it.
-- Exit codes: `0` answer printed · `75` PENDING → run `ask-human wait <id>` again · `76` TIMEOUT (4 h since asked) → park.
-- Each call blocks ≤ 240 s (`--wait` to change) with a heartbeat line every 60 s. Per runner:
-  - Claude Code: Bash timeout 2 min by default → pass `timeout: 300000` or use `--wait 100`.
-  - Codex: commands up to 240 s run fine (verified); stall_timeout 10 min is not hit thanks to heartbeats/short chunks.
-  - pi / Yoplai subagents: default is fine.
-- Loop `ask-human wait <id>` on 75 until 0 or 76. Do other unblocked work between calls if any.
+- The first output line is the request id (the Mattermost post id). Keep it.
+- Exit codes: `0` answer printed. `75` pending: run `ask-human wait <id>` again. `76` timeout (4 hours after the ask): park.
+- Each call blocks up to 240 s (`--wait` changes it) and prints a heartbeat line every 60 s. For each runner:
+  - Claude Code: the Bash timeout is 2 minutes by default. Pass `timeout: 300000` or use `--wait 100`.
+  - Codex: commands up to 240 s run correctly.
+  - pi and Yoplai subagents: the default is correct.
+- Loop `ask-human wait <id>` on 75 until 0 or 76. Do other unblocked work between calls.
+- Never use ask-human to announce a skip or to post "no reply needed".
 
 ## Park (on 76, or if you must stop)
 ```
 ask-human park <id> --note-file note.md --runner <codex|claude|pi|yoplai-pi|...> --session <session or run id>
 ```
-note.md must have lines `Doing:` `Done:` `Next:` `Blocker:` (Where/Resume are added automatically). Then stop.
-- No linked issue: the full park note is the handoff.
-- Linked issue (Linear, etc.): the issue is the channel from now on. Put the open question and full handoff on the issue, and keep note.md brief, pointing to the issue URL.
-- Never open a question in both places: if you stop and wait on an issue, ask there only, not via ask-human.
+note.md must have the lines `Doing:` `Done:` `Next:` `Blocker:`. The tool adds Where and Resume. Then run `buu end --keep <tabId>` (id from `buu status`) to keep the tab of the blocked step, and stop.
+- No linked issue: the park note is the full handoff.
+- Linked issue (Linear or other): the issue is the channel from now on. Put the open question and the full handoff on the issue. Keep note.md short, with the issue URL.
+- Never ask the same question in two places. If you wait on an issue, ask there only, not with ask-human.
 
 ## Resume
-`ask-human resume <id>` prints a resume prompt (handoff + Thinh's replies) and, for Yoplai runs, the `yoplai subagents resume …` command to run.
+`ask-human resume <id>` prints a resume prompt (handoff and Thinh's replies). For Yoplai runs, it also prints the `yoplai subagents resume …` command.
 `ask-human list [--status waiting|parked|answered]` shows open requests.
