@@ -79,3 +79,8 @@ A description of the things that are out of scope for this spec.
 Any further notes about the feature.
 
 </spec-template>
+
+## Checks before you finish
+
+- **Numeric limits come from the source.** Before the spec sets a size, rate or timeout limit, look up the provider's documented limit for the exact endpoint the code will use. A guessed "safe" value becomes the product's real limit, and providers often have several endpoints with very different limits.
+- **Public repos get invented data.** If the target repository is public, say in the spec that examples, fixtures and docs must use invented data, never real customer names, links, ids or messages. Removing private data from git history after the fact is costly.

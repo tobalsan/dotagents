@@ -123,3 +123,4 @@ In either form, avoid specific file paths or code snippets: they go stale fast. 
 2. **Status is always `Backlog`** unless the user explicitly says otherwise.
 3. **Don't assign a project "because it's obviously related".** If there is a relevant project, confirm it with the user.
 4. Attach labels/repo labels only when they're part of an established convention or the user asked for them.
+5. **File every slice the plan names**, not only the first ones, and tell the user which slice delivers the behaviour they will actually see. A slice that lives only in a planning note gets forgotten, and the user may expect a feature that no ticket covers.
