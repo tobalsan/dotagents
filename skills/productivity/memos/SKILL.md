@@ -105,9 +105,17 @@ Renaming a tag means rewriting `#old` → `#new` in the content of every memo ma
 
 Only with explicit authorization — both are external mutations, and a PAT acts as the user.
 
-Use `playwright-cli` directly, not through a Node script: `playwright-cli -s=memos open <base-url>`, `snapshot` after every state change, act on returned element refs (never guessed selectors), `playwright-cli -s=memos close` when done.
+Use the `buu` CLI (read the `buu` skill first). It drives the user's real browser, one tab group per session:
 
-**playwright-cli command quick reference:** `open <url>`, `goto <url>` (NOT `navigate`), `fill <ref> <text>` (NOT `fill <ref> --text <text>`), `click <ref>`, `snapshot`, `run-code '<JS>'`, `close`. The session flag is `-s=memos`.
+```sh
+export BUU_SESSION=memos
+buu js "await page.goto('<base-url>'); return page.url()"
+buu js "print(await page.locator('body').ariaSnapshot())"   # read the page after every state change
+buu js "await page.getByRole('button', {name: 'Sign up'}).click()"
+buu end                                                    # always, when done
+```
+
+Pick locators from the aria snapshot (role + name, label). Do not guess CSS selectors. Never put a password literal in `buu js` code: type it from a file or a secret helper, and never print it.
 
 1. **Account** — generate a password locally (`openssl rand -base64 32`), sign up at `<base-url>/auth/signup`, confirm the authenticated home page loads, then write `MEMOS_URL` / `MEMOS_USERNAME` / `MEMOS_PASSWORD` to `.env` under `umask 077` + `chmod 600`. Verify without printing via `POST /api/v1/auth/signin` with `{"passwordCredentials":{"username":"…","password":"…"}}` — success returns `accessToken`. If signup is disabled or setup is already done, stop and report the exact UI state rather than trying an unverified alternate path.
 
@@ -138,15 +146,13 @@ Once authenticated, PATs are also manageable via the API (`users/{user}/personal
 
 ## Avatar upload
 
-Avatar changes require the authenticated web UI. Use `playwright-cli` directly:
+Avatar changes require the authenticated web UI. Use `buu` (session `memos`):
 
-1. Open Memos, sign in if needed, then navigate to **Settings → My Account → Edit**. Snapshot after every navigation or click and use the returned refs.
-2. **Use the agent's own avatar from the workspace** (`~/cloud/cloud.png` for Cloud). Do NOT web-search for stock images — the user expects you to use your workspace identity file. In the edit dialog, the avatar control is an invisible `input[type=file]`; `playwright-cli upload` will fail with "can only be used when there is related modal state present." Use `run-code` instead:
+1. Open Memos, sign in if needed, then navigate to **Settings → My Account → Edit**. Read the aria snapshot after every navigation or click and pick locators from it.
+2. **Use the agent's own avatar from the workspace** (`~/cloud/cloud.png` for Cloud). Do NOT web-search for stock images — the user expects you to use your workspace identity file. In the edit dialog, the avatar control is an invisible `input[type=file]`. Set it directly:
 
    ```sh
-   playwright-cli -s=memos run-code 'async (page) => {
-     await page.locator("input[type=file]").setInputFiles("/absolute/path/avatar.png");
-   }'
+   buu js 'await page.locator("input[type=file]").setInputFiles("/absolute/path/avatar.png")'
    ```
 
-3. After `setInputFiles`, verify the avatar preview loaded by checking the dialog's inner HTML for a `data:image` src. Click **Save**, then snapshot and confirm the dialog closed without error (the settings page should re-render cleanly). Close the browser session.
+3. After `setInputFiles`, verify the avatar preview loaded by checking the dialog's inner HTML for a `data:image` src. Click **Save**, then snapshot and confirm the dialog closed without error (the settings page should re-render cleanly). Run `buu end`.
