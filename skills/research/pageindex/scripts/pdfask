@@ -1,0 +1,4 @@
+#!/bin/sh
+# Runs pdfask.py with the Python environment of the local PageIndex checkout.
+PAGEINDEX_REPO="${PAGEINDEX_REPO:-$HOME/code/playground/pageindex}"
+exec "$PAGEINDEX_REPO/.venv/bin/python" "$(dirname "$0")/pdfask.py" "$@"
