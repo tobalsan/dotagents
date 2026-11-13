@@ -87,3 +87,9 @@ The user can also lend a tab with the toolbar button. Prefer `buu claim --lent` 
 8. Never raise a tab. `page.bringToFront()` fails by design. Use `handoff` when the user must see a tab.
 9. Never close a lent or claimed tab. buu refuses it.
 10. Do not run two clients on the same session at once. A second kernel or CDP client takes over the tabs.
+
+## Pitfalls
+
+- Typing into an `autocomplete=on` input (AWS console and others) can make a password-manager iframe appear. buu then loses the tab ("Target page ... closed", claim fails with "Cannot access a chrome-extension:// URL"). Set the value with the native setter instead: `el => { Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el, v); el.dispatchEvent(new Event('input',{bubbles:true})) }`. Use a fresh session tab if a claimed tab breaks.
+- Ace code editors (AWS IAM JSON policy): `ace.setValue()` does not update the React form. Load the page fresh, click `.ace_content`, press `Meta+A`, `Backspace`, then `page.keyboard.insertText(text)`.
+- Extension 0.1.0 has no handoff ("unknown method handoffBegin"). Tell the user the tab ID in chat instead.
