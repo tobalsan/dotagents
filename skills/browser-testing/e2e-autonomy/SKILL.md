@@ -34,7 +34,7 @@ description: Run E2E tests in Thinh's real logged-in browser with buu, type pass
 - Check sign-in with `op whoami` before you ask Thinh.
 - Never `op read` into the transcript. Never paste, echo, or log a secret. Never put a secret in Mattermost, Linear, or a file.
 - `op` is the wrapper `~/.local/bin/op`. It runs as the `Agents` service account (token in `~/.config/op-sa/token`).
-- If an `op` call hangs with no output, the call used `/opt/homebrew/bin/op` without the token, for example from a login `bash -l`. 1Password then shows an "authorize <app>" modal. Call `op` by name in a non-login shell. Never ask Thinh to approve the modal, because it gives access to his personal vaults.
+- If an `op` call hangs with no output, the call used `/opt/homebrew/bin/op` without the token, for example from a login `bash -l`. 1Password then shows an "authorize <app>" modal. Call `op` by name in a non-login shell. Never ask Thinh to approve the modal, because it gives access to his personal vaults. Before you report `op` as broken, rerun `op whoami` by name in a non-login shell: both known hangs have this fix, so a hang usually means the call bypassed the wrapper.
 - Do not call `op` from inside `buu js`. On the Mac Studio, macOS then shows an "authorize node" prompt after each Node update, and the call hangs until Thinh accepts it. Use `type-secret.sh`.
 - Google accounts: passkeys do not work. Click "Try another way", then use the password and the authenticator code: `type-secret.sh "op://Agents/<item>/one-time password?attribute=otp" "<locator>"`.
 
