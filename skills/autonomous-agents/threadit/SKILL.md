@@ -43,8 +43,12 @@ ti GET /api/me   # check: 200 = ready
 | Mark processing / done | `ti POST /api/messages/123/reactions '{"emoji":"👀"}'` then `'{"emoji":"✅"}'` |
 | Search | `ti GET "/api/search?q=..."` |
 | Users for @mentions | `ti GET /api/users` |
+| Edit my message (notifies nobody) | `ti PATCH /api/messages/123 '{"body":"..."}'` |
+| Upload a file (returns `{id,...}`) | `curl -sS -X POST "$THREADIT_BASE_URL/api/attachments?filename=report.pdf" -H "Authorization: Bearer $THREADIT_CLI_TOKEN" -H 'content-type: application/pdf' --data-binary @report.pdf` |
+| Replace/remove attachments (full set kept; `[]` removes all) | upload first, then `ti PATCH /api/messages/123 '{"attachment_ids":[42]}'` |
 
 For JSON bodies with quotes or newlines, build them with `jq -n --arg b "$text" '{body:$b}'`.
+Message bodies render a markdown subset, including GFM pipe tables (header row plus `---` delimiter row required).
 
 ## Rules
 
@@ -64,5 +68,5 @@ For JSON bodies with quotes or newlines, build them with `jq -n --arg b "$text" 
 
 ## Full reference
 
-For attachments, votes, agent sessions, pagination, and error codes, read the live doc:
+For attachment limits, votes, agent sessions, pagination, and error codes, read the live doc:
 `curl -s "$THREADIT_BASE_URL/SKILL.md"`. Skip its onboarding section: the account exists already.
