@@ -90,6 +90,25 @@ The user can also lend a tab with the toolbar button. Prefer `buu claim --lent` 
 
 ## Pitfalls
 
+- Relay OAuth callbacks need a cookie-free check. A cookie-backed control does not prove this path.
+- Inspect the accessibility tree before choosing dialog or layout locators. A missing main or dialog element is not a product failure.
+- A secret canary must make the scan fail. Count files read, not paths discovered.
+- Startup checks need a child that outlives its leader. A list from after readiness cannot prove earlier ownership.
+- An orphan check uses the child's directory, not just the old leader record.
+- Captured-dashboard checks need real agent, history, and WebSocket paths. A Canvas-only fixture cannot prove the chat or composer flow.
+- The parent PID can change after startup. Ownership records use process start time, group, command, and directory instead.
+- A fixture support page does not test the product bundle. Dependency overrides can leave CommonJS imports unusable.
+- Layout checks need the measured CSS viewport, not only the requested emulation size.
+- Tests need separate coverage for shell loads and renderer messages. A refusal after shell navigation cannot send a renderer event.
+- A final DNS dot does not make a local hostname external. Local-link tests need cases with a final dot.
+- Background pages can throttle animation frames. Bounded locator waits or message acknowledgments avoid dependence on animation frames.
+- A browser download can succeed without a buu download event. File bytes and contents give stronger evidence than a widget success message.
+- Fixture TTL includes time between test actions. A status check separates fixture shutdown from a product failure.
+- Query-free snapshot frames lose query-based test settings. Synthetic probes need embedded, allowlisted settings. An isolation result needs proof that the selected attempt ran.
+- A negative proof can report a failure while its process still runs. A process deadline and failure-path cleanup prevent an indefinite wait. Startup ownership must exist before readiness, and deadline cleanup must finish before exit.
+- A stop operation needs one immutable owner identity. Before each signal, the live target must still match that identity. A replacement record does not validate the original target.
+- For HTTP middleware checks, test through the running server as well as the route handler. A real Node adapter can change Request and Response behavior.
+- In sandboxed HTTP frames, check `window.origin` and `location.origin` separately. An opaque security origin does not make the URL origin `null`.
 - Typing into an `autocomplete=on` input (AWS console and others) can make a password-manager iframe appear. buu then loses the tab ("Target page ... closed", claim fails with "Cannot access a chrome-extension:// URL"). Set the value with the native setter instead: `el => { Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el, v); el.dispatchEvent(new Event('input',{bubbles:true})) }`. Use a fresh session tab if a claimed tab breaks.
 - Ace code editors (AWS IAM JSON policy): `ace.setValue()` does not update the React form. Load the page fresh, click `.ace_content`, press `Meta+A`, `Backspace`, then `page.keyboard.insertText(text)`.
 - Extension 0.1.0 has no handoff ("unknown method handoffBegin"). Tell the user the tab ID in chat instead.
