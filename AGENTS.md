@@ -129,16 +129,6 @@ Always use `uv` to run python commands, unless explicitly stated otherwise.
 **Merge**: default to `git merge --ff-only` to merge branches.
 **Worktrees**: create worktrees in `~/.worktrees/` unless explicitly stated otherwise.
 
-## Delegation
-
-First classify the request as direct or orchestrate: call `classify_task` if that tool is available; otherwise state the classification in one line. It is advisory and never blocks tools, so a missing `classify_task` is not a blocker.
-- Clearly scoped one-line or single-file edit: work directly; never delegate, even in a thought experiment.
-- Anything else: orchestrate before implementation. In the first response, briefly explain in ordinary prose which bounded tasks go to lightweight, medium, and strong models, as applicable.
-- Lightweight model: code scouting, search, and simple bounded tasks.
-- Medium model: implementation.
-- Strong model: review, difficult diagnosis, or advanced advice.
-Integrate and verify delegated work yourself.
-
 ## The most important rule of all
 
 **We are satisficers**. 
@@ -146,6 +136,3 @@ What matters is doing something good, make things real, and iterate.
 We make tradeoffs, and prioritize what matters most today.
 We're not looking for perfection, we don't focus on the minutiae, or try to cover every possible edge case.
 
-### Telegram ping
-
-Only when user explicitly asks ("ping me when done", "notify me", etc.): on finish or when input needed, run `~/code/utility/tg-ping.sh '<short status>'`. Never ping otherwise.
